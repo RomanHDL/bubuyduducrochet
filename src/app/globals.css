@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --cream: #FFF9E8;
+  --blush: #FFE8E8;
+  --lavender: #EDE5FF;
+  --mint: #D4F5E0;
+  --cocoa: #8B6543;
+}
+
+body {
+  font-family: 'Nunito', 'Quicksand', sans-serif;
+  background-color: #FFFDF7;
+  color: #4A3320;
+}
+
+::selection {
+  background-color: #FFCCD2;
+  color: #4A3320;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #FFF9E8; }
+::-webkit-scrollbar-thumb { background: #E8C9B0; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #D4A574; }
+
+@layer components {
+  .btn-cute {
+    @apply px-6 py-2.5 rounded-bubble font-semibold transition-all duration-200 shadow-soft hover:shadow-warm hover:-translate-y-0.5 active:translate-y-0;
+  }
+  .btn-primary {
+    @apply btn-cute bg-blush-400 text-white hover:bg-blush-500;
+  }
+  .btn-secondary {
+    @apply btn-cute bg-cream-200 text-cocoa-600 hover:bg-cream-300;
+  }
+  .card-cute {
+    @apply bg-white rounded-cute shadow-soft border border-cream-200 overflow-hidden transition-all duration-200 hover:shadow-warm hover:-translate-y-1;
+  }
+  .input-cute {
+    @apply w-full px-4 py-3 rounded-2xl border-2 border-cream-200 bg-cream-50 text-cocoa-700 placeholder-cocoa-300 focus:outline-none focus:border-blush-300 focus:ring-2 focus:ring-blush-100 transition-all;
+  }
+}
