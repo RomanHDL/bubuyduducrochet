@@ -10,6 +10,7 @@ export interface IOrderItem {
 
 export interface IOrder {
   _id: string;
+  orderNumber: number;
   userId: string;
   userName: string;
   userEmail: string;
@@ -31,6 +32,7 @@ const OrderItemSchema = new Schema<IOrderItem>({
 }, { _id: false });
 
 const OrderSchema = new Schema<IOrder>({
+  orderNumber: { type: Number, unique: true },
   userId: { type: String, required: true },
   userName: { type: String, required: true },
   userEmail: { type: String, required: true },

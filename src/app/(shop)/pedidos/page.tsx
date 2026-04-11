@@ -106,7 +106,7 @@ export default function PedidosPage() {
                   <button onClick={() => setExpandedId(exp ? null : order._id)} className="w-full p-4 flex items-center gap-4 text-left">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs text-cocoa-300">#{order._id?.slice(-8)}</span>
+                        <span className="font-mono text-xs text-cocoa-300">#{order.orderNumber || order._id?.slice(-8)}</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${st.bg} ${st.color}`}>{st.emoji} {st.label}</span>
                         <span className={`text-[10px] font-bold ${pay.color}`}>{pay.emoji} {pay.label}</span>
                       </div>
@@ -187,7 +187,7 @@ export default function PedidosPage() {
                 </div>
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <div><span className="font-mono text-xs text-cocoa-300">#{order._id?.slice(-8)}</span><p className="text-xs text-cocoa-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div>
+                    <div><span className="font-mono text-xs text-cocoa-300">#{order.orderNumber || order._id?.slice(-8)}</span><p className="text-xs text-cocoa-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div>
                     <span className="font-display font-bold text-xl text-cocoa-700">${order.total?.toFixed(2)}</span>
                   </div>
                   <div className="space-y-2 mb-4">
@@ -198,10 +198,21 @@ export default function PedidosPage() {
                       </div>
                     ))}
                   </div>
-                  {order.status === 'pending' && order.paymentStatus === 'pending' && (
-                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-center">
-                      <p className="text-xs text-amber-700 font-medium mb-2">Envia tu comprobante de pago</p>
-                      <a href={`https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Pedido #${order._id?.slice(-8)} por $${order.total?.toFixed(2)}. Adjunto comprobante.`)}`} target="_blank" rel="noopener noreferrer" className="btn-cute bg-green-500 text-white text-xs px-5 py-2 hover:bg-green-600 inline-flex items-center gap-1">💬 WhatsApp</a>
+                  {order.status === 'pending' && (
+                    <div className="space-y-3">
+                      {order.paymentStatus === 'pending' && (
+                        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-center">
+                          <p className="text-xs text-amber-700 font-medium mb-2">Envia tu comprobante de pago</p>
+                          <a href={`https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Pedido #${order.orderNumber || order._id?.slice(-8)} por $${order.total?.toFixed(2)}. Adjunto comprobante.`)}`} target="_blank" rel="noopener noreferrer" className="btn-cute bg-green-500 text-white text-xs px-5 py-2 hover:bg-green-600 inline-flex items-center gap-1">💬 WhatsApp</a>
+                        </div>
+                      )}
+                      <button onClick={async () => {
+                        if (!confirm('Cancelar este pedido?')) return;
+                        await fetch(`/api/orders/${order._id}`, { method: 'DELETE' });
+                        fetchOrders();
+                      }} className="w-full py-2.5 rounded-bubble border-2 border-red-200 text-xs font-semibold text-red-400 hover:bg-red-50 hover:text-red-500 transition-all">
+                        ❌ Cancelar pedido
+                      </button>
                     </div>
                   )}
                 </div>

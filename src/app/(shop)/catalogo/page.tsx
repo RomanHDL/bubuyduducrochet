@@ -45,6 +45,14 @@ function Content() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   const [featPage, setFeatPage] = useState(0);
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [catForm, setCatForm] = useState({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
+
+  // Load categories from DB
+  useEffect(() => { fetch('/api/categories').then(r => r.json()).then(setDbCategories).catch(() => {}); }, []);
 
   useEffect(() => { setFavs(JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]')); }, []);
 
@@ -84,7 +92,13 @@ function Content() {
     setSaving(false);
   };
 
-  const sorted = [...products].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); return 0; });
+  // Price range filter
+  const priceFiltered = products.filter(p => {
+    if (priceMin && p.price < Number(priceMin)) return false;
+    if (priceMax && p.price > Number(priceMax)) return false;
+    return true;
+  });
+  const sorted = [...priceFiltered].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); return 0; });
   const allFeat = sorted.filter(p => p.featured);
   const featStart = (featPage * 3) % Math.max(allFeat.length, 1);
   const feat = allFeat.length > 3 ? [...allFeat, ...allFeat].slice(featStart, featStart + 3) : allFeat;
@@ -113,21 +127,71 @@ function Content() {
 
       {/* Filters */}
       <div className="mb-12 space-y-5">
+        {/* Search */}
         <div className="relative max-w-lg mx-auto">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base">🔍</span>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar amigurumis, accesorios..." className="input-cute pl-11 text-sm" />
           {search && <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-cocoa-300 hover:text-blush-400">✕</button>}
         </div>
+
+        {/* Categories — dynamic from DB */}
         <div className="flex flex-wrap justify-center gap-2">
-          {CATS.map(c => <button key={c.value} onClick={() => setCat(c.value)} className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${cat === c.value ? 'bg-blush-400 text-white shadow-glow scale-105' : 'bg-white text-cocoa-500 border border-cream-200 hover:border-blush-200 hover:text-blush-400'}`}>{c.emoji} {c.label}</button>)}
+          <button onClick={() => setCat('')} className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${cat === '' ? 'bg-blush-400 text-white shadow-glow scale-105' : 'bg-white text-cocoa-500 border border-cream-200 hover:border-blush-200 hover:text-blush-400'}`}>✨ Todos</button>
+          {dbCategories.map(c => (
+            <button key={c.slug} onClick={() => setCat(c.slug)} className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${cat === c.slug ? 'bg-blush-400 text-white shadow-glow scale-105' : 'bg-white text-cocoa-500 border border-cream-200 hover:border-blush-200 hover:text-blush-400'}`}>
+              {c.emoji} {c.name}
+            </button>
+          ))}
+          {isAdmin && (
+            <button onClick={() => setShowCatModal(true)} className="px-3 py-2.5 rounded-full text-sm font-semibold bg-lavender-50 text-lavender-400 border border-lavender-200 hover:bg-lavender-100 transition-all">➕</button>
+          )}
         </div>
+
+        {/* Price range */}
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <span className="text-sm font-semibold text-cocoa-500">💰 Precio:</span>
+          <div className="flex items-center gap-2">
+            <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min" className="w-24 px-3 py-2 rounded-xl border-2 border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
+            <span className="text-cocoa-300">—</span>
+            <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max" className="w-24 px-3 py-2 rounded-xl border-2 border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
+          </div>
+          {(priceMin || priceMax) && (
+            <button onClick={() => { setPriceMin(''); setPriceMax(''); }} className="text-xs text-blush-400 hover:text-blush-500 font-semibold">✕ Limpiar</button>
+          )}
+        </div>
+
+        {/* Sort + count */}
         <div className="flex items-center justify-between">
-          <p className="text-sm text-cocoa-400">{loading ? 'Buscando...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''}`}</p>
+          <p className="text-sm text-cocoa-400">{loading ? 'Buscando...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''}`}{priceMin || priceMax ? ` (filtro: $${priceMin || '0'} — $${priceMax || '∞'})` : ''}</p>
           <select value={sort} onChange={e => setSort(e.target.value)} className="text-sm bg-cream-50 border border-cream-200 rounded-2xl px-3 py-2 text-cocoa-500 focus:outline-none focus:border-blush-300">
             {SORTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
       </div>
+
+      {/* Admin: Category management modal */}
+      {showCatModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setShowCatModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-6">
+            <h2 className="font-display font-bold text-lg text-cocoa-700 mb-4">➕ Nueva Categoria</h2>
+            <div className="space-y-3">
+              <input value={catForm.name} onChange={e => setCatForm({...catForm, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')})} placeholder="Nombre (ej: Bolsas)" className="input-cute text-sm" />
+              <input value={catForm.slug} onChange={e => setCatForm({...catForm, slug: e.target.value})} placeholder="Slug (ej: bolsas)" className="input-cute text-sm" />
+              <input value={catForm.emoji} onChange={e => setCatForm({...catForm, emoji: e.target.value})} placeholder="Emoji (ej: 👜)" className="input-cute text-sm" />
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowCatModal(false)} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400">Cancelar</button>
+                <button onClick={async () => {
+                  if (!catForm.name || !catForm.slug) return;
+                  await fetch('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(catForm) });
+                  setShowCatModal(false); setCatForm({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
+                  const r = await fetch('/api/categories'); setDbCategories(await r.json());
+                }} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500">✨ Crear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Products */}
       {loading ? (

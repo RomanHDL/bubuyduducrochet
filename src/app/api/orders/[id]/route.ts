@@ -10,10 +10,28 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!session || (session.user as any).role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
-
   await connectDB();
   const body = await req.json();
   const order = await Order.findByIdAndUpdate(params.id, body, { new: true });
   if (!order) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 });
+  return NextResponse.json(order);
+}
+
+// DELETE cancel order (owner or admin)
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+  await connectDB();
+  const order = await Order.findById(params.id);
+  if (!order) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 });
+
+  const isAdmin = (session.user as any).role === 'admin';
+  const isOwner = order.userId === (session.user as any).id;
+
+  if (!isAdmin && !isOwner) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  if (!isAdmin && order.status !== 'pending') return NextResponse.json({ error: 'Solo puedes cancelar pedidos pendientes' }, { status: 400 });
+
+  order.status = 'cancelled';
+  await order.save();
   return NextResponse.json(order);
 }

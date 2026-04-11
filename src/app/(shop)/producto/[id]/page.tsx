@@ -50,7 +50,8 @@ export default function ProductDetailPage() {
     setAdding(true);
     try {
       await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: product._id, title: product.title, price: product.price, image: product.images?.[0] || '', quantity: qty }) });
-      setAdded(true); setTimeout(() => setAdded(false), 2000);
+      setAdded(true);
+      setTimeout(() => router.push('/carrito'), 800);
     } catch {} finally { setAdding(false); }
   };
 
@@ -186,7 +187,91 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* ═══ Reviews section ═══ */}
+        <ReviewSection productId={product._id} />
       </div>
     </AnimatedBg>
+  );
+}
+
+// ─── Reviews Component ───
+function ReviewSection({ productId }: { productId: string }) {
+  const { data: session } = useSession();
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [text, setText] = useState('');
+  const [rating, setRating] = useState(5);
+  const [imgUrl, setImgUrl] = useState('');
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/product-reviews?productId=${productId}`).then(r => r.json()).then(setReviews).catch(() => {});
+  }, [productId]);
+
+  const submit = async () => {
+    if (!text.trim()) return;
+    setSending(true);
+    await fetch('/api/product-reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, text, rating, images: imgUrl.trim() ? [imgUrl] : [] }) });
+    setSending(false); setText(''); setImgUrl(''); setShowForm(false);
+    const r = await fetch(`/api/product-reviews?productId=${productId}`); setReviews(await r.json());
+  };
+
+  const avg = reviews.length > 0 ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1) : '0';
+
+  return (
+    <div className="mt-12 bg-white/70 backdrop-blur-sm rounded-cute border border-cream-200 shadow-warm p-6 md:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="font-display font-bold text-2xl text-cocoa-700">Resenas del producto ⭐</h2>
+          <p className="text-sm text-cocoa-400 mt-1">{reviews.length} resena{reviews.length !== 1 ? 's' : ''} · Promedio {avg}/5</p>
+        </div>
+        {session && !showForm && (
+          <button onClick={() => setShowForm(true)} className="btn-cute bg-blush-400 text-white text-sm px-5 py-2 hover:bg-blush-500">✍️ Escribir resena</button>
+        )}
+      </div>
+
+      {/* Write review form */}
+      {showForm && (
+        <div className="bg-cream-50 rounded-cute border border-cream-200 p-5 mb-6">
+          <h3 className="font-semibold text-cocoa-700 mb-3">Tu resena</h3>
+          <div className="flex gap-1 mb-3">{[1,2,3,4,5].map(i => <button key={i} onClick={() => setRating(i)} className={`text-2xl ${i <= rating ? '' : 'opacity-25'}`}>⭐</button>)}</div>
+          <textarea value={text} onChange={e => setText(e.target.value)} rows={3} placeholder="Cuenta tu experiencia con este producto..." className="input-cute text-sm mb-3 resize-none" />
+          <input value={imgUrl} onChange={e => setImgUrl(e.target.value)} placeholder="URL de imagen (opcional)" className="input-cute text-sm mb-3" />
+          {imgUrl && imgUrl.startsWith('http') && <img src={imgUrl} alt="" className="w-20 h-20 rounded-lg object-cover mb-3 border border-cream-200" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />}
+          <div className="flex gap-2">
+            <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400">Cancelar</button>
+            <button onClick={submit} disabled={sending || !text.trim()} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500 disabled:opacity-50">{sending ? '🧶...' : '✨ Publicar'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* Reviews list */}
+      {reviews.length === 0 && !showForm ? (
+        <div className="text-center py-10">
+          <span className="text-4xl block mb-3">💬</span>
+          <p className="text-cocoa-400 text-sm">Aun no hay resenas. Se el primero en opinar!</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((r: any) => (
+            <div key={r._id} className="bg-white rounded-cute border border-cream-200 p-5 shadow-soft">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blush-100 flex items-center justify-center text-sm font-bold text-blush-500">{r.userName?.charAt(0)}</div>
+                  <span className="font-semibold text-sm text-cocoa-700">{r.userName}</span>
+                </div>
+                <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <span key={j} className="text-xs">⭐</span>)}</div>
+              </div>
+              <p className="text-sm text-cocoa-500 leading-relaxed">{r.text}</p>
+              {r.images?.length > 0 && (
+                <div className="flex gap-2 mt-3">{r.images.map((img: string, i: number) => <img key={i} src={img} alt="" className="w-16 h-16 rounded-lg object-cover border border-cream-200" />)}</div>
+              )}
+              <p className="text-[10px] text-cocoa-300 mt-2">{new Date(r.createdAt).toLocaleDateString('es-MX')}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

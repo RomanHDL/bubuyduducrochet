@@ -32,7 +32,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'El carrito esta vacio' }, { status: 400 });
   }
 
+  // Auto-increment order number
+  const lastOrder = await Order.findOne({}).sort({ orderNumber: -1 }).lean() as any;
+  const nextNumber = (lastOrder?.orderNumber || 0) + 1;
+
   const order = await Order.create({
+    orderNumber: nextNumber,
     userId,
     userName: session.user?.name || 'Cliente',
     userEmail: session.user?.email || '',
