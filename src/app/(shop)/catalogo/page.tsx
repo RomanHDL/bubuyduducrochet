@@ -6,32 +6,69 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
 
-// ═══ Cute sound system — Web Audio API, no files needed ═══
-const SOUNDS = [
-  // Sparkle / star ✨
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1200, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(2400, ctx.currentTime + 0.1); g.gain.setValueAtTime(0.08, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2); o.start(); o.stop(ctx.currentTime + 0.2); },
-  // Plush squeeze 🧸
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(600, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15); g.gain.setValueAtTime(0.07, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18); o.start(); o.stop(ctx.currentTime + 0.18); },
-  // Pop / bubble 🫧
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(800, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(1600, ctx.currentTime + 0.05); o.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.12); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15); o.start(); o.stop(ctx.currentTime + 0.15); },
-  // Chime / bell 🔔
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'triangle'; o.frequency.setValueAtTime(1400, ctx.currentTime); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); o.start(); o.stop(ctx.currentTime + 0.3); },
-  // Twinkle high ⭐
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1800, ctx.currentTime); o.frequency.setValueAtTime(2200, ctx.currentTime + 0.06); o.frequency.setValueAtTime(2600, ctx.currentTime + 0.12); g.gain.setValueAtTime(0.05, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2); o.start(); o.stop(ctx.currentTime + 0.2); },
-  // Soft boing 🎀
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(500, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05); o.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.15); g.gain.setValueAtTime(0.07, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2); o.start(); o.stop(ctx.currentTime + 0.2); },
-  // Xylophone tap 🎵
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'triangle'; o.frequency.setValueAtTime(1047, ctx.currentTime); g.gain.setValueAtTime(0.08, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25); o.start(); o.stop(ctx.currentTime + 0.25); },
-  // Whistle up 🌈
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(700, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.15); g.gain.setValueAtTime(0.05, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18); o.start(); o.stop(ctx.currentTime + 0.18); },
-  // Harp pluck 🧶
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'triangle'; o.frequency.setValueAtTime(880, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.2); g.gain.setValueAtTime(0.07, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25); o.start(); o.stop(ctx.currentTime + 0.25); },
-  // Pixie dust 💕
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const o2 = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); o2.connect(g); g.connect(ctx.destination); o.type = 'sine'; o2.type = 'sine'; o.frequency.setValueAtTime(2000, ctx.currentTime); o2.frequency.setValueAtTime(2500, ctx.currentTime); g.gain.setValueAtTime(0.04, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15); o.start(); o2.start(); o.stop(ctx.currentTime + 0.15); o2.stop(ctx.currentTime + 0.15); },
-  // Music box 🎶
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1319, ctx.currentTime); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35); o.start(); o.stop(ctx.currentTime + 0.35); },
-  // Droplet 💧
-  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1600, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.1); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12); o.start(); o.stop(ctx.currentTime + 0.12); },
+// ═══ Cute sound system — 40 unique Web Audio sounds ═══
+type SoundFn = (ctx: AudioContext) => void;
+function mkSound(type: OscillatorType, freqs: [number,number,number?], dur: number, vol: number): SoundFn {
+  return (ctx) => {
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination); o.type = type;
+    o.frequency.setValueAtTime(freqs[0], ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(freqs[1], ctx.currentTime + dur * 0.5);
+    if (freqs[2]) o.frequency.exponentialRampToValueAtTime(freqs[2], ctx.currentTime + dur * 0.9);
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.start(); o.stop(ctx.currentTime + dur);
+  };
+}
+function mkDual(f1: number, f2: number, dur: number, vol: number): SoundFn {
+  return (ctx) => {
+    const g = ctx.createGain(); g.connect(ctx.destination);
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    [f1, f2].forEach(f => { const o = ctx.createOscillator(); o.connect(g); o.type = 'sine'; o.frequency.setValueAtTime(f, ctx.currentTime); o.start(); o.stop(ctx.currentTime + dur); });
+  };
+}
+const SOUNDS: SoundFn[] = [
+  mkSound('sine', [1200, 2400], 0.2, 0.07),      // 0  Sparkle ✨
+  mkSound('sine', [600, 400], 0.18, 0.07),        // 1  Plush squeeze 🧸
+  mkSound('sine', [800, 1600, 600], 0.15, 0.06),  // 2  Pop bubble 🫧
+  mkSound('triangle', [1400, 1400], 0.3, 0.06),   // 3  Chime 🔔
+  mkSound('sine', [1800, 2600], 0.2, 0.05),       // 4  Twinkle ⭐
+  mkSound('sine', [500, 800, 350], 0.2, 0.07),    // 5  Boing 🎀
+  mkSound('triangle', [1047, 1047], 0.25, 0.07),  // 6  Xylophone 🎵
+  mkSound('sine', [700, 1400], 0.18, 0.05),       // 7  Whistle up 🌈
+  mkSound('triangle', [880, 440], 0.25, 0.07),    // 8  Harp pluck 🧶
+  mkDual(2000, 2500, 0.15, 0.04),                 // 9  Pixie dust 💕
+  mkSound('sine', [1319, 1319], 0.35, 0.06),      // 10 Music box 🎶
+  mkSound('sine', [1600, 400], 0.12, 0.06),       // 11 Droplet 💧
+  mkSound('sine', [440, 880, 1320], 0.22, 0.06),  // 12 Fairy ascend 🧚
+  mkSound('triangle', [1568, 1568], 0.28, 0.06),  // 13 Crystal G6 🔮
+  mkSound('sine', [900, 1800, 900], 0.2, 0.05),   // 14 Bounce 🎾
+  mkSound('sine', [2200, 1100], 0.15, 0.05),      // 15 Slide down 🎢
+  mkDual(1320, 1760, 0.2, 0.04),                  // 16 Harmony E-A 🎼
+  mkSound('triangle', [660, 660], 0.3, 0.06),     // 17 Soft E5 🌸
+  mkSound('sine', [1500, 3000], 0.12, 0.06),      // 18 Ping ✦
+  mkSound('sine', [350, 700, 350], 0.25, 0.06),   // 19 Wobble 🫠
+  mkSound('triangle', [1175, 1175], 0.22, 0.07),  // 20 D6 bell 🛎️
+  mkSound('sine', [2400, 600], 0.18, 0.05),       // 21 Falling star 🌠
+  mkDual(880, 1100, 0.2, 0.04),                   // 22 Chord A-Cs 🎹
+  mkSound('sine', [1000, 2000, 1500], 0.2, 0.06), // 23 Glitter ✨
+  mkSound('triangle', [784, 784], 0.28, 0.06),    // 24 G5 chime 💎
+  mkSound('sine', [550, 1100, 550], 0.22, 0.06),  // 25 Spring 🌱
+  mkSound('sine', [1760, 880], 0.2, 0.06),        // 26 Harp down 🎻
+  mkDual(1568, 2093, 0.18, 0.04),                 // 27 High duo G-C 🦋
+  mkSound('triangle', [523, 523], 0.3, 0.07),     // 28 C5 soft 🌙
+  mkSound('sine', [1400, 2800, 1400], 0.18, 0.05),// 29 Shimmer 💫
+  mkSound('sine', [300, 600], 0.2, 0.07),         // 30 Deep pop 🐻
+  mkDual(660, 990, 0.22, 0.04),                   // 31 E-B chord 🎵
+  mkSound('triangle', [1976, 1976], 0.2, 0.05),   // 32 B6 ting 🪄
+  mkSound('sine', [750, 1500, 750], 0.2, 0.06),   // 33 Wand wave ⚡
+  mkSound('sine', [1100, 550], 0.22, 0.06),       // 34 Descend Cs 🍂
+  mkDual(1047, 1319, 0.2, 0.04),                  // 35 C-E sweet 🍬
+  mkSound('triangle', [988, 988], 0.25, 0.06),    // 36 B5 ring 🌺
+  mkSound('sine', [1650, 3300], 0.12, 0.05),      // 37 Zing! ⚡
+  mkSound('sine', [420, 840, 420], 0.22, 0.06),   // 38 Jellyfish 🪼
+  mkDual(1397, 1760, 0.18, 0.04),                 // 39 F-A duo 🌻
 ];
 
 let _audioCtx: AudioContext | null = null;
@@ -201,21 +238,13 @@ function Content() {
           )}
         </div>
 
-        {/* Right: 4 featured cards — fill remaining space */}
+        {/* Right: 4 featured cards — with frames & sounds */}
         {feat.length > 0 && (
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2"><span className="text-sm">⭐</span><h3 className="font-display font-bold text-xs text-cocoa-500 uppercase tracking-wider">Destacados</h3></div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" key={featPage}>
               {feat.slice(0, 4).map((p) => (
-                <Link key={p._id} href={`/producto/${p._id}`} className="bg-white/80 backdrop-blur-sm rounded-xl border border-cream-200 overflow-hidden shadow-soft hover:shadow-warm hover:-translate-y-1 transition-all duration-300 group">
-                  <div className="aspect-square overflow-hidden">
-                    {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-cream-100 flex items-center justify-center"><span className="text-3xl opacity-20">🧸</span></div>}
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-bold text-cocoa-700 truncate group-hover:text-blush-400 transition-colors">{p.title}</p>
-                    <p className="text-sm font-bold text-blush-400 mt-0.5">${p.price}</p>
-                  </div>
-                </Link>
+                <Card key={p._id} p={p} idx={0} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />
               ))}
             </div>
           </div>
@@ -431,6 +460,7 @@ function Content() {
 
 // ═══ Museum painting frames — 20 unique ornate styles ═══
 const FRAMES = [
+  // ─── Original 20 ───
   { outer: '#D4A574', inner: '#C09460', accent: '#E8C9A0', deco: '🌸', shadow: 'rgba(212,165,116,0.4)' },
   { outer: '#B8860B', inner: '#DAA520', accent: '#FFD700', deco: '🦋', shadow: 'rgba(184,134,11,0.35)' },
   { outer: '#C9A0DC', inner: '#B088C9', accent: '#DCC0EE', deco: '💜', shadow: 'rgba(201,160,220,0.35)' },
@@ -451,6 +481,27 @@ const FRAMES = [
   { outer: '#B0A0C8', inner: '#9888B0', accent: '#C8B8E0', deco: '🦄', shadow: 'rgba(176,160,200,0.35)' },
   { outer: '#C8B080', inner: '#B49868', accent: '#DCC898', deco: '🧶', shadow: 'rgba(200,176,128,0.4)' },
   { outer: '#E0A0B8', inner: '#CC88A0', accent: '#F0B8D0', deco: '🌈', shadow: 'rgba(224,160,184,0.35)' },
+  // ─── 20 new frames ───
+  { outer: '#D4976A', inner: '#C08356', accent: '#E8B48E', deco: '🐰', shadow: 'rgba(212,151,106,0.4)' },
+  { outer: '#9B8EC4', inner: '#8A7DB3', accent: '#B5A8D8', deco: '🪄', shadow: 'rgba(155,142,196,0.35)' },
+  { outer: '#E6C88A', inner: '#D4B670', accent: '#F0DCA4', deco: '🐝', shadow: 'rgba(230,200,138,0.4)' },
+  { outer: '#88B4C8', inner: '#70A0B8', accent: '#A8CCE0', deco: '🐳', shadow: 'rgba(136,180,200,0.35)' },
+  { outer: '#D48C98', inner: '#C07884', accent: '#E8A8B0', deco: '🌷', shadow: 'rgba(212,140,152,0.35)' },
+  { outer: '#A8C090', inner: '#94AC7C', accent: '#BCD4A8', deco: '🐸', shadow: 'rgba(168,192,144,0.35)' },
+  { outer: '#C8A488', inner: '#B89070', accent: '#DCB8A0', deco: '🦊', shadow: 'rgba(200,164,136,0.4)' },
+  { outer: '#B898C8', inner: '#A484B8', accent: '#CCB0DC', deco: '🎠', shadow: 'rgba(184,152,200,0.35)' },
+  { outer: '#D4C098', inner: '#C0AC80', accent: '#E8D4B0', deco: '🧁', shadow: 'rgba(212,192,152,0.4)' },
+  { outer: '#98B8B8', inner: '#80A4A4', accent: '#B0CCCC', deco: '🐢', shadow: 'rgba(152,184,184,0.35)' },
+  { outer: '#E0B098', inner: '#CC9C84', accent: '#F0C8B0', deco: '🎪', shadow: 'rgba(224,176,152,0.35)' },
+  { outer: '#A4A8D4', inner: '#9094C0', accent: '#B8BCE8', deco: '🫧', shadow: 'rgba(164,168,212,0.35)' },
+  { outer: '#C89890', inner: '#B48478', accent: '#DCB0A8', deco: '🦁', shadow: 'rgba(200,152,144,0.35)' },
+  { outer: '#8CC0A8', inner: '#78AC94', accent: '#A4D4BC', deco: '🍀', shadow: 'rgba(140,192,168,0.35)' },
+  { outer: '#D8A8C0', inner: '#C494AC', accent: '#ECBCD4', deco: '🎀', shadow: 'rgba(216,168,192,0.35)' },
+  { outer: '#B4B898', inner: '#A0A480', accent: '#C8CCB0', deco: '🌾', shadow: 'rgba(180,184,152,0.35)' },
+  { outer: '#C4A0D4', inner: '#B08CC0', accent: '#D8B4E8', deco: '🦩', shadow: 'rgba(196,160,212,0.35)' },
+  { outer: '#D0B4A0', inner: '#BCA08C', accent: '#E4C8B8', deco: '🐻', shadow: 'rgba(208,180,160,0.4)' },
+  { outer: '#A0C4D0', inner: '#88B0BC', accent: '#B8D8E4', deco: '❄️', shadow: 'rgba(160,196,208,0.35)' },
+  { outer: '#D8C4A0', inner: '#C4B08C', accent: '#ECD8B8', deco: '🌟', shadow: 'rgba(216,196,160,0.4)' },
 ];
 
 function hashId(id: string): number {
