@@ -17,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(order);
 }
 
-// DELETE cancel order (owner or admin)
+// DELETE — admin: remove unpaid orders permanently; customer: cancel pending
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
@@ -29,7 +29,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const isOwner = order.userId === (session.user as any).id;
 
   if (!isAdmin && !isOwner) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  if (!isAdmin && order.status !== 'pending') return NextResponse.json({ error: 'Solo puedes cancelar pedidos pendientes' }, { status: 400 });
+
+  // Admin can permanently delete unpaid orders
+  if (isAdmin && order.paymentStatus !== 'paid') {
+    await Order.findByIdAndDelete(params.id);
+    return NextResponse.json({ deleted: true });
+  }
+
+  // Customer can only cancel pending orders
+  if (!isAdmin && order.status !== 'pending') {
+    return NextResponse.json({ error: 'Solo puedes cancelar pedidos pendientes' }, { status: 400 });
+  }
 
   order.status = 'cancelled';
   await order.save();

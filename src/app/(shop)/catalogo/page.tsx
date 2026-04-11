@@ -213,7 +213,7 @@ function Content() {
             </button>
 
             {showFilters && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-cute shadow-warm border border-cream-200 p-4 z-30">
+              <div className="fixed inset-x-3 sm:inset-x-auto sm:absolute sm:right-0 top-auto mt-2 sm:w-72 bg-white rounded-cute shadow-warm border border-cream-200 p-4 z-30">
                 <h4 className="text-xs font-bold text-cocoa-600 mb-3">Ordenar por</h4>
                 <div className="space-y-1 mb-4">
                   {[

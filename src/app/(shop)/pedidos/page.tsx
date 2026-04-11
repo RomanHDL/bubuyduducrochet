@@ -148,6 +148,7 @@ export default function PedidosPage() {
                         {order.status === 'confirmed' && <button onClick={() => updateOrder(order._id, { status: 'shipped' })} className="btn-cute bg-indigo-100 text-indigo-700 text-xs px-4 py-2 border border-indigo-200">📦 Enviado</button>}
                         {order.status === 'shipped' && <button onClick={() => updateOrder(order._id, { status: 'delivered' })} className="btn-cute bg-green-100 text-green-700 text-xs px-4 py-2 border border-green-200">🎉 Entregado</button>}
                         {order.status !== 'cancelled' && order.status !== 'delivered' && <button onClick={() => { if (confirm('Cancelar pedido?')) updateOrder(order._id, { status: 'cancelled' }) }} className="btn-cute bg-red-50 text-red-500 text-xs px-4 py-2 border border-red-200">❌ Cancelar</button>}
+                        {order.paymentStatus !== 'paid' && <button onClick={async () => { if (!confirm(`Eliminar permanentemente pedido #${order.orderNumber || order._id?.slice(-8)}?`)) return; await fetch(`/api/orders/${order._id}`, { method: 'DELETE' }); fetchOrders(); }} className="btn-cute bg-red-500 text-white text-xs px-4 py-2 hover:bg-red-600">🗑️ Eliminar</button>}
                       </div>
                     </div>
                   )}

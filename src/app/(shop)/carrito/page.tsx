@@ -213,7 +213,7 @@ export default function CartPage() {
               <h3 className="font-display font-bold text-lg text-cocoa-700 mb-5">Resumen del pedido</h3>
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm text-cocoa-500"><span>Productos ({items.reduce((s, i) => s + i.quantity, 0)})</span><span className="font-semibold">${total.toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm text-cocoa-500"><span>Envio</span><span className="font-semibold text-green-500">Gratis 🎁</span></div>
+                <div className="flex justify-between text-sm text-cocoa-500"><span>Envio</span><span className="font-semibold text-cocoa-400">Se coordina por WhatsApp 📱</span></div>
                 <div className="border-t border-cream-200 pt-3">
                   <div className="flex justify-between"><span className="font-display font-bold text-cocoa-700">Total</span><span className="font-display font-bold text-2xl text-cocoa-800">${total.toFixed(2)}</span></div>
                   <p className="text-[10px] text-cocoa-300 mt-1">MXN · IVA incluido</p>
@@ -225,7 +225,7 @@ export default function CartPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-cream-50 rounded-xl"><span>🏦</span> Transferencia / OXXO</div>
                 <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-[#00B1EA]/5 rounded-xl border border-[#00B1EA]/10"><span>💳</span> Mercado Pago <span className="text-[8px] font-bold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full">Pronto</span></div>
-                <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-green-50 rounded-xl"><span>📦</span> Envio gratis a todo Mexico</div>
+                <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-cream-50 rounded-xl"><span>📱</span> Envio se coordina por WhatsApp</div>
               </div>
 
               <Link href="/catalogo" className="block text-center text-sm text-cocoa-400 font-semibold mt-4 hover:text-blush-400">Seguir comprando 🧶</Link>
