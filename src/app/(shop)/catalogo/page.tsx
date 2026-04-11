@@ -47,6 +47,7 @@ function Content() {
   const [featPage, setFeatPage] = useState(0);
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [showCatModal, setShowCatModal] = useState(false);
   const [catForm, setCatForm] = useState({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
@@ -147,77 +148,96 @@ function Content() {
           )}
         </div>
 
-        {/* ═══ Filter bar — Mercado Libre style ═══ */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-cute border border-cream-200 shadow-soft p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Results count */}
-            <p className="text-sm font-semibold text-cocoa-600">{loading ? '🔍 Buscando...' : `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`}</p>
+        {/* ═══ Sort & Filter — dropdown button ═══ */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <p className="text-sm text-cocoa-400">{loading ? '🔍...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''}`}</p>
 
-            <div className="h-5 w-px bg-cream-300 hidden sm:block" />
+          <div className="relative">
+            <button onClick={() => setShowFilters(!showFilters)} className="btn-cute bg-white text-cocoa-600 border-2 border-cream-200 text-sm px-5 py-2.5 hover:border-blush-200 flex items-center gap-2">
+              🔽 Ordenar y filtrar
+              {(sort !== 'recent' || priceMin || priceMax) && <span className="w-2 h-2 rounded-full bg-blush-400" />}
+            </button>
 
-            {/* Sort */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-cocoa-400">Ordenar:</span>
-              <div className="flex flex-wrap gap-1">
-                {[
-                  { value: 'recent', label: '🕐 Recientes' },
-                  { value: 'price-low', label: '💰 Menor precio' },
-                  { value: 'price-high', label: '💎 Mayor precio' },
-                  { value: 'name', label: '🔤 A-Z' },
-                  { value: 'featured', label: '⭐ Destacados' },
-                ].map(o => (
-                  <button key={o.value} onClick={() => setSort(o.value)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${sort === o.value ? 'bg-blush-400 text-white shadow-soft' : 'bg-cream-50 text-cocoa-400 hover:bg-cream-100 hover:text-cocoa-600 border border-cream-200'}`}>
-                    {o.label}
-                  </button>
-                ))}
+            {showFilters && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-cute shadow-warm border border-cream-200 p-4 z-30">
+                <h4 className="text-xs font-bold text-cocoa-600 mb-3">Ordenar por</h4>
+                <div className="space-y-1 mb-4">
+                  {[
+                    { value: 'recent', label: 'Mas recientes', icon: '🕐' },
+                    { value: 'price-low', label: 'Menor precio', icon: '💰' },
+                    { value: 'price-high', label: 'Mayor precio', icon: '💎' },
+                    { value: 'name', label: 'Nombre A-Z', icon: '🔤' },
+                    { value: 'featured', label: 'Destacados primero', icon: '⭐' },
+                  ].map(o => (
+                    <button key={o.value} onClick={() => setSort(o.value)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left ${sort === o.value ? 'bg-blush-50 text-blush-500 font-bold border border-blush-200' : 'text-cocoa-500 hover:bg-cream-50'}`}>
+                      <span>{o.icon}</span> {o.label} {sort === o.value && <span className="ml-auto">✓</span>}
+                    </button>
+                  ))}
+                </div>
+
+                <h4 className="text-xs font-bold text-cocoa-600 mb-2">Rango de precio</h4>
+                <div className="flex items-center gap-2 mb-4">
+                  <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="$ Min" className="flex-1 px-2.5 py-2 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
+                  <span className="text-cocoa-300 text-xs">—</span>
+                  <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="$ Max" className="flex-1 px-2.5 py-2 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => { setPriceMin(''); setPriceMax(''); setSort('recent'); setShowFilters(false); }} className="flex-1 py-2 rounded-xl border border-cream-200 text-xs font-semibold text-cocoa-400">Limpiar</button>
+                  <button onClick={() => setShowFilters(false)} className="flex-1 py-2 rounded-xl bg-blush-400 text-white text-xs font-bold">Aplicar</button>
+                </div>
               </div>
-            </div>
-
-            <div className="h-5 w-px bg-cream-300 hidden sm:block" />
-
-            {/* Price range */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-cocoa-400">Precio:</span>
-              <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="$ Min" className="w-20 px-2.5 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
-              <span className="text-cocoa-300 text-xs">a</span>
-              <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="$ Max" className="w-20 px-2.5 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
-              {(priceMin || priceMax) && <button onClick={() => { setPriceMin(''); setPriceMax(''); }} className="text-xs text-blush-400 hover:text-blush-500 font-bold">✕</button>}
-            </div>
+            )}
           </div>
-
-          {/* Active filters summary */}
-          {(cat || priceMin || priceMax || search) && (
-            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-cream-100">
-              <span className="text-[10px] text-cocoa-400">Filtros:</span>
-              {search && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">🔍 "{search}"</span>}
-              {cat && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">{dbCategories.find(c => c.slug === cat)?.emoji} {dbCategories.find(c => c.slug === cat)?.name}</span>}
-              {priceMin && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">💰 Min ${priceMin}</span>}
-              {priceMax && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">💰 Max ${priceMax}</span>}
-              <button onClick={() => { setSearch(''); setCat(''); setPriceMin(''); setPriceMax(''); setSort('recent'); }} className="text-[10px] text-blush-400 font-bold hover:text-blush-500">Limpiar todo ✕</button>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Admin: Category management modal */}
+      {/* Admin: Category management modal — FULL */}
       {showCatModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setShowCatModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-6">
-            <h2 className="font-display font-bold text-lg text-cocoa-700 mb-4">➕ Nueva Categoria</h2>
-            <div className="space-y-3">
-              <input value={catForm.name} onChange={e => setCatForm({...catForm, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')})} placeholder="Nombre (ej: Bolsas)" className="input-cute text-sm" />
-              <input value={catForm.slug} onChange={e => setCatForm({...catForm, slug: e.target.value})} placeholder="Slug (ej: bolsas)" className="input-cute text-sm" />
-              <input value={catForm.emoji} onChange={e => setCatForm({...catForm, emoji: e.target.value})} placeholder="Emoji (ej: 👜)" className="input-cute text-sm" />
-              <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowCatModal(false)} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400">Cancelar</button>
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-8 overflow-y-auto">
+          <div className="fixed inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setShowCatModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-5 my-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display font-bold text-lg text-cocoa-700">🏷️ Gestionar Categorias</h2>
+              <button onClick={() => setShowCatModal(false)} className="w-7 h-7 rounded-full bg-cream-100 flex items-center justify-center text-cocoa-400 text-xs hover:bg-cream-200">✕</button>
+            </div>
+
+            {/* Existing categories — editable */}
+            <div className="space-y-2 mb-5 max-h-48 overflow-y-auto">
+              {dbCategories.map(c => (
+                <div key={c._id} className="flex items-center gap-2 p-2.5 bg-cream-50 rounded-xl border border-cream-200 group">
+                  <span className="text-xl">{c.emoji}</span>
+                  <span className="flex-1 text-sm font-semibold text-cocoa-700">{c.name}</span>
+                  <span className="text-[10px] text-cocoa-300 font-mono">{c.slug}</span>
+                  <button onClick={async () => { if (!confirm(`Eliminar "${c.name}"?`)) return; await fetch(`/api/categories/${c._id}`, { method: 'DELETE' }); const r = await fetch('/api/categories'); setDbCategories(await r.json()); }}
+                    className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[10px] text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 shadow-sm">✕</button>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-cream-200 pt-4">
+              <h3 className="text-xs font-bold text-cocoa-600 mb-3">➕ Agregar nueva</h3>
+              <div className="space-y-2">
+                <input value={catForm.name} onChange={e => setCatForm({...catForm, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')})} placeholder="Nombre (ej: Bolsas)" className="input-cute text-sm py-2" />
+                <input value={catForm.slug} onChange={e => setCatForm({...catForm, slug: e.target.value})} placeholder="Slug automatico" className="input-cute text-sm py-2 text-cocoa-300" readOnly />
+
+                {/* Emoji picker */}
+                <div>
+                  <p className="text-xs font-semibold text-cocoa-600 mb-1.5">Emoji: <span className="text-xl ml-1">{catForm.emoji}</span></p>
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-cream-50 rounded-xl border border-cream-200">
+                    {['🧸','🎀','🌸','👶','🧶','💕','🦋','✨','💝','🎁','👜','🧵','🪡','🧤','🧣','🎒','👗','👒','🧢','🪆','🎎','🐱','🐰','🦊','🐻','🐼','🦁','🐸','🐙','🐝','🐋','🦄','🌻','🌹','🌺','🌷','🍃','🌿','☁️','⭐','🌈','💜','💙','💚','💛','🧡','❤️','🤎','🖤','🤍','🔮','🎨','🎭','🎪','🎠','🏠','🏡','📱','💻','🎵','🎮','⚽','🏀','🎾','🎯','🧩','♟️','🎲','🃏','🪄','🔑','💍','👑','🎩','🕶️','🧳','🛍️','📦','📷','🔔','💡','📚','✏️','🖍️','🎈','🎊','🎉','🧁','🍰','🍭','🍬','🍩','🧇'].map(e => (
+                      <button key={e} onClick={() => setCatForm({...catForm, emoji: e})} className={`text-xl p-1 rounded-lg hover:bg-blush-50 transition-colors ${catForm.emoji === e ? 'bg-blush-100 ring-2 ring-blush-300' : ''}`}>{e}</button>
+                    ))}
+                  </div>
+                </div>
+
                 <button onClick={async () => {
                   if (!catForm.name || !catForm.slug) return;
                   await fetch('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(catForm) });
-                  setShowCatModal(false); setCatForm({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
+                  setCatForm({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
                   const r = await fetch('/api/categories'); setDbCategories(await r.json());
-                }} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500">✨ Crear</button>
+                }} className="w-full btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500">✨ Crear categoria</button>
               </div>
             </div>
           </div>
@@ -250,8 +270,8 @@ function Content() {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" key={featPage}>
-                {feat.map((p, i) => <Card key={p._id + featPage} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} big />)}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-6" key={featPage}>
+                {feat.map((p, i) => <Card key={p._id + featPage} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
               </div>
             </div>
           )}
@@ -264,17 +284,17 @@ function Content() {
 
       {/* ═══ Modal ═══ */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-8 overflow-y-auto">
           <div className="fixed inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setModal(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-bubble shadow-warm border border-cream-200 p-6 my-8">
+          <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-5 my-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display font-bold text-xl text-cocoa-700">{editId ? '✏️ Editar Producto' : '➕ Nuevo Producto'}</h2>
               <button onClick={() => setModal(false)} className="w-8 h-8 rounded-full bg-cream-100 flex items-center justify-center text-cocoa-400 hover:bg-cream-200">✕</button>
             </div>
             {err && <div className="bg-blush-50 border border-blush-200 rounded-2xl px-4 py-3 text-sm text-blush-500 font-medium mb-4">⚠️ {err}</div>}
             <div className="space-y-4">
-              <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Titulo *</label><input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Osito Amigurumi..." className="input-cute" /></div>
-              <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Descripcion *</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Adorable osito tejido a mano..." rows={3} className="input-cute resize-none" /></div>
+              <div><label className="block text-xs font-semibold text-cocoa-600 mb-1">Titulo *</label><input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Osito Amigurumi..." className="input-cute text-sm py-2" /></div>
+              <div><label className="block text-xs font-semibold text-cocoa-600 mb-1">Descripcion *</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Adorable osito tejido a mano..." rows={2} className="input-cute text-sm py-2 resize-none" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Precio (MXN) *</label><input type="number" min="0" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} className="input-cute" /></div>
                 <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Stock</label><input type="number" min="0" value={form.stock} onChange={e => setForm({...form, stock: Number(e.target.value)})} className="input-cute" /></div>
