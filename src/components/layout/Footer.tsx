@@ -9,11 +9,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">🧸</span>
-              <span className="font-display font-bold text-xl text-white">Bubu & Dudu</span>
-            </div>
-            <p className="text-sm text-cream-300 leading-relaxed">Creaciones artesanales tejidas a mano con amor desde Monterrey, Nuevo Leon.</p>
+            <span className="font-display font-bold text-xl text-white">Mundo A Crochet</span>
+            <p className="text-sm text-cream-300 leading-relaxed mt-2">Creaciones artesanales tejidas a mano con amor desde Monterrey, Nuevo Leon.</p>
           </div>
           <div>
             <h4 className="font-display font-bold text-white mb-3">Tienda</h4>
@@ -44,7 +41,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-cocoa-600 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-cream-400">© {new Date().getFullYear()} Bubu & Dudu Crochet. Hecho con 💕 en Monterrey</p>
+          <p className="text-xs text-cream-400">© {new Date().getFullYear()} Mundo A Crochet. Hecho con 💕 en Monterrey</p>
           <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-green-300 hover:text-green-200 transition-colors">💬 WhatsApp</a>
         </div>
       </div>
