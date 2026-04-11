@@ -211,34 +211,28 @@ function Content() {
   );
 }
 
-// ═══ 20 unique decorative frame styles ═══
+// ═══ Museum painting frames — 20 unique ornate styles ═══
 const FRAMES = [
-  // Gradient borders with glow
-  { bg: 'linear-gradient(135deg, #FFB6C1, #FF69B4)', shadow: '0 4px 20px rgba(255,105,180,0.25)', radius: '20px', deco: '🌸', decoPos: 'top-right' },
-  { bg: 'linear-gradient(135deg, #DDA0DD, #9370DB)', shadow: '0 4px 20px rgba(147,112,219,0.25)', radius: '24px', deco: '🦋', decoPos: 'top-left' },
-  { bg: 'linear-gradient(135deg, #87CEEB, #4682B4)', shadow: '0 4px 20px rgba(70,130,180,0.25)', radius: '18px', deco: '✨', decoPos: 'bottom-right' },
-  { bg: 'linear-gradient(135deg, #98FB98, #3CB371)', shadow: '0 4px 20px rgba(60,179,113,0.25)', radius: '22px', deco: '🌿', decoPos: 'top-right' },
-  { bg: 'linear-gradient(135deg, #FFDAB9, #FF8C00)', shadow: '0 4px 20px rgba(255,140,0,0.2)', radius: '20px', deco: '🧡', decoPos: 'bottom-left' },
-  { bg: 'linear-gradient(135deg, #E6E6FA, #BA55D3)', shadow: '0 4px 20px rgba(186,85,211,0.2)', radius: '26px', deco: '💜', decoPos: 'top-left' },
-  // Double + accent
-  { bg: 'linear-gradient(45deg, #FFB6C1, #FFC0CB, #FFB6C1)', shadow: '0 6px 24px rgba(255,192,203,0.35), inset 0 0 0 2px rgba(255,182,193,0.3)', radius: '20px', deco: '💕', decoPos: 'top-right' },
-  { bg: 'linear-gradient(45deg, #AFEEEE, #48D1CC, #AFEEEE)', shadow: '0 6px 24px rgba(72,209,204,0.3), inset 0 0 0 2px rgba(175,238,238,0.3)', radius: '22px', deco: '🐚', decoPos: 'bottom-right' },
-  { bg: 'linear-gradient(to right, #F4A7BB, #E8A0BF, #BE93C5)', shadow: '0 4px 20px rgba(190,147,197,0.3)', radius: '24px', deco: '🎀', decoPos: 'top-left' },
-  { bg: 'linear-gradient(to right, #FCEABB, #F8B500)', shadow: '0 4px 20px rgba(248,181,0,0.2)', radius: '18px', deco: '⭐', decoPos: 'top-right' },
-  // Pastel rainbow
-  { bg: 'linear-gradient(135deg, #FFD1DC, #FFE5B4, #BAFFC9)', shadow: '0 4px 20px rgba(255,209,220,0.3)', radius: '22px', deco: '🌈', decoPos: 'bottom-left' },
-  { bg: 'linear-gradient(135deg, #C9B1FF, #FFC8DD, #BDE0FE)', shadow: '0 4px 20px rgba(201,177,255,0.3)', radius: '20px', deco: '🪻', decoPos: 'top-right' },
-  // Warm tones
-  { bg: 'linear-gradient(135deg, #FFE4E1, #FFA07A)', shadow: '0 4px 20px rgba(255,160,122,0.25)', radius: '20px', deco: '🧸', decoPos: 'bottom-right' },
-  { bg: 'linear-gradient(135deg, #FFFACD, #FFD700)', shadow: '0 4px 20px rgba(255,215,0,0.2)', radius: '24px', deco: '🌻', decoPos: 'top-left' },
-  { bg: 'linear-gradient(135deg, #FFE4C4, #DEB887)', shadow: '0 4px 20px rgba(222,184,135,0.25)', radius: '16px', deco: '🧶', decoPos: 'top-right' },
-  // Cool tones
-  { bg: 'linear-gradient(135deg, #B0E0E6, #5F9EA0)', shadow: '0 4px 20px rgba(95,158,160,0.2)', radius: '22px', deco: '🐋', decoPos: 'bottom-left' },
-  { bg: 'linear-gradient(135deg, #D8BFD8, #8B008B)', shadow: '0 4px 20px rgba(139,0,139,0.15)', radius: '20px', deco: '🔮', decoPos: 'top-right' },
-  { bg: 'linear-gradient(135deg, #F0FFF0, #90EE90)', shadow: '0 4px 20px rgba(144,238,144,0.25)', radius: '18px', deco: '🍃', decoPos: 'bottom-right' },
-  // Special
-  { bg: 'linear-gradient(135deg, #FFF0F5, #FF1493, #FFF0F5)', shadow: '0 6px 28px rgba(255,20,147,0.2)', radius: '28px', deco: '💖', decoPos: 'top-right' },
-  { bg: 'linear-gradient(135deg, #F0F8FF, #6495ED, #F0F8FF)', shadow: '0 6px 28px rgba(100,149,237,0.2)', radius: '26px', deco: '🦄', decoPos: 'top-left' },
+  { outer: '#D4A574', inner: '#C09460', accent: '#E8C9A0', deco: '🌸', shadow: 'rgba(212,165,116,0.4)' },
+  { outer: '#B8860B', inner: '#DAA520', accent: '#FFD700', deco: '🦋', shadow: 'rgba(184,134,11,0.35)' },
+  { outer: '#C9A0DC', inner: '#B088C9', accent: '#DCC0EE', deco: '💜', shadow: 'rgba(201,160,220,0.35)' },
+  { outer: '#E8A0A0', inner: '#D48B8B', accent: '#F5C4C4', deco: '🌹', shadow: 'rgba(232,160,160,0.35)' },
+  { outer: '#8FBC8F', inner: '#7AA87A', accent: '#B0D4B0', deco: '🌿', shadow: 'rgba(143,188,143,0.35)' },
+  { outer: '#CD853F', inner: '#B8732E', accent: '#DEB887', deco: '🧸', shadow: 'rgba(205,133,63,0.4)' },
+  { outer: '#BC8F8F', inner: '#A67B7B', accent: '#D4A8A8', deco: '🎀', shadow: 'rgba(188,143,143,0.35)' },
+  { outer: '#87CEEB', inner: '#6BB5D6', accent: '#ADD8E6', deco: '✨', shadow: 'rgba(135,206,235,0.35)' },
+  { outer: '#DDA0DD', inner: '#CC8FCC', accent: '#EEB8EE', deco: '🪻', shadow: 'rgba(221,160,221,0.35)' },
+  { outer: '#F0C080', inner: '#E0A860', accent: '#FFD8A0', deco: '🌻', shadow: 'rgba(240,192,128,0.4)' },
+  { outer: '#C0A0C0', inner: '#B090B0', accent: '#D8B8D8', deco: '💕', shadow: 'rgba(192,160,192,0.35)' },
+  { outer: '#A0C8A0', inner: '#88B088', accent: '#B8D8B8', deco: '🍃', shadow: 'rgba(160,200,160,0.35)' },
+  { outer: '#D4B896', inner: '#C0A47E', accent: '#E8D0B0', deco: '🐚', shadow: 'rgba(212,184,150,0.4)' },
+  { outer: '#C8A2C8', inner: '#B890B8', accent: '#DDB8DD', deco: '🔮', shadow: 'rgba(200,162,200,0.35)' },
+  { outer: '#E8B4B8', inner: '#D4A0A4', accent: '#F5CCD0', deco: '💖', shadow: 'rgba(232,180,184,0.35)' },
+  { outer: '#A0B8D0', inner: '#88A0B8', accent: '#B8D0E8', deco: '🐋', shadow: 'rgba(160,184,208,0.35)' },
+  { outer: '#D0A870', inner: '#BC9458', accent: '#E4C090', deco: '⭐', shadow: 'rgba(208,168,112,0.4)' },
+  { outer: '#B0A0C8', inner: '#9888B0', accent: '#C8B8E0', deco: '🦄', shadow: 'rgba(176,160,200,0.35)' },
+  { outer: '#C8B080', inner: '#B49868', accent: '#DCC898', deco: '🧶', shadow: 'rgba(200,176,128,0.4)' },
+  { outer: '#E0A0B8', inner: '#CC88A0', accent: '#F0B8D0', deco: '🌈', shadow: 'rgba(224,160,184,0.35)' },
 ];
 
 function hashId(id: string): number {
@@ -248,32 +242,22 @@ function hashId(id: string): number {
 }
 
 function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p: Product; idx?: number; favs: string[]; toggleFav: (id: string, e: React.MouseEvent) => void; isAdmin: boolean; onEdit: (p: Product, e: React.MouseEvent) => void; onDel: (id: string, t: string, e: React.MouseEvent) => void; big?: boolean }) {
-  const frame = FRAMES[(hashId(p._id) + idx) % FRAMES.length];
-  const decoStyle: Record<string, any> = {
-    'top-right': { top: -6, right: -4 },
-    'top-left': { top: -6, left: -4 },
-    'bottom-right': { bottom: -4, right: -4 },
-    'bottom-left': { bottom: -4, left: -4 },
-  };
+  const f = FRAMES[(hashId(p._id) + idx) % FRAMES.length];
 
   return (
-    <div className="relative group" style={{ animationDelay: `${idx * 50}ms` }}>
-      {/* Gradient border layer */}
-      <div className="absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={{ background: frame.bg, borderRadius: frame.radius, padding: '3px' }}>
-        <div className="w-full h-full bg-white" style={{ borderRadius: `calc(${frame.radius} - 3px)` }} />
-      </div>
+    <div className="relative group" style={{ padding: '10px' }}>
+      {/* Museum frame — multi-layered border like a real painting */}
+      <div className="absolute inset-0 rounded-lg" style={{ background: f.outer, boxShadow: `6px 6px 20px ${f.shadow}, inset 0 0 0 3px ${f.accent}, inset 0 0 0 6px ${f.inner}, inset 0 0 0 8px ${f.accent}` }} />
 
-      {/* Decorative emoji */}
-      <span className="absolute z-20 text-lg opacity-70 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300 pointer-events-none" style={decoStyle[frame.decoPos]}>
-        {frame.deco}
-      </span>
+      {/* Corner ornaments */}
+      <span className="absolute -top-2 -right-2 z-20 text-2xl drop-shadow-md group-hover:scale-150 group-hover:rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
+      <span className="absolute -bottom-2 -left-2 z-20 text-xl drop-shadow-md opacity-50 group-hover:opacity-90 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
 
-      <Link href={`/producto/${p._id}`}
-        className="relative z-10 block bg-white overflow-hidden hover:-translate-y-1.5 transition-all duration-300"
-        style={{ borderRadius: frame.radius, boxShadow: frame.shadow }}>
+      {/* Inner mat (like the white mat inside a painting frame) */}
+      <div className="relative z-10 m-[3px] bg-cream-50 rounded overflow-hidden group-hover:-translate-y-1 transition-transform duration-300" style={{ boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.08)' }}>
 
         {/* Fav */}
-        <button onClick={e => toggleFav(p._id, e)} className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-soft ${favs.includes(p._id) ? 'bg-blush-100 scale-110' : 'bg-white/80 text-cocoa-300 hover:text-blush-400'}`}>{favs.includes(p._id) ? '❤️' : '🤍'}</button>
+        <button onClick={e => toggleFav(p._id, e)} className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-soft ${favs.includes(p._id) ? 'bg-blush-100 scale-110' : 'bg-white/90 text-cocoa-300 hover:text-blush-400'}`}>{favs.includes(p._id) ? '❤️' : '🤍'}</button>
 
         {/* Admin */}
         {isAdmin && (
@@ -283,26 +267,25 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p:
           </div>
         )}
 
-        {/* Image */}
-        <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} bg-gradient-to-br from-cream-50 to-blush-50/30 relative overflow-hidden`}>
-          {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center"><span className="text-6xl opacity-20">🧸</span></div>}
-          {p.featured && <span className="absolute bottom-3 left-3 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft animate-pulse">⭐ Destacado</span>}
+        {/* Image — the "painting" */}
+        <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} relative overflow-hidden`}>
+          {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" /> : <div className="w-full h-full bg-gradient-to-br from-cream-100 to-blush-50 flex items-center justify-center"><span className="text-5xl opacity-20">🧸</span></div>}
+          {p.featured && <span className="absolute bottom-2 left-2 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft animate-pulse">⭐ Destacado</span>}
           {p.stock <= 0 && <div className="absolute inset-0 bg-cocoa-800/40 flex items-center justify-center backdrop-blur-[2px]"><span className="bg-white/90 text-cocoa-700 font-bold px-4 py-2 rounded-full text-sm">Agotado</span></div>}
-          {/* Shimmer on hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-700 -translate-x-full" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-700 -translate-x-full" />
         </div>
 
-        {/* Info */}
-        <div className="p-4">
-          <span className="text-[10px] font-bold text-blush-400 uppercase tracking-wider">{p.category}</span>
-          <h3 className="font-display font-bold text-cocoa-700 mt-1 group-hover:text-blush-400 transition-colors line-clamp-1 text-sm">{p.title}</h3>
+        {/* Nameplate (like museum labels) */}
+        <div className="p-3.5 bg-white border-t" style={{ borderColor: f.accent }}>
+          <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: f.inner }}>{p.category}</span>
+          <h3 className="font-display font-bold text-cocoa-700 mt-0.5 group-hover:text-blush-400 transition-colors line-clamp-1 text-sm">{p.title}</h3>
           {big && <p className="text-xs text-cocoa-400 mt-1 line-clamp-2">{p.description}</p>}
-          <div className="flex items-center justify-between mt-2.5">
+          <div className="flex items-center justify-between mt-2">
             <span className="font-display font-bold text-lg text-cocoa-700">${p.price}</span>
             <span className="text-[10px] text-cocoa-300 font-medium">{p.stock > 0 ? (p.stock <= 3 ? `Ultimos ${p.stock}!` : 'Disponible') : 'Agotado'}</span>
           </div>
         </div>
-      </Link>
+      </div>
     </div>
   );
 }
