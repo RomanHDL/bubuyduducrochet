@@ -89,34 +89,22 @@ export default function ProductDetailPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
 
-          {/* ═══ Image with museum frame ═══ */}
+          {/* ═══ Product image — clean, no frame ═══ */}
           <div>
-            <div className="relative" style={{ padding: '14px' }}>
-              {/* Frame layers */}
-              <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: f.outer, boxShadow: `10px 10px 30px ${f.outer}50, -3px -3px 10px rgba(255,255,255,0.4), inset 0 0 0 4px ${f.accent}, inset 0 0 0 8px ${f.inner}, inset 0 0 0 10px ${f.accent}` }} />
-
-              {/* Corner emojis */}
-              <span className="absolute -top-3 -right-3 z-20 text-3xl drop-shadow-lg pointer-events-none">{f.deco}</span>
-              <span className="absolute -bottom-3 -left-3 z-20 text-2xl drop-shadow-md opacity-60 pointer-events-none">{f.deco}</span>
-
-              {/* Inner mat + image */}
-              <div className="relative z-10 m-[5px] bg-cream-50 rounded-xl overflow-hidden" style={{ boxShadow: 'inset 0 3px 12px rgba(0,0,0,0.06)' }}>
-                <div className="aspect-square">
-                  {product.images?.[selectedImage] ? (
-                    <img src={product.images[selectedImage]} alt={product.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cream-100 to-blush-50"><span className="text-8xl opacity-20">🧸</span></div>
-                  )}
-                </div>
-              </div>
+            <div className="aspect-square rounded-2xl overflow-hidden bg-cream-50 shadow-warm border border-cream-200">
+              {product.images?.[selectedImage] ? (
+                <img src={product.images[selectedImage]} alt={product.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cream-100 to-blush-50"><span className="text-8xl opacity-20">🧸</span></div>
+              )}
             </div>
 
             {/* Thumbnails */}
             {product.images?.length > 1 && (
-              <div className="flex gap-3 mt-5 px-3">
+              <div className="flex gap-3 mt-4">
                 {product.images.map((img, i) => (
                   <button key={i} onClick={() => setSelectedImage(i)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border-3 transition-all shadow-soft ${selectedImage === i ? 'border-blush-400 shadow-warm scale-105' : 'border-cream-200 hover:border-blush-200'}`}>
+                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shadow-soft ${selectedImage === i ? 'border-blush-400 shadow-warm scale-105' : 'border-cream-200 hover:border-blush-200'}`}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
