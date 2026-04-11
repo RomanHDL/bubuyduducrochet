@@ -53,7 +53,14 @@ function Content() {
   const [catForm, setCatForm] = useState({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
 
   // Load categories from DB
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+
   useEffect(() => { fetch('/api/categories').then(r => r.json()).then(setDbCategories).catch(() => {}); }, []);
+
+  // Fetch featured products ONCE, never filtered
+  useEffect(() => {
+    fetch('/api/products?featured=true').then(r => r.json()).then(d => setFeaturedProducts(Array.isArray(d) ? d : [])).catch(() => {});
+  }, []);
 
   useEffect(() => { setFavs(JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]')); }, []);
 
@@ -100,8 +107,8 @@ function Content() {
     return true;
   });
   const sorted = [...priceFiltered].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); if (sort === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0); return 0; });
-  // Featured — always from ALL products, never filtered
-  const allFeat = products.filter(p => p.featured);
+  // Featured — from separate fetch, NEVER filtered by category/search/price
+  const allFeat = featuredProducts;
   const featStart = (featPage * 4) % Math.max(allFeat.length, 1);
   const feat = allFeat.length > 4 ? [...allFeat, ...allFeat].slice(featStart, featStart + 4) : allFeat;
 
@@ -143,9 +150,9 @@ function Content() {
 
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:pl-14 py-10">
       {/* ═══ Header — title left + 4 featured right, tight ═══ */}
-      <div className="flex flex-col lg:flex-row gap-5 mb-10 items-stretch">
+      <div className="flex flex-col lg:flex-row gap-5 mb-10 items-start">
         {/* Left: Title */}
-        <div className="lg:w-[280px] flex-shrink-0 flex flex-col justify-center">
+        <div className="lg:w-[280px] flex-shrink-0 flex flex-col justify-start">
           <div className="inline-flex items-center gap-2 bg-blush-50 border border-blush-200 rounded-full px-4 py-1.5 mb-3 self-start">
             <span className="text-sm">🧶</span><span className="text-xs font-bold text-cocoa-500">{products.length} creaciones</span>
           </div>
