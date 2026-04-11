@@ -101,12 +101,12 @@ function Content() {
   });
   const sorted = [...priceFiltered].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); if (sort === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0); return 0; });
   const allFeat = sorted.filter(p => p.featured);
-  const featStart = (featPage * 3) % Math.max(allFeat.length, 1);
-  const feat = allFeat.length > 3 ? [...allFeat, ...allFeat].slice(featStart, featStart + 3) : allFeat;
+  const featStart = (featPage * 5) % Math.max(allFeat.length, 1);
+  const feat = allFeat.length > 5 ? [...allFeat, ...allFeat].slice(featStart, featStart + 5) : allFeat;
 
   // Auto-rotate featured every 6 seconds
   useEffect(() => {
-    if (allFeat.length <= 3) return;
+    if (allFeat.length <= 5) return;
     const timer = setInterval(() => setFeatPage(p => p + 1), 6000);
     return () => clearInterval(timer);
   }, [allFeat.length]);
@@ -128,13 +128,6 @@ function Content() {
 
       {/* Filters */}
       <div className="mb-12 space-y-5">
-        {/* Search */}
-        <div className="relative max-w-lg mx-auto">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base">🔍</span>
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar amigurumis, accesorios..." className="input-cute pl-11 text-sm" />
-          {search && <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-cocoa-300 hover:text-blush-400">✕</button>}
-        </div>
-
         {/* Categories — dynamic from DB */}
         <div className="flex flex-wrap justify-center gap-2">
           <button onClick={() => setCat('')} className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${cat === '' ? 'bg-blush-400 text-white shadow-glow scale-105' : 'bg-white text-cocoa-500 border border-cream-200 hover:border-blush-200 hover:text-blush-400'}`}>✨ Todos</button>
@@ -148,11 +141,17 @@ function Content() {
           )}
         </div>
 
-        {/* ═══ Sort & Filter — dropdown button ═══ */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <p className="text-sm text-cocoa-400">{loading ? '🔍...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''}`}</p>
+        {/* Search + Sort row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Search — centered */}
+          <div className="relative flex-1 min-w-[200px]">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base">🔍</span>
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar amigurumis, accesorios..." className="input-cute pl-11 text-sm" />
+            {search && <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-cocoa-300 hover:text-blush-400">✕</button>}
+          </div>
 
-          <div className="relative">
+          {/* Sort & Filter button */}
+          <div className="relative flex-shrink-0">
             <button onClick={() => setShowFilters(!showFilters)} className="btn-cute bg-white text-cocoa-600 border-2 border-cream-200 text-sm px-5 py-2.5 hover:border-blush-200 flex items-center gap-2">
               🔽 Ordenar y filtrar
               {(sort !== 'recent' || priceMin || priceMax) && <span className="w-2 h-2 rounded-full bg-blush-400" />}
@@ -191,11 +190,14 @@ function Content() {
             )}
           </div>
         </div>
+
+        {/* Results count */}
+        <p className="text-sm text-cocoa-400 text-center">{loading ? '🔍 Buscando...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''} encontrado${sorted.length !== 1 ? 's' : ''}`}</p>
       </div>
 
       {/* Admin: Category management modal — FULL */}
       {showCatModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-8 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-20 overflow-y-auto">
           <div className="fixed inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setShowCatModal(false)} />
           <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-5 my-4">
             <div className="flex items-center justify-between mb-4">
@@ -262,15 +264,15 @@ function Content() {
             <div className="mb-14">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2"><span className="text-lg">⭐</span><h2 className="font-display font-bold text-xl text-cocoa-700">Destacados</h2></div>
-                {allFeat.length > 3 && (
+                {allFeat.length > 5 && (
                   <div className="flex gap-1.5">
-                    {Array.from({ length: Math.ceil(allFeat.length / 3) }).map((_, i) => (
-                      <button key={i} onClick={() => setFeatPage(i)} className={`w-2 h-2 rounded-full transition-all ${featPage % Math.ceil(allFeat.length / 3) === i ? 'bg-blush-400 w-5' : 'bg-cream-300'}`} />
+                    {Array.from({ length: Math.ceil(allFeat.length / 5) }).map((_, i) => (
+                      <button key={i} onClick={() => setFeatPage(i)} className={`w-2 h-2 rounded-full transition-all ${featPage % Math.ceil(allFeat.length / 5) === i ? 'bg-blush-400 w-5' : 'bg-cream-300'}`} />
                     ))}
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-6" key={featPage}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" key={featPage}>
                 {feat.map((p, i) => <Card key={p._id + featPage} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
               </div>
             </div>
@@ -284,7 +286,7 @@ function Content() {
 
       {/* ═══ Modal ═══ */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-8 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-20 overflow-y-auto">
           <div className="fixed inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setModal(false)} />
           <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-5 my-4">
             <div className="flex items-center justify-between mb-6">
