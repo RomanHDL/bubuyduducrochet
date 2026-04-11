@@ -4,82 +4,200 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
-const STATUS_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
-  pending: { label: 'Pendiente', color: 'bg-cream-200 text-cocoa-600', emoji: '⏳' },
-  confirmed: { label: 'Confirmado', color: 'bg-sky-100 text-sky-700', emoji: '✅' },
-  shipped: { label: 'Enviado', color: 'bg-lavender-100 text-lavender-400', emoji: '📦' },
-  delivered: { label: 'Entregado', color: 'bg-mint-100 text-green-700', emoji: '🎉' },
-  cancelled: { label: 'Cancelado', color: 'bg-blush-100 text-blush-500', emoji: '❌' },
+const WA = '528187087288';
+
+const STATUS_MAP: Record<string, { label: string; color: string; emoji: string; bg: string }> = {
+  pending:   { label: 'Pendiente',  color: 'text-amber-700',   emoji: '⏳', bg: 'bg-amber-50 border-amber-200' },
+  confirmed: { label: 'Confirmado', color: 'text-sky-700',     emoji: '✅', bg: 'bg-sky-50 border-sky-200' },
+  shipped:   { label: 'Enviado',    color: 'text-indigo-700',  emoji: '📦', bg: 'bg-indigo-50 border-indigo-200' },
+  delivered: { label: 'Entregado',  color: 'text-green-700',   emoji: '🎉', bg: 'bg-green-50 border-green-200' },
+  cancelled: { label: 'Cancelado',  color: 'text-red-600',     emoji: '❌', bg: 'bg-red-50 border-red-200' },
+};
+
+const PAYMENT_MAP: Record<string, { label: string; color: string; emoji: string }> = {
+  pending:  { label: 'Pendiente', color: 'text-amber-600', emoji: '💳' },
+  paid:     { label: 'Pagado',    color: 'text-green-600', emoji: '✅' },
+  refunded: { label: 'Reembolsado', color: 'text-red-500', emoji: '↩️' },
 };
 
 export default function PedidosPage() {
   const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === 'admin';
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!session) { setLoading(false); return; }
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch('/api/orders');
-        const data = await res.json();
-        setOrders(Array.isArray(data) ? data : []);
-      } catch { /* silent */ }
-      finally { setLoading(false); }
-    };
+  const fetchOrders = async () => {
+    try { const r = await fetch('/api/orders'); const d = await r.json(); setOrders(Array.isArray(d) ? d : []); }
+    catch {} finally { setLoading(false); }
+  };
+
+  useEffect(() => { if (session) fetchOrders(); else setLoading(false); }, [session]);
+
+  const updateOrder = async (id: string, updates: any) => {
+    await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
     fetchOrders();
-  }, [session]);
+  };
 
-  if (!session) {
+  if (!session) return (
+    <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+      <span className="text-5xl block mb-4">📦</span>
+      <h2 className="font-display font-bold text-2xl text-cocoa-700 mb-3">Inicia sesion para ver tus pedidos</h2>
+      <Link href="/login" className="btn-cute bg-blush-400 text-white px-6 py-2.5 hover:bg-blush-500 inline-block">Iniciar Sesion</Link>
+    </div>
+  );
+
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">📦</span></div>;
+
+  // ═══ ADMIN VIEW ═══
+  if (isAdmin) {
+    const filtered = orders.filter(o => {
+      if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+      if (paymentFilter !== 'all' && o.paymentStatus !== paymentFilter) return false;
+      if (searchQuery) { const q = searchQuery.toLowerCase(); return o.userName?.toLowerCase().includes(q) || o.userEmail?.toLowerCase().includes(q) || o._id?.includes(q); }
+      return true;
+    });
+
+    const totalSales = orders.filter(o => o.paymentStatus === 'paid').reduce((s: number, o: any) => s + (o.total || 0), 0);
+    const pendingCount = orders.filter(o => o.status === 'pending').length;
+    const paidCount = orders.filter(o => o.paymentStatus === 'paid').length;
+
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-        <span className="text-5xl block mb-4">📦</span>
-        <h2 className="font-display font-bold text-2xl text-cocoa-700 mb-3">Inicia sesion para ver tus pedidos</h2>
-        <Link href="/login" className="btn-cute bg-blush-400 text-white px-6 py-2.5 hover:bg-blush-500 inline-block">Iniciar Sesion</Link>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div><h1 className="font-display font-bold text-3xl text-cocoa-700">Gestion de Pedidos 📋</h1><p className="text-cocoa-400 text-sm mt-1">{orders.length} pedidos totales</p></div>
+          <span className="text-xs font-bold text-lavender-400 bg-lavender-50 px-3 py-1.5 rounded-full border border-lavender-200">👑 Vista Admin</span>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-4"><p className="text-2xl font-bold text-cocoa-700">{orders.length}</p><p className="text-xs text-cocoa-400 mt-0.5">Total pedidos</p></div>
+          <div className="bg-amber-50 rounded-cute shadow-soft border border-amber-200 p-4"><p className="text-2xl font-bold text-amber-700">{pendingCount}</p><p className="text-xs text-amber-600 mt-0.5">⏳ Pendientes</p></div>
+          <div className="bg-green-50 rounded-cute shadow-soft border border-green-200 p-4"><p className="text-2xl font-bold text-green-700">{paidCount}</p><p className="text-xs text-green-600 mt-0.5">✅ Pagados</p></div>
+          <div className="bg-blush-50 rounded-cute shadow-soft border border-blush-200 p-4"><p className="text-2xl font-bold text-blush-500">${totalSales.toFixed(2)}</p><p className="text-xs text-blush-400 mt-0.5">💰 Ventas</p></div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <div className="relative flex-1 min-w-[200px]"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm">🔍</span><input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Cliente, email, ID..." className="input-cute pl-9 text-sm py-2.5" /></div>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="input-cute text-sm py-2.5 w-auto"><option value="all">📋 Estado</option>{Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}</select>
+          <select value={paymentFilter} onChange={e => setPaymentFilter(e.target.value)} className="input-cute text-sm py-2.5 w-auto"><option value="all">💳 Pago</option>{Object.entries(PAYMENT_MAP).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}</select>
+        </div>
+
+        {/* Orders */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-cute shadow-soft border border-cream-200"><span className="text-4xl block mb-3">📭</span><p className="text-cocoa-400">No hay pedidos con estos filtros</p></div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(order => {
+              const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
+              const pay = PAYMENT_MAP[order.paymentStatus] || PAYMENT_MAP.pending;
+              const exp = expandedId === order._id;
+
+              return (
+                <div key={order._id} className={`bg-white rounded-cute shadow-soft border transition-all ${exp ? 'border-[#4A90D9]/30 shadow-warm' : 'border-cream-200'}`}>
+                  <button onClick={() => setExpandedId(exp ? null : order._id)} className="w-full p-4 flex items-center gap-4 text-left">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs text-cocoa-300">#{order._id?.slice(-8)}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${st.bg} ${st.color}`}>{st.emoji} {st.label}</span>
+                        <span className={`text-[10px] font-bold ${pay.color}`}>{pay.emoji} {pay.label}</span>
+                      </div>
+                      <p className="font-semibold text-cocoa-700 mt-1">{order.userName}</p>
+                      <p className="text-xs text-cocoa-400">{order.userEmail} · {new Date(order.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0"><p className="font-display font-bold text-lg text-cocoa-700">${order.total?.toFixed(2)}</p><p className="text-[10px] text-cocoa-300">{order.items?.length} prod.</p></div>
+                    <span className={`text-cocoa-300 transition-transform ${exp ? 'rotate-180' : ''}`}>▾</span>
+                  </button>
+
+                  {exp && (
+                    <div className="px-4 pb-4 border-t border-cream-200">
+                      {/* Products */}
+                      <div className="mt-4 mb-5">
+                        <h4 className="text-xs font-bold text-cocoa-400 uppercase tracking-wider mb-2">Productos</h4>
+                        {order.items?.map((item: any, i: number) => (
+                          <div key={i} className="flex items-center gap-3 p-2.5 bg-cream-50 rounded-xl mb-1.5">
+                            <div className="w-12 h-12 rounded-lg bg-white overflow-hidden flex-shrink-0 border border-cream-200">
+                              {item.image ? <img src={item.image} alt="" className="w-full h-full object-cover" /> : <span className="flex items-center justify-center w-full h-full">🧸</span>}
+                            </div>
+                            <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-cocoa-700 truncate">{item.title}</p><p className="text-xs text-cocoa-400">${item.price} x {item.quantity}</p></div>
+                            <span className="font-bold text-cocoa-700 text-sm">${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {order.notes && <div className="mb-4 p-3 bg-lavender-50 rounded-xl border border-lavender-200"><p className="text-xs text-cocoa-400"><strong>Nota:</strong> {order.notes}</p></div>}
+
+                      {/* Controls */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div><label className="text-xs font-bold text-cocoa-500 mb-1 block">Estado pedido</label><select value={order.status} onChange={e => updateOrder(order._id, { status: e.target.value })} className="input-cute text-sm py-2.5">{Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}</select></div>
+                        <div><label className="text-xs font-bold text-cocoa-500 mb-1 block">Estado pago</label><select value={order.paymentStatus} onChange={e => updateOrder(order._id, { paymentStatus: e.target.value })} className="input-cute text-sm py-2.5">{Object.entries(PAYMENT_MAP).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}</select></div>
+                      </div>
+
+                      {/* Quick actions */}
+                      <div className="flex flex-wrap gap-2">
+                        <a href={`https://wa.me/${WA}?text=${encodeURIComponent(`Hola ${order.userName}! Tu pedido #${order._id?.slice(-8)} de Bubu & Dudu esta ${st.label.toLowerCase()}. Total: $${order.total?.toFixed(2)}`)}`} target="_blank" rel="noopener noreferrer" className="btn-cute bg-green-500 text-white text-xs px-4 py-2 hover:bg-green-600">💬 WhatsApp</a>
+                        <a href={`mailto:${order.userEmail}?subject=Pedido%20%23${order._id?.slice(-8)}`} className="btn-cute bg-[#4A90D9] text-white text-xs px-4 py-2 hover:bg-[#3A7BC8]">📧 Email</a>
+                        {order.status === 'pending' && <button onClick={() => updateOrder(order._id, { status: 'confirmed', paymentStatus: 'paid' })} className="btn-cute bg-green-100 text-green-700 text-xs px-4 py-2 border border-green-200">✅ Confirmar pago</button>}
+                        {order.status === 'confirmed' && <button onClick={() => updateOrder(order._id, { status: 'shipped' })} className="btn-cute bg-indigo-100 text-indigo-700 text-xs px-4 py-2 border border-indigo-200">📦 Enviado</button>}
+                        {order.status === 'shipped' && <button onClick={() => updateOrder(order._id, { status: 'delivered' })} className="btn-cute bg-green-100 text-green-700 text-xs px-4 py-2 border border-green-200">🎉 Entregado</button>}
+                        {order.status !== 'cancelled' && order.status !== 'delivered' && <button onClick={() => { if (confirm('Cancelar pedido?')) updateOrder(order._id, { status: 'cancelled' }) }} className="btn-cute bg-red-50 text-red-500 text-xs px-4 py-2 border border-red-200">❌ Cancelar</button>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">📦</span></div>;
-
+  // ═══ CUSTOMER VIEW ═══
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="font-display font-bold text-3xl text-cocoa-700 mb-6">Mis Pedidos 📦</h1>
 
       {orders.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-cute shadow-soft border border-cream-200">
           <span className="text-5xl block mb-4">🧸</span>
           <h3 className="font-display font-bold text-xl text-cocoa-600 mb-2">Aun no tienes pedidos</h3>
-          <p className="text-cocoa-400 mb-6">Explora nuestro catalogo y haz tu primer pedido!</p>
+          <p className="text-cocoa-400 mb-6">Explora nuestro catalogo!</p>
           <Link href="/catalogo" className="btn-cute bg-blush-400 text-white px-6 py-2.5 hover:bg-blush-500 inline-block">Ver Catalogo 🧶</Link>
         </div>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => {
-            const st = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
+          {orders.map(order => {
+            const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
+            const pay = PAYMENT_MAP[order.paymentStatus] || PAYMENT_MAP.pending;
             return (
-              <div key={order._id} className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <span className="text-xs text-cocoa-300 font-medium">Pedido #{order._id?.slice(-8)}</span>
-                    <span className="mx-2 text-cream-300">|</span>
-                    <span className="text-xs text-cocoa-400">{new Date(order.createdAt).toLocaleDateString('es-MX')}</span>
+              <div key={order._id} className="bg-white rounded-cute shadow-soft border border-cream-200 overflow-hidden">
+                <div className={`px-5 py-2.5 flex items-center justify-between ${st.bg} border-b`}>
+                  <span className={`text-xs font-bold ${st.color}`}>{st.emoji} {st.label}</span>
+                  <span className={`text-xs font-semibold ${pay.color}`}>{pay.emoji} Pago {pay.label.toLowerCase()}</span>
+                </div>
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div><span className="font-mono text-xs text-cocoa-300">#{order._id?.slice(-8)}</span><p className="text-xs text-cocoa-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div>
+                    <span className="font-display font-bold text-xl text-cocoa-700">${order.total?.toFixed(2)}</span>
                   </div>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${st.color}`}>{st.emoji} {st.label}</span>
-                </div>
-
-                <div className="flex flex-wrap gap-3 mb-3">
-                  {order.items?.map((item: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2 bg-cream-50 rounded-xl px-3 py-1.5">
-                      <span className="text-sm font-medium text-cocoa-600">{item.title}</span>
-                      <span className="text-xs text-cocoa-300">x{item.quantity}</span>
+                  <div className="space-y-2 mb-4">
+                    {order.items?.map((item: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-cream-100 overflow-hidden flex-shrink-0">{item.image ? <img src={item.image} alt="" className="w-full h-full object-cover" /> : <span className="flex items-center justify-center w-full h-full text-sm">🧸</span>}</div>
+                        <div className="flex-1 min-w-0"><p className="text-sm font-medium text-cocoa-700 truncate">{item.title}</p><p className="text-xs text-cocoa-400">x{item.quantity} · ${item.price}</p></div>
+                      </div>
+                    ))}
+                  </div>
+                  {order.status === 'pending' && order.paymentStatus === 'pending' && (
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-center">
+                      <p className="text-xs text-amber-700 font-medium mb-2">Envia tu comprobante de pago</p>
+                      <a href={`https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Pedido #${order._id?.slice(-8)} por $${order.total?.toFixed(2)}. Adjunto comprobante.`)}`} target="_blank" rel="noopener noreferrer" className="btn-cute bg-green-500 text-white text-xs px-5 py-2 hover:bg-green-600 inline-flex items-center gap-1">💬 WhatsApp</a>
                     </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-cream-200">
-                  <span className="text-sm text-cocoa-400">{order.items?.length || 0} productos</span>
-                  <span className="font-display font-bold text-lg text-cocoa-700">${(order.total || 0).toFixed(2)}</span>
+                  )}
                 </div>
               </div>
             );
