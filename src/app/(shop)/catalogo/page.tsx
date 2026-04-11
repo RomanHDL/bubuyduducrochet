@@ -251,14 +251,14 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p:
   return (
     <div className="relative group" style={{ padding: '12px' }}>
       {/* Museum frame — multi-layered border like a real painting */}
-      <div className="absolute inset-0 rounded-xl" style={{ background: f.outer, boxShadow: `8px 8px 24px ${f.shadow}, -2px -2px 8px rgba(255,255,255,0.3), inset 0 0 0 3px ${f.accent}, inset 0 0 0 7px ${f.inner}, inset 0 0 0 9px ${f.accent}` }} />
+      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ background: f.outer, boxShadow: `8px 8px 24px ${f.shadow}, -2px -2px 8px rgba(255,255,255,0.3), inset 0 0 0 3px ${f.accent}, inset 0 0 0 7px ${f.inner}, inset 0 0 0 9px ${f.accent}` }} />
 
       {/* Corner ornaments — BIG emojis */}
       <span className="absolute -top-3 -right-3 z-20 text-3xl drop-shadow-lg group-hover:scale-[1.4] group-hover:rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
       <span className="absolute -bottom-3 -left-3 z-20 text-2xl drop-shadow-md opacity-60 group-hover:opacity-100 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
 
-      {/* Inner mat (like the white mat inside a painting frame) */}
-      <div className="relative z-10 m-[4px] bg-cream-50 rounded-lg overflow-hidden group-hover:-translate-y-1 transition-transform duration-300" style={{ boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.06)' }}>
+      {/* Inner mat — entire card is clickable */}
+      <Link href={`/producto/${p._id}`} className="relative z-10 block m-[4px] bg-cream-50 rounded-lg overflow-hidden group-hover:-translate-y-1 transition-transform duration-300 cursor-pointer" style={{ boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.06)' }}>
 
         {/* Fav */}
         <button onClick={e => toggleFav(p._id, e)} className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-soft ${favs.includes(p._id) ? 'bg-blush-100 scale-110' : 'bg-white/90 text-cocoa-300 hover:text-blush-400'}`}>{favs.includes(p._id) ? '❤️' : '🤍'}</button>
@@ -289,7 +289,7 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p:
             <span className="text-[10px] text-cocoa-300 font-medium">{p.stock > 0 ? (p.stock <= 3 ? `Ultimos ${p.stock}!` : 'Disponible') : 'Agotado'}</span>
           </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }

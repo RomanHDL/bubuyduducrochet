@@ -1,7 +1,6 @@
-// ═══ Animated Background — Different theme per page ═══
-// Usage: <AnimatedBg theme="pink" /> wraps content in animated bg
+// ═══ Animated Background — 7 themes, lots of floating emojis ═══
 
-const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: string; size: string; delay: string }[]; emojis: { char: string; pos: string; anim: string; delay: string }[] }> = {
+const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: string; size: string; delay: string }[]; emojis: { char: string; pos: string; anim: string; delay: string; size?: string }[] }> = {
   pink: {
     gradient: 'from-blush-50 via-cream-50 to-lavender-50',
     blobs: [
@@ -10,10 +9,16 @@ const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: st
       { color: 'bg-sky-100/20', pos: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2', size: 'w-80 h-80', delay: '6s' },
     ],
     emojis: [
-      { char: '🧸', pos: 'top-8 left-[8%]', anim: 'anim-float', delay: '0s' },
-      { char: '🧶', pos: 'top-16 right-[12%]', anim: 'anim-float-r', delay: '1s' },
-      { char: '💕', pos: 'bottom-20 left-[20%]', anim: 'anim-drift', delay: '2s' },
-      { char: '✨', pos: 'top-1/3 right-[6%]', anim: 'anim-sparkle', delay: '1.5s' },
+      { char: '🧸', pos: 'top-[5%] left-[6%]', anim: 'anim-float', delay: '0s' },
+      { char: '🧶', pos: 'top-[8%] right-[10%]', anim: 'anim-float-r', delay: '1s' },
+      { char: '💕', pos: 'bottom-[15%] left-[18%]', anim: 'anim-drift', delay: '2s' },
+      { char: '✨', pos: 'top-[30%] right-[5%]', anim: 'anim-sparkle', delay: '1.5s' },
+      { char: '💖', pos: 'top-[20%] left-[3%]', anim: 'anim-sparkle', delay: '3s' },
+      { char: '🌸', pos: 'bottom-[25%] right-[8%]', anim: 'anim-float', delay: '4s' },
+      { char: '🎀', pos: 'top-[50%] left-[2%]', anim: 'anim-float-r', delay: '2.5s' },
+      { char: '💝', pos: 'bottom-[8%] right-[15%]', anim: 'anim-drift', delay: '5s' },
+      { char: '🦋', pos: 'top-[65%] right-[3%]', anim: 'anim-float', delay: '1s' },
+      { char: '🌷', pos: 'bottom-[35%] left-[5%]', anim: 'anim-sparkle', delay: '3.5s' },
     ],
   },
   lavender: {
@@ -24,9 +29,15 @@ const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: st
       { color: 'bg-mint-100/20', pos: 'top-1/3 left-1/3', size: 'w-64 h-64', delay: '7s' },
     ],
     emojis: [
-      { char: '🦋', pos: 'top-10 right-[10%]', anim: 'anim-float', delay: '0s' },
-      { char: '💜', pos: 'bottom-16 left-[15%]', anim: 'anim-float-r', delay: '2s' },
-      { char: '✨', pos: 'top-1/4 left-[5%]', anim: 'anim-sparkle', delay: '1s' },
+      { char: '🦋', pos: 'top-[6%] right-[8%]', anim: 'anim-float', delay: '0s' },
+      { char: '💜', pos: 'bottom-[12%] left-[12%]', anim: 'anim-float-r', delay: '2s' },
+      { char: '✨', pos: 'top-[22%] left-[4%]', anim: 'anim-sparkle', delay: '1s' },
+      { char: '🔮', pos: 'top-[45%] right-[3%]', anim: 'anim-drift', delay: '3s' },
+      { char: '🪻', pos: 'bottom-[20%] right-[10%]', anim: 'anim-float', delay: '4s' },
+      { char: '💫', pos: 'top-[60%] left-[5%]', anim: 'anim-sparkle', delay: '2.5s' },
+      { char: '🌙', pos: 'top-[10%] left-[15%]', anim: 'anim-float-r', delay: '5s' },
+      { char: '☁️', pos: 'bottom-[30%] left-[3%]', anim: 'anim-drift', delay: '1.5s' },
+      { char: '💕', pos: 'top-[75%] right-[6%]', anim: 'anim-float', delay: '3.5s' },
     ],
   },
   mint: {
@@ -37,9 +48,15 @@ const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: st
       { color: 'bg-lavender-100/20', pos: 'top-1/2 right-1/4', size: 'w-64 h-64', delay: '3s' },
     ],
     emojis: [
-      { char: '🌿', pos: 'top-8 left-[10%]', anim: 'anim-float', delay: '0s' },
-      { char: '🍃', pos: 'bottom-12 right-[8%]', anim: 'anim-float-r', delay: '1.5s' },
-      { char: '🌸', pos: 'top-1/3 right-[5%]', anim: 'anim-sparkle', delay: '2.5s' },
+      { char: '🌿', pos: 'top-[5%] left-[8%]', anim: 'anim-float', delay: '0s' },
+      { char: '🍃', pos: 'bottom-[10%] right-[6%]', anim: 'anim-float-r', delay: '1.5s' },
+      { char: '🌸', pos: 'top-[25%] right-[4%]', anim: 'anim-sparkle', delay: '2.5s' },
+      { char: '🌱', pos: 'top-[50%] left-[3%]', anim: 'anim-drift', delay: '3s' },
+      { char: '✨', pos: 'bottom-[25%] left-[10%]', anim: 'anim-sparkle', delay: '4s' },
+      { char: '🌻', pos: 'top-[15%] right-[12%]', anim: 'anim-float', delay: '1s' },
+      { char: '🦋', pos: 'bottom-[35%] right-[4%]', anim: 'anim-float-r', delay: '5s' },
+      { char: '💚', pos: 'top-[70%] left-[6%]', anim: 'anim-drift', delay: '2s' },
+      { char: '🐝', pos: 'top-[40%] right-[2%]', anim: 'anim-float', delay: '3.5s' },
     ],
   },
   sky: {
@@ -50,9 +67,14 @@ const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: st
       { color: 'bg-lavender-200/25', pos: 'top-1/2 left-0', size: 'w-56 h-56', delay: '2s' },
     ],
     emojis: [
-      { char: '☁️', pos: 'top-10 right-[12%]', anim: 'anim-float', delay: '0s' },
-      { char: '💙', pos: 'bottom-16 left-[10%]', anim: 'anim-float-r', delay: '2s' },
-      { char: '✨', pos: 'top-1/4 left-[8%]', anim: 'anim-sparkle', delay: '3s' },
+      { char: '☁️', pos: 'top-[8%] right-[10%]', anim: 'anim-float', delay: '0s' },
+      { char: '💙', pos: 'bottom-[12%] left-[8%]', anim: 'anim-float-r', delay: '2s' },
+      { char: '✨', pos: 'top-[20%] left-[5%]', anim: 'anim-sparkle', delay: '3s' },
+      { char: '📦', pos: 'top-[40%] right-[3%]', anim: 'anim-drift', delay: '1s' },
+      { char: '⭐', pos: 'bottom-[20%] right-[8%]', anim: 'anim-sparkle', delay: '4s' },
+      { char: '🕊️', pos: 'top-[55%] left-[3%]', anim: 'anim-float', delay: '2.5s' },
+      { char: '💫', pos: 'top-[10%] left-[20%]', anim: 'anim-sparkle', delay: '5s' },
+      { char: '🌤️', pos: 'bottom-[30%] left-[15%]', anim: 'anim-float-r', delay: '1.5s' },
     ],
   },
   warm: {
@@ -63,9 +85,14 @@ const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: st
       { color: 'bg-lavender-100/20', pos: 'top-1/3 right-1/3', size: 'w-64 h-64', delay: '6s' },
     ],
     emojis: [
-      { char: '🧸', pos: 'top-8 right-[8%]', anim: 'anim-float', delay: '0s' },
-      { char: '🎀', pos: 'bottom-12 left-[12%]', anim: 'anim-float-r', delay: '1.5s' },
-      { char: '💖', pos: 'top-1/3 left-[5%]', anim: 'anim-sparkle', delay: '2s' },
+      { char: '🧸', pos: 'top-[6%] right-[6%]', anim: 'anim-float', delay: '0s' },
+      { char: '🎀', pos: 'bottom-[10%] left-[10%]', anim: 'anim-float-r', delay: '1.5s' },
+      { char: '💖', pos: 'top-[25%] left-[3%]', anim: 'anim-sparkle', delay: '2s' },
+      { char: '🛒', pos: 'top-[45%] right-[4%]', anim: 'anim-drift', delay: '3s' },
+      { char: '🧶', pos: 'bottom-[25%] right-[8%]', anim: 'anim-float', delay: '4s' },
+      { char: '✨', pos: 'top-[60%] left-[5%]', anim: 'anim-sparkle', delay: '1s' },
+      { char: '🌸', pos: 'bottom-[40%] left-[3%]', anim: 'anim-float-r', delay: '5s' },
+      { char: '💕', pos: 'top-[15%] left-[15%]', anim: 'anim-drift', delay: '2.5s' },
     ],
   },
   peach: {
@@ -76,9 +103,16 @@ const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: st
       { color: 'bg-sky-100/20', pos: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2', size: 'w-72 h-72', delay: '2s' },
     ],
     emojis: [
-      { char: '🌻', pos: 'top-10 left-[10%]', anim: 'anim-float', delay: '0s' },
-      { char: '💕', pos: 'bottom-14 right-[10%]', anim: 'anim-float-r', delay: '2s' },
-      { char: '🧶', pos: 'top-1/4 right-[6%]', anim: 'anim-sparkle', delay: '1s' },
+      { char: '🌻', pos: 'top-[5%] left-[8%]', anim: 'anim-float', delay: '0s' },
+      { char: '💕', pos: 'bottom-[10%] right-[8%]', anim: 'anim-float-r', delay: '2s' },
+      { char: '🧶', pos: 'top-[20%] right-[5%]', anim: 'anim-sparkle', delay: '1s' },
+      { char: '🧸', pos: 'top-[40%] left-[2%]', anim: 'anim-drift', delay: '3s' },
+      { char: '🌸', pos: 'bottom-[20%] left-[12%]', anim: 'anim-float', delay: '4s' },
+      { char: '✨', pos: 'top-[55%] right-[3%]', anim: 'anim-sparkle', delay: '2.5s' },
+      { char: '🎀', pos: 'bottom-[35%] right-[5%]', anim: 'anim-float-r', delay: '5s' },
+      { char: '💝', pos: 'top-[70%] left-[5%]', anim: 'anim-drift', delay: '1.5s' },
+      { char: '🌷', pos: 'top-[10%] right-[15%]', anim: 'anim-float', delay: '3.5s' },
+      { char: '🦋', pos: 'bottom-[45%] left-[4%]', anim: 'anim-sparkle', delay: '4.5s' },
     ],
   },
   gold: {
@@ -89,9 +123,14 @@ const THEMES: Record<string, { gradient: string; blobs: { color: string; pos: st
       { color: 'bg-lavender-100/20', pos: 'top-1/3 right-0', size: 'w-64 h-64', delay: '7s' },
     ],
     emojis: [
-      { char: '⭐', pos: 'top-8 right-[10%]', anim: 'anim-sparkle', delay: '0s' },
-      { char: '🌟', pos: 'bottom-12 left-[8%]', anim: 'anim-sparkle', delay: '2s' },
-      { char: '🧸', pos: 'top-1/3 left-[5%]', anim: 'anim-float', delay: '1s' },
+      { char: '⭐', pos: 'top-[6%] right-[8%]', anim: 'anim-sparkle', delay: '0s' },
+      { char: '🌟', pos: 'bottom-[10%] left-[6%]', anim: 'anim-sparkle', delay: '2s' },
+      { char: '🧸', pos: 'top-[25%] left-[4%]', anim: 'anim-float', delay: '1s' },
+      { char: '✨', pos: 'top-[45%] right-[3%]', anim: 'anim-sparkle', delay: '3s' },
+      { char: '💛', pos: 'bottom-[25%] right-[10%]', anim: 'anim-float-r', delay: '4s' },
+      { char: '🏆', pos: 'top-[60%] left-[5%]', anim: 'anim-drift', delay: '2.5s' },
+      { char: '🎁', pos: 'bottom-[35%] left-[3%]', anim: 'anim-float', delay: '5s' },
+      { char: '💫', pos: 'top-[15%] left-[18%]', anim: 'anim-sparkle', delay: '1.5s' },
     ],
   },
 };
@@ -103,28 +142,18 @@ export default function AnimatedBg({ theme = 'pink', children }: { theme?: keyof
     <div className={`relative min-h-screen overflow-hidden bg-gradient-to-br ${t.gradient}`}>
       {/* Animated blob shapes */}
       {t.blobs.map((blob, i) => (
-        <div
-          key={i}
-          className={`absolute ${blob.color} ${blob.pos} ${blob.size} rounded-full blur-[80px] anim-blob pointer-events-none`}
-          style={{ animationDelay: blob.delay }}
-        />
+        <div key={i} className={`absolute ${blob.color} ${blob.pos} ${blob.size} rounded-full blur-[80px] anim-blob pointer-events-none`} style={{ animationDelay: blob.delay }} />
       ))}
 
-      {/* Floating emojis */}
+      {/* Floating emojis — lots of them */}
       {t.emojis.map((e, i) => (
-        <div
-          key={i}
-          className={`absolute ${e.pos} text-4xl opacity-15 ${e.anim} pointer-events-none`}
-          style={{ animationDelay: e.delay }}
-        >
+        <div key={i} className={`absolute ${e.pos} ${e.size || 'text-4xl'} opacity-[0.12] ${e.anim} pointer-events-none select-none`} style={{ animationDelay: e.delay }}>
           {e.char}
         </div>
       ))}
 
-      {/* Content */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      {/* Content on top */}
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
