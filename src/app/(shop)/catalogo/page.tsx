@@ -96,7 +96,7 @@ function Content() {
   }, [allFeat.length]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       {/* Header */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 bg-blush-50 border border-blush-200 rounded-full px-4 py-1.5 mb-4">
@@ -110,7 +110,7 @@ function Content() {
       </div>
 
       {/* Filters */}
-      <div className="mb-10 space-y-5">
+      <div className="mb-12 space-y-5">
         <div className="relative max-w-lg mx-auto">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base">🔍</span>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar amigurumis, accesorios..." className="input-cute pl-11 text-sm" />
@@ -142,8 +142,8 @@ function Content() {
       ) : (
         <>
           {!search && !cat && feat.length > 0 && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-5">
+            <div className="mb-14">
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2"><span className="text-lg">⭐</span><h2 className="font-display font-bold text-xl text-cocoa-700">Destacados</h2></div>
                 {allFeat.length > 3 && (
                   <div className="flex gap-1.5">
@@ -153,12 +153,13 @@ function Content() {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" key={featPage}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" key={featPage}>
                 {feat.map((p, i) => <Card key={p._id + featPage} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} big />)}
               </div>
             </div>
           )}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+          {!search && !cat && <div className="flex items-center gap-2 mb-6"><span className="text-lg">🧶</span><h2 className="font-display font-bold text-xl text-cocoa-700">Todos los productos</h2></div>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
             {sorted.map((p, i) => <Card key={p._id} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
           </div>
         </>
@@ -245,16 +246,16 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p:
   const f = FRAMES[(hashId(p._id) + idx) % FRAMES.length];
 
   return (
-    <div className="relative group" style={{ padding: '10px' }}>
+    <div className="relative group" style={{ padding: '12px' }}>
       {/* Museum frame — multi-layered border like a real painting */}
-      <div className="absolute inset-0 rounded-lg" style={{ background: f.outer, boxShadow: `6px 6px 20px ${f.shadow}, inset 0 0 0 3px ${f.accent}, inset 0 0 0 6px ${f.inner}, inset 0 0 0 8px ${f.accent}` }} />
+      <div className="absolute inset-0 rounded-xl" style={{ background: f.outer, boxShadow: `8px 8px 24px ${f.shadow}, -2px -2px 8px rgba(255,255,255,0.3), inset 0 0 0 3px ${f.accent}, inset 0 0 0 7px ${f.inner}, inset 0 0 0 9px ${f.accent}` }} />
 
-      {/* Corner ornaments */}
-      <span className="absolute -top-2 -right-2 z-20 text-2xl drop-shadow-md group-hover:scale-150 group-hover:rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
-      <span className="absolute -bottom-2 -left-2 z-20 text-xl drop-shadow-md opacity-50 group-hover:opacity-90 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
+      {/* Corner ornaments — BIG emojis */}
+      <span className="absolute -top-3 -right-3 z-20 text-3xl drop-shadow-lg group-hover:scale-[1.4] group-hover:rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
+      <span className="absolute -bottom-3 -left-3 z-20 text-2xl drop-shadow-md opacity-60 group-hover:opacity-100 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
 
       {/* Inner mat (like the white mat inside a painting frame) */}
-      <div className="relative z-10 m-[3px] bg-cream-50 rounded overflow-hidden group-hover:-translate-y-1 transition-transform duration-300" style={{ boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.08)' }}>
+      <div className="relative z-10 m-[4px] bg-cream-50 rounded-lg overflow-hidden group-hover:-translate-y-1 transition-transform duration-300" style={{ boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.06)' }}>
 
         {/* Fav */}
         <button onClick={e => toggleFav(p._id, e)} className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-soft ${favs.includes(p._id) ? 'bg-blush-100 scale-110' : 'bg-white/90 text-cocoa-300 hover:text-blush-400'}`}>{favs.includes(p._id) ? '❤️' : '🤍'}</button>
