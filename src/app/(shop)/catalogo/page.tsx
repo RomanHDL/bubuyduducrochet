@@ -100,14 +100,15 @@ function Content() {
     return true;
   });
   const sorted = [...priceFiltered].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); if (sort === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0); return 0; });
-  const allFeat = sorted.filter(p => p.featured);
-  const featStart = (featPage * 5) % Math.max(allFeat.length, 1);
-  const feat = allFeat.length > 5 ? [...allFeat, ...allFeat].slice(featStart, featStart + 5) : allFeat;
+  // Featured — always from ALL products, never filtered
+  const allFeat = products.filter(p => p.featured);
+  const featStart = (featPage * 4) % Math.max(allFeat.length, 1);
+  const feat = allFeat.length > 4 ? [...allFeat, ...allFeat].slice(featStart, featStart + 4) : allFeat;
 
-  // Auto-rotate featured every 6 seconds
+  // Auto-rotate featured every 5 seconds
   useEffect(() => {
-    if (allFeat.length <= 5) return;
-    const timer = setInterval(() => setFeatPage(p => p + 1), 6000);
+    if (allFeat.length <= 4) return;
+    const timer = setInterval(() => setFeatPage(p => p + 1), 5000);
     return () => clearInterval(timer);
   }, [allFeat.length]);
 
@@ -159,8 +160,8 @@ function Content() {
         {feat.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3"><span className="text-sm">⭐</span><h3 className="font-display font-bold text-sm text-cocoa-700">Destacados</h3></div>
-            <div className="grid grid-cols-3 gap-3">
-              {feat.slice(0, 3).map((p, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {feat.slice(0, 4).map((p, i) => (
                 <Link key={p._id} href={`/producto/${p._id}`} className="bg-white/70 rounded-xl border border-cream-200 overflow-hidden shadow-soft hover:shadow-warm hover:-translate-y-0.5 transition-all group">
                   <div className="aspect-square overflow-hidden">
                     {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-cream-100 flex items-center justify-center"><span className="text-2xl opacity-30">🧸</span></div>}
