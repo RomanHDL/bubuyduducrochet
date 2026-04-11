@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Testimonials from '@/components/Testimonials';
 
 const CATEGORIES = [
   { name: 'Amigurumis', emoji: '🧸', desc: 'Munequitos adorables tejidos a mano', color: 'bg-blush-50 border-blush-200', href: '/catalogo?category=amigurumis' },
@@ -14,12 +15,6 @@ const BENEFITS = [
   { emoji: '✨', title: 'Unico', desc: 'Piezas exclusivas que no encontraras en otro lugar' },
 ];
 
-const TESTIMONIALS = [
-  { name: 'Maria G.', text: 'El amigurumi de gatito que pedi es hermosisimo! Se nota el amor en cada puntada. Mi hija no lo suelta.', emoji: '🐱', rating: 5 },
-  { name: 'Sofia R.', text: 'Pedi un oso personalizado para baby shower y quedo perfecto. Todas las invitadas preguntaron donde lo compre!', emoji: '🧸', rating: 5 },
-  { name: 'Laura M.', text: 'La calidad es increible, los colores son exactos a las fotos. Ya es mi tercera compra y siempre quedo encantada.', emoji: '🌸', rating: 5 },
-  { name: 'Ana P.', text: 'El envio fue super rapido y el empaquetado precioso. Se ve que cuidan cada detalle. 100% recomendado!', emoji: '📦', rating: 5 },
-];
 
 const PROCESS = [
   { emoji: '💬', title: 'Platicamos', desc: 'Cuentanos que tienes en mente' },
@@ -117,26 +112,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══ TESTIMONIALS ═══ */}
-      <section className="bg-gradient-to-r from-lavender-50 via-cream-50 to-blush-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <h2 className="font-display font-bold text-3xl text-cocoa-700 mb-2">Lo que dicen nuestras clientas 💕</h2>
-            <p className="text-cocoa-400">Historias reales de quienes ya tienen su pieza</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-                <div className="flex gap-0.5 mb-3">{Array.from({ length: t.rating }).map((_, j) => <span key={j} className="text-sm">⭐</span>)}</div>
-                <p className="text-sm text-cocoa-500 leading-relaxed mb-4 italic">&ldquo;{t.text}&rdquo;</p>
-                <div className="flex items-center gap-2 pt-3 border-t border-cream-100">
-                  <span className="text-lg">{t.emoji}</span>
-                  <span className="text-xs font-bold text-cocoa-600">{t.name}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Testimonials />
 
       {/* ═══ FAQ PREVIEW ═══ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
