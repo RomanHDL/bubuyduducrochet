@@ -341,18 +341,39 @@ function Content() {
               </div>
               <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Categoria</label><select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="input-cute">{CATS.filter(c => c.value).map(c => <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>)}</select></div>
               <div>
-                <label className="block text-sm font-semibold text-cocoa-600 mb-1">Imagenes (URLs)</label>
+                <label className="block text-sm font-semibold text-cocoa-600 mb-2">Imagenes</label>
                 {form.images.map((url, i) => (
-                  <div key={i} className="flex gap-2 mb-2">
-                    <input value={url} onChange={e => { const imgs = [...form.images]; imgs[i] = e.target.value; setForm({...form, images: imgs}); }} placeholder="https://i.pinimg.com/originals/..." className="input-cute text-xs flex-1" />
-                    {form.images.length > 1 && <button onClick={() => setForm({...form, images: form.images.filter((_,j) => j !== i)})} className="text-blush-400 px-2">✕</button>}
+                  <div key={i} className="mb-3">
+                    <div className="flex gap-2 items-center">
+                      <input value={url} onChange={e => { const imgs = [...form.images]; imgs[i] = e.target.value; setForm({...form, images: imgs}); }} placeholder="URL o sube un archivo..." className="input-cute text-xs flex-1 py-2" />
+                      <label className="flex-shrink-0 cursor-pointer btn-cute bg-lavender-100 text-lavender-600 px-3 py-2 text-xs font-bold hover:bg-lavender-200 border border-lavender-200">
+                        📁 Archivo
+                        <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 5 * 1024 * 1024) { setErr('Imagen muy grande (max 5MB)'); return; }
+                          setErr('');
+                          const fd = new FormData();
+                          fd.append('file', file);
+                          try {
+                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                            const data = await res.json();
+                            if (data.url) { const imgs = [...form.images]; imgs[i] = data.url; setForm(prev => ({...prev, images: imgs})); }
+                            else { setErr(data.error || 'Error al subir'); }
+                          } catch { setErr('Error al subir imagen'); }
+                        }} />
+                      </label>
+                      {form.images.length > 1 && <button onClick={() => setForm({...form, images: form.images.filter((_,j) => j !== i)})} className="text-blush-400 px-1 text-lg hover:scale-110 transition-transform">✕</button>}
+                    </div>
+                    {url && (url.startsWith('http') || url.startsWith('data:')) && (
+                      <div className="mt-2 rounded-xl overflow-hidden border border-cream-200 h-28 bg-cream-50">
+                        <img src={url} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+                      </div>
+                    )}
                   </div>
                 ))}
-                <button onClick={() => setForm({...form, images: [...form.images, '']})} className="text-xs text-lavender-400 font-semibold">+ Agregar imagen</button>
+                <button onClick={() => setForm({...form, images: [...form.images, '']})} className="text-xs text-lavender-400 font-semibold hover:text-lavender-600 transition-colors">+ Agregar otra imagen</button>
               </div>
-              {form.images[0]?.startsWith('http') && (
-                <div className="rounded-cute overflow-hidden border border-cream-200 h-40"><img src={form.images[0]} alt="Preview" className="w-full h-full object-cover" onError={e => (e.target as HTMLImageElement).style.display = 'none'} /></div>
-              )}
               <label className="flex items-center gap-3 cursor-pointer p-3 bg-cream-50 rounded-2xl border border-cream-200">
                 <input type="checkbox" checked={form.featured} onChange={e => setForm({...form, featured: e.target.checked})} className="w-4 h-4 rounded text-blush-400 border-cream-300 focus:ring-blush-200" />
                 <div><span className="text-sm font-semibold text-cocoa-600">⭐ Producto destacado</span><p className="text-[11px] text-cocoa-400">Aparece en la seccion de destacados</p></div>
