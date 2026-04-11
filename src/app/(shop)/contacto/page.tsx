@@ -1,5 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import AnimatedBg from '@/components/AnimatedBg';
-import Link from 'next/link';
 
 const WA_NUMBER = '528187087288';
 const WA_MSG = encodeURIComponent('Hola! Me interesa saber mas sobre sus creaciones de crochet 🧸');
@@ -13,13 +15,67 @@ const VALUES = [
 ];
 
 const TIMELINE = [
-  { year: '2023', title: 'Los primeros puntitos', desc: 'Comenzamos tejiendo amigurumis para familiares y amigos como pasatiempo.', emoji: '🧶' },
-  { year: '2024', title: 'Nace Mundo A Crochet', desc: 'La demanda crecio y decidimos convertir nuestra pasion en un emprendimiento real.', emoji: '🌟' },
-  { year: '2025', title: 'Tienda en linea', desc: 'Lanzamos nuestra tienda para llevar nuestras creaciones a todo Mexico.', emoji: '🚀' },
-  { year: '2026', title: 'Creciendo juntas', desc: 'Seguimos tejiendo suenos y creando piezas que llenan de ternura cada hogar.', emoji: '💕' },
+  {
+    year: '2024',
+    title: 'Nace Mundo A Crochet',
+    desc: 'Lo que comenzo como un hobby tejiendo amigurumis para familiares se convirtio en un emprendimiento real lleno de pasion y ternura.',
+    emoji: '🧶',
+    color: 'from-blush-400 to-blush-500',
+    bg: 'bg-blush-50',
+    border: 'border-blush-200',
+    dot: 'bg-blush-400',
+  },
+  {
+    year: '2025',
+    title: 'Creciendo con amor',
+    desc: 'La demanda crecio y empezamos a llegar a mas hogares. Cada pieza que creamos lleva un pedacito de nuestro corazon.',
+    emoji: '🌟',
+    color: 'from-lavender-400 to-lavender-500',
+    bg: 'bg-lavender-50',
+    border: 'border-lavender-200',
+    dot: 'bg-lavender-400',
+  },
+  {
+    year: '2026',
+    title: 'Tienda en linea',
+    desc: 'Lanzamos nuestra pagina web para llevar nuestras creaciones de crochet a todo Mexico. Un sueno hecho realidad!',
+    emoji: '🚀',
+    color: 'from-mint-400 to-mint-500',
+    bg: 'bg-mint-50',
+    border: 'border-mint-200',
+    dot: 'bg-mint-400',
+  },
+  {
+    year: '💕',
+    title: 'El futuro',
+    desc: 'Seguimos tejiendo suenos y creando piezas que llenan de ternura cada hogar. Lo mejor esta por venir!',
+    emoji: '✨',
+    color: 'from-sky-400 to-sky-500',
+    bg: 'bg-sky-50',
+    border: 'border-sky-200',
+    dot: 'bg-sky-400',
+  },
 ];
 
+// Base numbers (real clients before website)
+const BASE_PIECES = 150;
+const BASE_CLIENTS = 20;
+
 export default function ContactPage() {
+  const [stats, setStats] = useState({ itemsSold: 0, uniqueCustomers: 0, avgRating: 5, reviewCount: 0 });
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(d => { setStats(d); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  const totalPieces = BASE_PIECES + stats.itemsSold;
+  const totalClients = BASE_CLIENTS + stats.uniqueCustomers;
+  const rating = stats.reviewCount > 0 ? stats.avgRating : 5.0;
+
   return (
     <AnimatedBg theme="mint">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -128,33 +184,50 @@ export default function ContactPage() {
         </div>
       </div>
 
-      {/* ═══ Timeline ═══ */}
+      {/* ═══ Timeline — Nuestro Camino ═══ */}
       <div className="mb-12">
-        <div className="text-center mb-8">
+        <div className="text-center mb-10">
           <h2 className="font-display font-bold text-2xl text-cocoa-700 mb-2">Nuestro Camino 🧶</h2>
           <p className="text-cocoa-400 text-sm">De un hobby a un sueno hecho realidad</p>
         </div>
-        <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blush-300 via-lavender-300 to-mint-300" />
 
-          <div className="space-y-8">
+        <div className="relative">
+          {/* Animated gradient line */}
+          <div className="absolute left-7 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-1 rounded-full bg-gradient-to-b from-blush-300 via-lavender-300 via-60% to-mint-300 anim-gradient" />
+
+          <div className="space-y-10">
             {TIMELINE.map((t, i) => (
-              <div key={t.year} className={`relative flex items-start gap-6 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
-                {/* Dot */}
-                <div className="absolute left-6 md:left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white border-3 border-blush-400 shadow-soft z-10 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-blush-400" />
+              <div
+                key={t.year}
+                className="relative flex items-start gap-6 animate-fade-in"
+                style={{ animationDelay: `${i * 150}ms` }}
+              >
+                {/* Pulse dot */}
+                <div className="absolute left-7 md:left-1/2 -translate-x-1/2 z-10 flex items-center justify-center">
+                  <div className={`absolute w-10 h-10 rounded-full ${t.dot} opacity-20 animate-ping`} style={{ animationDuration: '3s' }} />
+                  <div className={`relative w-5 h-5 rounded-full bg-white border-[3px] shadow-lg flex items-center justify-center`} style={{ borderColor: `var(--tw-gradient-from, #FFB4B4)` }}>
+                    <div className={`w-2 h-2 rounded-full ${t.dot}`} />
+                  </div>
                 </div>
 
-                {/* Card */}
-                <div className={`ml-14 md:ml-0 md:w-[calc(50%-2rem)] ${i % 2 === 0 ? '' : 'md:ml-auto'}`}>
-                  <div className="bg-white/80 backdrop-blur-sm rounded-cute border border-cream-200 p-5 shadow-soft hover:shadow-warm transition-all">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{t.emoji}</span>
-                      <span className="text-xs font-bold text-blush-400 bg-blush-50 px-2.5 py-0.5 rounded-full border border-blush-100">{t.year}</span>
+                {/* Card — alternates sides on desktop */}
+                <div className={`ml-16 md:ml-0 md:w-[calc(50%-2.5rem)] ${i % 2 === 0 ? '' : 'md:ml-auto'}`}>
+                  <div className={`relative ${t.bg} backdrop-blur-sm rounded-2xl border ${t.border} p-6 shadow-soft hover:shadow-warm hover:-translate-y-1 transition-all duration-300 overflow-hidden group`}>
+                    {/* Decorative corner blob */}
+                    <div className={`absolute -top-4 -right-4 w-16 h-16 rounded-full ${t.dot} opacity-10 blur-xl group-hover:opacity-20 transition-opacity`} />
+                    <div className={`absolute -bottom-3 -left-3 w-12 h-12 rounded-full ${t.dot} opacity-10 blur-lg group-hover:opacity-15 transition-opacity`} />
+
+                    <div className="relative">
+                      {/* Year badge */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center shadow-md`}>
+                          <span className="text-lg">{t.emoji}</span>
+                        </div>
+                        <span className={`text-sm font-extrabold text-cocoa-700 tracking-wide`}>{t.year}</span>
+                      </div>
+                      <h3 className="font-display font-bold text-lg text-cocoa-700 mb-2">{t.title}</h3>
+                      <p className="text-sm text-cocoa-400 leading-relaxed">{t.desc}</p>
                     </div>
-                    <h3 className="font-display font-bold text-cocoa-700 mb-1">{t.title}</h3>
-                    <p className="text-sm text-cocoa-400 leading-relaxed">{t.desc}</p>
                   </div>
                 </div>
               </div>
@@ -163,18 +236,21 @@ export default function ContactPage() {
         </div>
       </div>
 
-      {/* ═══ Numbers ═══ */}
+      {/* ═══ Live Numbers ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
         {[
-          { num: '500+', label: 'Piezas creadas', emoji: '🧸' },
-          { num: '200+', label: 'Clientes felices', emoji: '😊' },
-          { num: '100%', label: 'Hecho a mano', emoji: '🧶' },
-          { num: '4.9⭐', label: 'Calificacion', emoji: '💕' },
-        ].map(s => (
-          <div key={s.label} className="bg-white/70 backdrop-blur-sm rounded-cute border border-cream-200 p-5 text-center shadow-soft">
-            <span className="text-2xl block mb-1">{s.emoji}</span>
-            <p className="font-display font-bold text-2xl text-cocoa-700">{s.num}</p>
-            <p className="text-xs text-cocoa-400 mt-0.5">{s.label}</p>
+          { num: `${totalPieces}+`, label: 'Piezas creadas', emoji: '🧸', accent: 'text-blush-500' },
+          { num: `${totalClients}+`, label: 'Clientes felices', emoji: '😊', accent: 'text-lavender-500' },
+          { num: '100%', label: 'Hecho a mano', emoji: '🧶', accent: 'text-mint-500' },
+          { num: `${rating}⭐`, label: 'Calificacion', emoji: '💕', accent: 'text-amber-500' },
+        ].map((s, i) => (
+          <div key={s.label} className="relative bg-white/70 backdrop-blur-sm rounded-cute border border-cream-200 p-5 text-center shadow-soft hover:shadow-warm hover:-translate-y-1 transition-all overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-cream-100/0 group-hover:from-white/50 group-hover:to-cream-100/50 transition-all duration-300" />
+            <div className="relative">
+              <span className="text-2xl block mb-1">{s.emoji}</span>
+              <p className={`font-display font-bold text-2xl ${s.accent} ${loaded ? 'animate-count-up' : ''}`}>{s.num}</p>
+              <p className="text-xs text-cocoa-400 mt-0.5">{s.label}</p>
+            </div>
           </div>
         ))}
       </div>
