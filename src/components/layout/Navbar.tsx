@@ -12,7 +12,7 @@ export default function Navbar() {
   const isAdmin = (session?.user as any)?.role === 'admin';
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#B8DFF5] shadow-md">
+    <nav className="sticky top-0 z-50 bg-[#89CFF0] shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo — natural colors, no frame */}

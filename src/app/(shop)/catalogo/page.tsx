@@ -211,59 +211,98 @@ function Content() {
   );
 }
 
-// Generate unique frame style from product ID
-const FRAME_STYLES = [
-  { border: '3px solid #FFB6C1', shadow: '0 4px 20px rgba(255,182,193,0.3)', radius: '20px' },           // Pink soft
-  { border: '3px solid #DDA0DD', shadow: '0 4px 20px rgba(221,160,221,0.3)', radius: '24px' },           // Plum
-  { border: '3px solid #B0E0E6', shadow: '0 4px 20px rgba(176,224,230,0.3)', radius: '16px' },           // Powder blue
-  { border: '3px solid #98FB98', shadow: '0 4px 20px rgba(152,251,152,0.3)', radius: '20px' },           // Pale green
-  { border: '3px solid #FFDAB9', shadow: '0 4px 20px rgba(255,218,185,0.3)', radius: '22px' },           // Peach
-  { border: '3px solid #E6E6FA', shadow: '0 4px 20px rgba(230,230,250,0.3)', radius: '18px' },           // Lavender
-  { border: '3px solid #FFE4B5', shadow: '0 4px 20px rgba(255,228,181,0.3)', radius: '20px' },           // Moccasin
-  { border: '3px solid #AFEEEE', shadow: '0 4px 20px rgba(175,238,238,0.3)', radius: '24px' },           // Pale turquoise
-  { border: '3px double #F4A7BB', shadow: '0 4px 20px rgba(244,167,187,0.25)', radius: '20px' },         // Double pink
-  { border: '3px dashed #C8A2C8', shadow: '0 4px 18px rgba(200,162,200,0.25)', radius: '16px' },         // Dashed lilac
-  { border: '4px solid #FADADD', shadow: '0 6px 24px rgba(250,218,221,0.35)', radius: '28px' },          // Thick blush
-  { border: '3px solid #FFD1DC', shadow: '0 4px 20px rgba(255,209,220,0.3), inset 0 0 0 1px rgba(255,182,193,0.2)', radius: '20px' }, // Inner glow
+// ═══ 20 unique decorative frame styles ═══
+const FRAMES = [
+  // Gradient borders with glow
+  { bg: 'linear-gradient(135deg, #FFB6C1, #FF69B4)', shadow: '0 4px 20px rgba(255,105,180,0.25)', radius: '20px', deco: '🌸', decoPos: 'top-right' },
+  { bg: 'linear-gradient(135deg, #DDA0DD, #9370DB)', shadow: '0 4px 20px rgba(147,112,219,0.25)', radius: '24px', deco: '🦋', decoPos: 'top-left' },
+  { bg: 'linear-gradient(135deg, #87CEEB, #4682B4)', shadow: '0 4px 20px rgba(70,130,180,0.25)', radius: '18px', deco: '✨', decoPos: 'bottom-right' },
+  { bg: 'linear-gradient(135deg, #98FB98, #3CB371)', shadow: '0 4px 20px rgba(60,179,113,0.25)', radius: '22px', deco: '🌿', decoPos: 'top-right' },
+  { bg: 'linear-gradient(135deg, #FFDAB9, #FF8C00)', shadow: '0 4px 20px rgba(255,140,0,0.2)', radius: '20px', deco: '🧡', decoPos: 'bottom-left' },
+  { bg: 'linear-gradient(135deg, #E6E6FA, #BA55D3)', shadow: '0 4px 20px rgba(186,85,211,0.2)', radius: '26px', deco: '💜', decoPos: 'top-left' },
+  // Double + accent
+  { bg: 'linear-gradient(45deg, #FFB6C1, #FFC0CB, #FFB6C1)', shadow: '0 6px 24px rgba(255,192,203,0.35), inset 0 0 0 2px rgba(255,182,193,0.3)', radius: '20px', deco: '💕', decoPos: 'top-right' },
+  { bg: 'linear-gradient(45deg, #AFEEEE, #48D1CC, #AFEEEE)', shadow: '0 6px 24px rgba(72,209,204,0.3), inset 0 0 0 2px rgba(175,238,238,0.3)', radius: '22px', deco: '🐚', decoPos: 'bottom-right' },
+  { bg: 'linear-gradient(to right, #F4A7BB, #E8A0BF, #BE93C5)', shadow: '0 4px 20px rgba(190,147,197,0.3)', radius: '24px', deco: '🎀', decoPos: 'top-left' },
+  { bg: 'linear-gradient(to right, #FCEABB, #F8B500)', shadow: '0 4px 20px rgba(248,181,0,0.2)', radius: '18px', deco: '⭐', decoPos: 'top-right' },
+  // Pastel rainbow
+  { bg: 'linear-gradient(135deg, #FFD1DC, #FFE5B4, #BAFFC9)', shadow: '0 4px 20px rgba(255,209,220,0.3)', radius: '22px', deco: '🌈', decoPos: 'bottom-left' },
+  { bg: 'linear-gradient(135deg, #C9B1FF, #FFC8DD, #BDE0FE)', shadow: '0 4px 20px rgba(201,177,255,0.3)', radius: '20px', deco: '🪻', decoPos: 'top-right' },
+  // Warm tones
+  { bg: 'linear-gradient(135deg, #FFE4E1, #FFA07A)', shadow: '0 4px 20px rgba(255,160,122,0.25)', radius: '20px', deco: '🧸', decoPos: 'bottom-right' },
+  { bg: 'linear-gradient(135deg, #FFFACD, #FFD700)', shadow: '0 4px 20px rgba(255,215,0,0.2)', radius: '24px', deco: '🌻', decoPos: 'top-left' },
+  { bg: 'linear-gradient(135deg, #FFE4C4, #DEB887)', shadow: '0 4px 20px rgba(222,184,135,0.25)', radius: '16px', deco: '🧶', decoPos: 'top-right' },
+  // Cool tones
+  { bg: 'linear-gradient(135deg, #B0E0E6, #5F9EA0)', shadow: '0 4px 20px rgba(95,158,160,0.2)', radius: '22px', deco: '🐋', decoPos: 'bottom-left' },
+  { bg: 'linear-gradient(135deg, #D8BFD8, #8B008B)', shadow: '0 4px 20px rgba(139,0,139,0.15)', radius: '20px', deco: '🔮', decoPos: 'top-right' },
+  { bg: 'linear-gradient(135deg, #F0FFF0, #90EE90)', shadow: '0 4px 20px rgba(144,238,144,0.25)', radius: '18px', deco: '🍃', decoPos: 'bottom-right' },
+  // Special
+  { bg: 'linear-gradient(135deg, #FFF0F5, #FF1493, #FFF0F5)', shadow: '0 6px 28px rgba(255,20,147,0.2)', radius: '28px', deco: '💖', decoPos: 'top-right' },
+  { bg: 'linear-gradient(135deg, #F0F8FF, #6495ED, #F0F8FF)', shadow: '0 6px 28px rgba(100,149,237,0.2)', radius: '26px', deco: '🦄', decoPos: 'top-left' },
 ];
 
-function getFrameForId(id: string, idx: number): typeof FRAME_STYLES[0] {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  return FRAME_STYLES[Math.abs(hash + idx) % FRAME_STYLES.length];
+function hashId(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = id.charCodeAt(i) + ((h << 5) - h);
+  return Math.abs(h);
 }
 
 function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p: Product; idx?: number; favs: string[]; toggleFav: (id: string, e: React.MouseEvent) => void; isAdmin: boolean; onEdit: (p: Product, e: React.MouseEvent) => void; onDel: (id: string, t: string, e: React.MouseEvent) => void; big?: boolean }) {
-  const frame = getFrameForId(p._id, idx);
+  const frame = FRAMES[(hashId(p._id) + idx) % FRAMES.length];
+  const decoStyle: Record<string, any> = {
+    'top-right': { top: -6, right: -4 },
+    'top-left': { top: -6, left: -4 },
+    'bottom-right': { bottom: -4, right: -4 },
+    'bottom-left': { bottom: -4, left: -4 },
+  };
 
   return (
-    <Link href={`/producto/${p._id}`} className="group relative bg-white overflow-hidden hover:-translate-y-1 hover:shadow-warm transition-all duration-300"
-      style={{ border: frame.border, boxShadow: frame.shadow, borderRadius: frame.radius }}>
-      {/* Fav */}
-      <button onClick={e => toggleFav(p._id, e)} className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-soft ${favs.includes(p._id) ? 'bg-blush-100 scale-110' : 'bg-white/80 text-cocoa-300 hover:text-blush-400'}`}>{favs.includes(p._id) ? '❤️' : '🤍'}</button>
-      {/* Admin */}
-      {isAdmin && (
-        <div className="absolute top-3 left-3 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={e => onEdit(p, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-lavender-100">✏️</button>
-          <button onClick={e => onDel(p._id, p.title, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-blush-100">🗑️</button>
-        </div>
-      )}
-      {/* Image */}
-      <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} bg-gradient-to-br from-cream-50 to-blush-50 relative overflow-hidden`}>
-        {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center"><span className="text-6xl opacity-30">🧸</span></div>}
-        {p.featured && <span className="absolute bottom-3 left-3 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft">⭐ Destacado</span>}
-        {p.stock <= 0 && <div className="absolute inset-0 bg-cocoa-800/40 flex items-center justify-center backdrop-blur-[2px]"><span className="bg-white/90 text-cocoa-700 font-bold px-4 py-2 rounded-full text-sm">Agotado</span></div>}
+    <div className="relative group" style={{ animationDelay: `${idx * 50}ms` }}>
+      {/* Gradient border layer */}
+      <div className="absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity duration-300" style={{ background: frame.bg, borderRadius: frame.radius, padding: '3px' }}>
+        <div className="w-full h-full bg-white" style={{ borderRadius: `calc(${frame.radius} - 3px)` }} />
       </div>
-      {/* Info */}
-      <div className="p-4">
-        <span className="text-[10px] font-bold text-blush-400 uppercase tracking-wider">{p.category}</span>
-        <h3 className="font-display font-bold text-cocoa-700 mt-1 group-hover:text-blush-400 transition-colors line-clamp-1 text-sm">{p.title}</h3>
-        {big && <p className="text-xs text-cocoa-400 mt-1 line-clamp-2">{p.description}</p>}
-        <div className="flex items-center justify-between mt-2.5">
-          <span className="font-display font-bold text-lg text-cocoa-700">${p.price}</span>
-          <span className="text-[10px] text-cocoa-300 font-medium">{p.stock > 0 ? (p.stock <= 3 ? `Ultimos ${p.stock}!` : 'Disponible') : 'Agotado'}</span>
+
+      {/* Decorative emoji */}
+      <span className="absolute z-20 text-lg opacity-70 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300 pointer-events-none" style={decoStyle[frame.decoPos]}>
+        {frame.deco}
+      </span>
+
+      <Link href={`/producto/${p._id}`}
+        className="relative z-10 block bg-white overflow-hidden hover:-translate-y-1.5 transition-all duration-300"
+        style={{ borderRadius: frame.radius, boxShadow: frame.shadow }}>
+
+        {/* Fav */}
+        <button onClick={e => toggleFav(p._id, e)} className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-soft ${favs.includes(p._id) ? 'bg-blush-100 scale-110' : 'bg-white/80 text-cocoa-300 hover:text-blush-400'}`}>{favs.includes(p._id) ? '❤️' : '🤍'}</button>
+
+        {/* Admin */}
+        {isAdmin && (
+          <div className="absolute top-3 left-3 z-20 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={e => onEdit(p, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-lavender-100">✏️</button>
+            <button onClick={e => onDel(p._id, p.title, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-blush-100">🗑️</button>
+          </div>
+        )}
+
+        {/* Image */}
+        <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} bg-gradient-to-br from-cream-50 to-blush-50/30 relative overflow-hidden`}>
+          {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center"><span className="text-6xl opacity-20">🧸</span></div>}
+          {p.featured && <span className="absolute bottom-3 left-3 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft animate-pulse">⭐ Destacado</span>}
+          {p.stock <= 0 && <div className="absolute inset-0 bg-cocoa-800/40 flex items-center justify-center backdrop-blur-[2px]"><span className="bg-white/90 text-cocoa-700 font-bold px-4 py-2 rounded-full text-sm">Agotado</span></div>}
+          {/* Shimmer on hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-700 -translate-x-full" />
         </div>
-      </div>
-    </Link>
+
+        {/* Info */}
+        <div className="p-4">
+          <span className="text-[10px] font-bold text-blush-400 uppercase tracking-wider">{p.category}</span>
+          <h3 className="font-display font-bold text-cocoa-700 mt-1 group-hover:text-blush-400 transition-colors line-clamp-1 text-sm">{p.title}</h3>
+          {big && <p className="text-xs text-cocoa-400 mt-1 line-clamp-2">{p.description}</p>}
+          <div className="flex items-center justify-between mt-2.5">
+            <span className="font-display font-bold text-lg text-cocoa-700">${p.price}</span>
+            <span className="text-[10px] text-cocoa-300 font-medium">{p.stock > 0 ? (p.stock <= 3 ? `Ultimos ${p.stock}!` : 'Disponible') : 'Agotado'}</span>
+          </div>
+        </div>
+      </Link>
+    </div>
   );
 }
