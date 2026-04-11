@@ -83,8 +83,7 @@ function Content() {
   };
 
   const sorted = [...products].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); return 0; });
-  const feat = sorted.filter(p => p.featured);
-  const rest = sorted.filter(p => !p.featured);
+  const feat = sorted.filter(p => p.featured).slice(0, 3);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -141,7 +140,7 @@ function Content() {
             </div>
           )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-            {(search || cat ? sorted : rest).map(p => <Card key={p._id} p={p} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
+            {sorted.map(p => <Card key={p._id} p={p} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
           </div>
         </>
       )}
