@@ -33,6 +33,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
   const [added, setAdded] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -89,15 +90,15 @@ export default function ProductDetailPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
 
-          {/* ═══ Product image — clean, no frame ═══ */}
+          {/* ═══ Product image — click to expand ═══ */}
           <div>
-            <div className="aspect-square rounded-2xl overflow-hidden bg-cream-50 shadow-warm border border-cream-200">
+            <button onClick={() => product.images?.[selectedImage] && setLightbox(true)} className="w-full aspect-square rounded-2xl overflow-hidden bg-cream-50 shadow-warm border border-cream-200 cursor-zoom-in group">
               {product.images?.[selectedImage] ? (
-                <img src={product.images[selectedImage]} alt={product.title} className="w-full h-full object-cover" />
+                <img src={product.images[selectedImage]} alt={product.title} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cream-100 to-blush-50"><span className="text-8xl opacity-20">🧸</span></div>
               )}
-            </div>
+            </button>
 
             {/* Thumbnails */}
             {product.images?.length > 1 && (
@@ -179,6 +180,37 @@ export default function ProductDetailPage() {
         {/* ═══ Reviews section ═══ */}
         <ReviewSection productId={product._id} />
       </div>
+
+      {/* ═══ Lightbox — fullscreen image ═══ */}
+      {lightbox && product.images?.[selectedImage] && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(false)}>
+          {/* Close button */}
+          <button className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white text-xl hover:bg-white/20 transition-colors z-10">✕</button>
+
+          {/* Navigation arrows */}
+          {product.images.length > 1 && (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev > 0 ? prev - 1 : product.images.length - 1); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white text-xl hover:bg-white/20 transition-colors z-10">‹</button>
+              <button onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev < product.images.length - 1 ? prev + 1 : 0); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white text-xl hover:bg-white/20 transition-colors z-10">›</button>
+            </>
+          )}
+
+          {/* Full image */}
+          <img src={product.images[selectedImage]} alt={product.title} className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
+
+          {/* Image counter */}
+          {product.images.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+              {product.images.map((_, i) => (
+                <button key={i} onClick={(e) => { e.stopPropagation(); setSelectedImage(i); }}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${selectedImage === i ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'}`} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </AnimatedBg>
   );
 }
