@@ -163,7 +163,7 @@ function Content() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" key={featPage}>
               {feat.slice(0, 4).map((p) => (
                 <Link key={p._id} href={`/producto/${p._id}`} className="bg-white/80 backdrop-blur-sm rounded-xl border border-cream-200 overflow-hidden shadow-soft hover:shadow-warm hover:-translate-y-1 transition-all duration-300 group">
-                  <div className="aspect-[4/5] overflow-hidden">
+                  <div className="aspect-square overflow-hidden">
                     {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-cream-100 flex items-center justify-center"><span className="text-3xl opacity-20">🧸</span></div>}
                   </div>
                   <div className="p-2.5">
@@ -310,7 +310,7 @@ function Content() {
         <>
           <div className="flex items-center gap-2 mb-6"><span className="text-lg">🧶</span><h2 className="font-display font-bold text-xl text-cocoa-700">Todos los productos</h2></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-            {sorted.map((p, i) => <Card key={p._id} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
+            {sorted.filter(p => !(feat.length > 0 && !search && !cat && !priceMin && !priceMax && p.featured)).map((p, i) => <Card key={p._id} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
           </div>
         </>
       )}
