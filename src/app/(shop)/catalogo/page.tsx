@@ -142,33 +142,33 @@ function Content() {
     </div>
 
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:pl-14 py-10">
-      {/* ═══ Header — title left + 3 featured right ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 items-start">
-        {/* Left: Title + description */}
-        <div>
-          <div className="inline-flex items-center gap-2 bg-blush-50 border border-blush-200 rounded-full px-4 py-1.5 mb-4">
-            <span className="text-sm">🧶</span><span className="text-xs font-bold text-cocoa-500">{products.length} creaciones disponibles</span>
+      {/* ═══ Header — title left + 4 featured right, tight ═══ */}
+      <div className="flex flex-col lg:flex-row gap-5 mb-10 items-stretch">
+        {/* Left: Title */}
+        <div className="lg:w-[280px] flex-shrink-0 flex flex-col justify-center">
+          <div className="inline-flex items-center gap-2 bg-blush-50 border border-blush-200 rounded-full px-4 py-1.5 mb-3 self-start">
+            <span className="text-sm">🧶</span><span className="text-xs font-bold text-cocoa-500">{products.length} creaciones</span>
           </div>
-          <h1 className="font-display font-bold text-3xl lg:text-4xl text-cocoa-700 mb-2">Nuestro Catalogo</h1>
-          <p className="text-cocoa-400 max-w-md">Cada pieza es unica, hecha a mano con los mejores materiales y todo nuestro carino</p>
+          <h1 className="font-display font-bold text-2xl lg:text-3xl text-cocoa-700 mb-1.5">Nuestro Catalogo</h1>
+          <p className="text-cocoa-400 text-sm leading-relaxed">Cada pieza es unica, hecha a mano con amor</p>
           {isAdmin && (
-            <button onClick={openNew} className="mt-5 btn-cute bg-lavender-400 text-white px-6 py-2.5 hover:bg-lavender-500 shadow-soft inline-flex items-center gap-2">➕ Agregar Producto</button>
+            <button onClick={openNew} className="mt-3 btn-cute bg-lavender-400 text-white px-5 py-2 text-sm hover:bg-lavender-500 shadow-soft inline-flex items-center gap-2 self-start">➕ Agregar</button>
           )}
         </div>
 
-        {/* Right: 3 featured mini cards */}
+        {/* Right: 4 featured cards — fill remaining space */}
         {feat.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-3"><span className="text-sm">⭐</span><h3 className="font-display font-bold text-sm text-cocoa-700">Destacados</h3></div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {feat.slice(0, 4).map((p, i) => (
-                <Link key={p._id} href={`/producto/${p._id}`} className="bg-white/70 rounded-xl border border-cream-200 overflow-hidden shadow-soft hover:shadow-warm hover:-translate-y-0.5 transition-all group">
-                  <div className="aspect-square overflow-hidden">
-                    {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-cream-100 flex items-center justify-center"><span className="text-2xl opacity-30">🧸</span></div>}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2"><span className="text-sm">⭐</span><h3 className="font-display font-bold text-xs text-cocoa-500 uppercase tracking-wider">Destacados</h3></div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" key={featPage}>
+              {feat.slice(0, 4).map((p) => (
+                <Link key={p._id} href={`/producto/${p._id}`} className="bg-white/80 backdrop-blur-sm rounded-xl border border-cream-200 overflow-hidden shadow-soft hover:shadow-warm hover:-translate-y-1 transition-all duration-300 group">
+                  <div className="aspect-[4/5] overflow-hidden">
+                    {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-cream-100 flex items-center justify-center"><span className="text-3xl opacity-20">🧸</span></div>}
                   </div>
-                  <div className="p-2">
-                    <p className="text-[10px] font-bold text-cocoa-700 truncate">{p.title}</p>
-                    <p className="text-xs font-bold text-blush-400">${p.price}</p>
+                  <div className="p-2.5">
+                    <p className="text-xs font-bold text-cocoa-700 truncate group-hover:text-blush-400 transition-colors">{p.title}</p>
+                    <p className="text-sm font-bold text-blush-400 mt-0.5">${p.price}</p>
                   </div>
                 </Link>
               ))}
