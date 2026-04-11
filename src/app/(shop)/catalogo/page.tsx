@@ -98,7 +98,7 @@ function Content() {
     if (priceMax && p.price > Number(priceMax)) return false;
     return true;
   });
-  const sorted = [...priceFiltered].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); return 0; });
+  const sorted = [...priceFiltered].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); if (sort === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0); return 0; });
   const allFeat = sorted.filter(p => p.featured);
   const featStart = (featPage * 3) % Math.max(allFeat.length, 1);
   const feat = allFeat.length > 3 ? [...allFeat, ...allFeat].slice(featStart, featStart + 3) : allFeat;
@@ -147,25 +147,56 @@ function Content() {
           )}
         </div>
 
-        {/* Price range */}
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <span className="text-sm font-semibold text-cocoa-500">💰 Precio:</span>
-          <div className="flex items-center gap-2">
-            <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min" className="w-24 px-3 py-2 rounded-xl border-2 border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
-            <span className="text-cocoa-300">—</span>
-            <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max" className="w-24 px-3 py-2 rounded-xl border-2 border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
-          </div>
-          {(priceMin || priceMax) && (
-            <button onClick={() => { setPriceMin(''); setPriceMax(''); }} className="text-xs text-blush-400 hover:text-blush-500 font-semibold">✕ Limpiar</button>
-          )}
-        </div>
+        {/* ═══ Filter bar — Mercado Libre style ═══ */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-cute border border-cream-200 shadow-soft p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Results count */}
+            <p className="text-sm font-semibold text-cocoa-600">{loading ? '🔍 Buscando...' : `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`}</p>
 
-        {/* Sort + count */}
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-cocoa-400">{loading ? 'Buscando...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''}`}{priceMin || priceMax ? ` (filtro: $${priceMin || '0'} — $${priceMax || '∞'})` : ''}</p>
-          <select value={sort} onChange={e => setSort(e.target.value)} className="text-sm bg-cream-50 border border-cream-200 rounded-2xl px-3 py-2 text-cocoa-500 focus:outline-none focus:border-blush-300">
-            {SORTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+            <div className="h-5 w-px bg-cream-300 hidden sm:block" />
+
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-cocoa-400">Ordenar:</span>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { value: 'recent', label: '🕐 Recientes' },
+                  { value: 'price-low', label: '💰 Menor precio' },
+                  { value: 'price-high', label: '💎 Mayor precio' },
+                  { value: 'name', label: '🔤 A-Z' },
+                  { value: 'featured', label: '⭐ Destacados' },
+                ].map(o => (
+                  <button key={o.value} onClick={() => setSort(o.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${sort === o.value ? 'bg-blush-400 text-white shadow-soft' : 'bg-cream-50 text-cocoa-400 hover:bg-cream-100 hover:text-cocoa-600 border border-cream-200'}`}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-5 w-px bg-cream-300 hidden sm:block" />
+
+            {/* Price range */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-cocoa-400">Precio:</span>
+              <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="$ Min" className="w-20 px-2.5 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
+              <span className="text-cocoa-300 text-xs">a</span>
+              <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="$ Max" className="w-20 px-2.5 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
+              {(priceMin || priceMax) && <button onClick={() => { setPriceMin(''); setPriceMax(''); }} className="text-xs text-blush-400 hover:text-blush-500 font-bold">✕</button>}
+            </div>
+          </div>
+
+          {/* Active filters summary */}
+          {(cat || priceMin || priceMax || search) && (
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-cream-100">
+              <span className="text-[10px] text-cocoa-400">Filtros:</span>
+              {search && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">🔍 "{search}"</span>}
+              {cat && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">{dbCategories.find(c => c.slug === cat)?.emoji} {dbCategories.find(c => c.slug === cat)?.name}</span>}
+              {priceMin && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">💰 Min ${priceMin}</span>}
+              {priceMax && <span className="text-[10px] font-bold text-cocoa-500 bg-cream-100 px-2 py-0.5 rounded-full">💰 Max ${priceMax}</span>}
+              <button onClick={() => { setSearch(''); setCat(''); setPriceMin(''); setPriceMax(''); setSort('recent'); }} className="text-[10px] text-blush-400 font-bold hover:text-blush-500">Limpiar todo ✕</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -233,9 +264,9 @@ function Content() {
 
       {/* ═══ Modal ═══ */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setModal(false)} />
-          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-bubble shadow-warm border border-cream-200 p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 overflow-y-auto">
+          <div className="fixed inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setModal(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-bubble shadow-warm border border-cream-200 p-6 my-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display font-bold text-xl text-cocoa-700">{editId ? '✏️ Editar Producto' : '➕ Nuevo Producto'}</h2>
               <button onClick={() => setModal(false)} className="w-8 h-8 rounded-full bg-cream-100 flex items-center justify-center text-cocoa-400 hover:bg-cream-200">✕</button>
