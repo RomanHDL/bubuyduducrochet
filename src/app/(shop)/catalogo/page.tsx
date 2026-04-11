@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import AnimatedBg from '@/components/AnimatedBg';
 
 interface Product {
   _id: string; title: string; description: string; price: number; images: string[]; stock: number; category: string; featured: boolean;
@@ -96,6 +97,7 @@ function Content() {
   }, [allFeat.length]);
 
   return (
+    <AnimatedBg theme="peach">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       {/* Header */}
       <div className="text-center mb-10">
@@ -209,6 +211,7 @@ function Content() {
         </div>
       )}
     </div>
+    </AnimatedBg>
   );
 }
 

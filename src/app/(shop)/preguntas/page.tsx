@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import AnimatedBg from '@/components/AnimatedBg';
 
 const CATEGORY_OPTIONS = ['🧶 Productos', '📦 Envios', '💳 Pagos', '🔄 Devoluciones', '📱 General'];
 
@@ -37,6 +38,7 @@ export default function FAQPage() {
   const grouped = faqs.reduce((acc: any, f: any) => { (acc[f.category] = acc[f.category] || []).push(f); return acc; }, {});
 
   return (
+    <AnimatedBg theme="mint">
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <div className="text-center mb-12">
         <span className="text-5xl block mb-3">❓</span>
@@ -106,5 +108,6 @@ export default function FAQPage() {
         </div>
       )}
     </div>
+    </AnimatedBg>
   );
 }

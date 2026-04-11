@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AnimatedBg from '@/components/AnimatedBg';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function LoginPage() {
   };
 
   return (
+    <AnimatedBg theme="lavender">
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-cream-50 via-blush-50 to-lavender-50 relative overflow-hidden">
       {/* Decorative */}
       <div className="absolute top-10 left-10 text-5xl opacity-15 animate-bounce" style={{ animationDuration: '3s' }}>🧸</div>
@@ -116,5 +118,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </AnimatedBg>
   );
 }

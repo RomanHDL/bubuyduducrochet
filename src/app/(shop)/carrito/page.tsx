@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AnimatedBg from '@/components/AnimatedBg';
 
 const WA = '528187087288';
 
@@ -50,20 +51,23 @@ export default function CartPage() {
 
   if (!session) {
     return (
+      <AnimatedBg theme="warm">
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <span className="text-5xl block mb-4">🛒</span>
         <h2 className="font-display font-bold text-2xl text-cocoa-700 mb-3">Inicia sesion para ver tu carrito</h2>
         <Link href="/login" className="btn-cute bg-blush-400 text-white px-6 py-2.5 hover:bg-blush-500 inline-block">Iniciar Sesion 💕</Link>
       </div>
+      </AnimatedBg>
     );
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🛒</span></div>;
+  if (loading) return <AnimatedBg theme="warm"><div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🛒</span></div></AnimatedBg>;
 
   // ═══ STEP 3: Order confirmed ═══
   if (step === 'done') {
     const waMsg = encodeURIComponent(`Hola! Acabo de hacer un pedido en Bubu & Dudu Crochet 🧸\n\nPedido: ${orderId}\nTotal: $${total.toFixed(2)} MXN\n\nYa realice mi pago, adjunto comprobante.`);
     return (
+      <AnimatedBg theme="warm">
       <div className="max-w-lg mx-auto px-4 py-12 text-center">
         <span className="text-6xl block mb-4">✅</span>
         <h1 className="font-display font-bold text-3xl text-cocoa-700 mb-3">Pedido Confirmado!</h1>
@@ -88,12 +92,14 @@ export default function CartPage() {
 
         <Link href="/pedidos" className="block text-sm font-semibold text-cocoa-400 hover:text-blush-400">Ver mis pedidos →</Link>
       </div>
+      </AnimatedBg>
     );
   }
 
   // ═══ STEP 2: Payment info ═══
   if (step === 'payment') {
     return (
+      <AnimatedBg theme="warm">
       <div className="max-w-lg mx-auto px-4 py-8">
         <button onClick={() => setStep('cart')} className="text-sm text-cocoa-400 hover:text-blush-400 mb-6 flex items-center gap-1">← Volver al carrito</button>
 
@@ -137,11 +143,13 @@ export default function CartPage() {
           <p className="text-center text-xs text-cocoa-300">Al confirmar, se registra tu pedido. Despues envias tu comprobante de pago por WhatsApp.</p>
         </div>
       </div>
+      </AnimatedBg>
     );
   }
 
   // ═══ STEP 1: Cart ═══
   return (
+    <AnimatedBg theme="warm">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="font-display font-bold text-3xl text-cocoa-700 mb-6">Tu Carrito 🛒</h1>
 
@@ -193,5 +201,6 @@ export default function CartPage() {
         </div>
       )}
     </div>
+    </AnimatedBg>
   );
 }

@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import AnimatedBg from '@/components/AnimatedBg';
 
 export default function MiCuentaPage() {
   const { data: session } = useSession();
@@ -19,6 +20,7 @@ export default function MiCuentaPage() {
 
   if (!session) {
     return (
+      <AnimatedBg theme="lavender">
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16 bg-gradient-to-br from-cream-50 via-blush-50 to-lavender-50">
         <span className="text-6xl mb-4">🧸</span>
         <h1 className="font-display font-bold text-2xl text-cocoa-700 mb-2">Mi Cuenta</h1>
@@ -27,6 +29,7 @@ export default function MiCuentaPage() {
           Iniciar Sesion 💕
         </Link>
       </div>
+      </AnimatedBg>
     );
   }
 
@@ -42,6 +45,7 @@ export default function MiCuentaPage() {
   ];
 
   return (
+    <AnimatedBg theme="lavender">
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
       {/* Profile header */}
       <div className="bg-gradient-to-r from-blush-100 via-cream-100 to-lavender-100 rounded-bubble p-8 mb-8 border border-blush-200 text-center">
@@ -110,5 +114,6 @@ export default function MiCuentaPage() {
         Cerrar Sesion
       </button>
     </div>
+    </AnimatedBg>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AnimatedBg from '@/components/AnimatedBg';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -52,6 +53,7 @@ export default function RegisterPage() {
   };
 
   return (
+    <AnimatedBg theme="pink">
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-lavender-50 via-cream-50 to-mint-50">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -109,5 +111,6 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+    </AnimatedBg>
   );
 }

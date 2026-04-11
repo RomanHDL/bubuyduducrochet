@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import AnimatedBg from '@/components/AnimatedBg';
 
 const WA = '528187087288';
 
@@ -43,14 +44,16 @@ export default function PedidosPage() {
   };
 
   if (!session) return (
+    <AnimatedBg theme="sky">
     <div className="max-w-2xl mx-auto px-4 py-20 text-center">
       <span className="text-5xl block mb-4">📦</span>
       <h2 className="font-display font-bold text-2xl text-cocoa-700 mb-3">Inicia sesion para ver tus pedidos</h2>
       <Link href="/login" className="btn-cute bg-blush-400 text-white px-6 py-2.5 hover:bg-blush-500 inline-block">Iniciar Sesion</Link>
     </div>
+    </AnimatedBg>
   );
 
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">📦</span></div>;
+  if (loading) return <AnimatedBg theme="sky"><div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">📦</span></div></AnimatedBg>;
 
   // ═══ ADMIN VIEW ═══
   if (isAdmin) {
@@ -66,6 +69,7 @@ export default function PedidosPage() {
     const paidCount = orders.filter(o => o.paymentStatus === 'paid').length;
 
     return (
+      <AnimatedBg theme="sky">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div><h1 className="font-display font-bold text-3xl text-cocoa-700">Gestion de Pedidos 📋</h1><p className="text-cocoa-400 text-sm mt-1">{orders.length} pedidos totales</p></div>
@@ -153,11 +157,13 @@ export default function PedidosPage() {
           </div>
         )}
       </div>
+      </AnimatedBg>
     );
   }
 
   // ═══ CUSTOMER VIEW ═══
   return (
+    <AnimatedBg theme="sky">
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="font-display font-bold text-3xl text-cocoa-700 mb-6">Mis Pedidos 📦</h1>
 
@@ -205,5 +211,6 @@ export default function PedidosPage() {
         </div>
       )}
     </div>
+    </AnimatedBg>
   );
 }

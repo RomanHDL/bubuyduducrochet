@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import AnimatedBg from '@/components/AnimatedBg';
 
 interface Product {
   _id: string;
@@ -42,6 +43,7 @@ export default function FavoritosPage() {
 
   if (!session) {
     return (
+      <AnimatedBg theme="pink">
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16 bg-gradient-to-br from-cream-50 via-blush-50 to-lavender-50">
         <span className="text-6xl mb-4">💕</span>
         <h1 className="font-display font-bold text-2xl text-cocoa-700 mb-2">Mis Favoritos</h1>
@@ -50,10 +52,12 @@ export default function FavoritosPage() {
           Iniciar Sesion 🧸
         </Link>
       </div>
+      </AnimatedBg>
     );
   }
 
   return (
+    <AnimatedBg theme="pink">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
         <span className="text-3xl">💕</span>
@@ -105,5 +109,6 @@ export default function FavoritosPage() {
         </div>
       )}
     </div>
+    </AnimatedBg>
   );
 }

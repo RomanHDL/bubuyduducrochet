@@ -1,3 +1,4 @@
+import AnimatedBg from '@/components/AnimatedBg';
 import Link from 'next/link';
 
 const WA_NUMBER = '528187087288';
@@ -6,7 +7,7 @@ const EMAIL = 'veroguadalupita@gmail.com';
 
 export default function ContactPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+    <AnimatedBg theme="mint"><div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
       <div className="text-center mb-10">
         <span className="text-5xl block mb-3">💌</span>
         <h1 className="font-display font-bold text-3xl text-cocoa-700 mb-2">Sobre Nosotros</h1>
@@ -99,5 +100,6 @@ export default function ContactPage() {
         </a>
       </div>
     </div>
+    </AnimatedBg>
   );
 }
