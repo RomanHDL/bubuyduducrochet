@@ -43,6 +43,7 @@ function Content() {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
+  const [featPage, setFeatPage] = useState(0);
 
   useEffect(() => { setFavs(JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]')); }, []);
 
@@ -83,7 +84,16 @@ function Content() {
   };
 
   const sorted = [...products].sort((a, b) => { if (sort === 'price-low') return a.price - b.price; if (sort === 'price-high') return b.price - a.price; if (sort === 'name') return a.title.localeCompare(b.title); return 0; });
-  const feat = sorted.filter(p => p.featured).slice(0, 3);
+  const allFeat = sorted.filter(p => p.featured);
+  const featStart = (featPage * 3) % Math.max(allFeat.length, 1);
+  const feat = allFeat.length > 3 ? [...allFeat, ...allFeat].slice(featStart, featStart + 3) : allFeat;
+
+  // Auto-rotate featured every 6 seconds
+  useEffect(() => {
+    if (allFeat.length <= 3) return;
+    const timer = setInterval(() => setFeatPage(p => p + 1), 6000);
+    return () => clearInterval(timer);
+  }, [allFeat.length]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -133,14 +143,23 @@ function Content() {
         <>
           {!search && !cat && feat.length > 0 && (
             <div className="mb-12">
-              <div className="flex items-center gap-2 mb-5"><span className="text-lg">⭐</span><h2 className="font-display font-bold text-xl text-cocoa-700">Destacados</h2></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {feat.slice(0, 3).map(p => <Card key={p._id} p={p} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} big />)}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2"><span className="text-lg">⭐</span><h2 className="font-display font-bold text-xl text-cocoa-700">Destacados</h2></div>
+                {allFeat.length > 3 && (
+                  <div className="flex gap-1.5">
+                    {Array.from({ length: Math.ceil(allFeat.length / 3) }).map((_, i) => (
+                      <button key={i} onClick={() => setFeatPage(i)} className={`w-2 h-2 rounded-full transition-all ${featPage % Math.ceil(allFeat.length / 3) === i ? 'bg-blush-400 w-5' : 'bg-cream-300'}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" key={featPage}>
+                {feat.map((p, i) => <Card key={p._id + featPage} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} big />)}
               </div>
             </div>
           )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-            {sorted.map(p => <Card key={p._id} p={p} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
+            {sorted.map((p, i) => <Card key={p._id} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
           </div>
         </>
       )}
@@ -192,21 +211,50 @@ function Content() {
   );
 }
 
-function Card({ p, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p: Product; favs: string[]; toggleFav: (id: string, e: React.MouseEvent) => void; isAdmin: boolean; onEdit: (p: Product, e: React.MouseEvent) => void; onDel: (id: string, t: string, e: React.MouseEvent) => void; big?: boolean }) {
+// Generate unique frame style from product ID
+const FRAME_STYLES = [
+  { border: '3px solid #FFB6C1', shadow: '0 4px 20px rgba(255,182,193,0.3)', radius: '20px' },           // Pink soft
+  { border: '3px solid #DDA0DD', shadow: '0 4px 20px rgba(221,160,221,0.3)', radius: '24px' },           // Plum
+  { border: '3px solid #B0E0E6', shadow: '0 4px 20px rgba(176,224,230,0.3)', radius: '16px' },           // Powder blue
+  { border: '3px solid #98FB98', shadow: '0 4px 20px rgba(152,251,152,0.3)', radius: '20px' },           // Pale green
+  { border: '3px solid #FFDAB9', shadow: '0 4px 20px rgba(255,218,185,0.3)', radius: '22px' },           // Peach
+  { border: '3px solid #E6E6FA', shadow: '0 4px 20px rgba(230,230,250,0.3)', radius: '18px' },           // Lavender
+  { border: '3px solid #FFE4B5', shadow: '0 4px 20px rgba(255,228,181,0.3)', radius: '20px' },           // Moccasin
+  { border: '3px solid #AFEEEE', shadow: '0 4px 20px rgba(175,238,238,0.3)', radius: '24px' },           // Pale turquoise
+  { border: '3px double #F4A7BB', shadow: '0 4px 20px rgba(244,167,187,0.25)', radius: '20px' },         // Double pink
+  { border: '3px dashed #C8A2C8', shadow: '0 4px 18px rgba(200,162,200,0.25)', radius: '16px' },         // Dashed lilac
+  { border: '4px solid #FADADD', shadow: '0 6px 24px rgba(250,218,221,0.35)', radius: '28px' },          // Thick blush
+  { border: '3px solid #FFD1DC', shadow: '0 4px 20px rgba(255,209,220,0.3), inset 0 0 0 1px rgba(255,182,193,0.2)', radius: '20px' }, // Inner glow
+];
+
+function getFrameForId(id: string, idx: number): typeof FRAME_STYLES[0] {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return FRAME_STYLES[Math.abs(hash + idx) % FRAME_STYLES.length];
+}
+
+function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p: Product; idx?: number; favs: string[]; toggleFav: (id: string, e: React.MouseEvent) => void; isAdmin: boolean; onEdit: (p: Product, e: React.MouseEvent) => void; onDel: (id: string, t: string, e: React.MouseEvent) => void; big?: boolean }) {
+  const frame = getFrameForId(p._id, idx);
+
   return (
-    <Link href={`/producto/${p._id}`} className="card-cute group relative">
+    <Link href={`/producto/${p._id}`} className="group relative bg-white overflow-hidden hover:-translate-y-1 hover:shadow-warm transition-all duration-300"
+      style={{ border: frame.border, boxShadow: frame.shadow, borderRadius: frame.radius }}>
+      {/* Fav */}
       <button onClick={e => toggleFav(p._id, e)} className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-soft ${favs.includes(p._id) ? 'bg-blush-100 scale-110' : 'bg-white/80 text-cocoa-300 hover:text-blush-400'}`}>{favs.includes(p._id) ? '❤️' : '🤍'}</button>
+      {/* Admin */}
       {isAdmin && (
         <div className="absolute top-3 left-3 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={e => onEdit(p, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-lavender-100" title="Editar">✏️</button>
-          <button onClick={e => onDel(p._id, p.title, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-blush-100" title="Eliminar">🗑️</button>
+          <button onClick={e => onEdit(p, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-lavender-100">✏️</button>
+          <button onClick={e => onDel(p._id, p.title, e)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm shadow-soft hover:bg-blush-100">🗑️</button>
         </div>
       )}
-      <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} bg-gradient-to-br from-cream-100 to-blush-50 relative overflow-hidden`}>
+      {/* Image */}
+      <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} bg-gradient-to-br from-cream-50 to-blush-50 relative overflow-hidden`}>
         {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center"><span className="text-6xl opacity-30">🧸</span></div>}
         {p.featured && <span className="absolute bottom-3 left-3 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft">⭐ Destacado</span>}
         {p.stock <= 0 && <div className="absolute inset-0 bg-cocoa-800/40 flex items-center justify-center backdrop-blur-[2px]"><span className="bg-white/90 text-cocoa-700 font-bold px-4 py-2 rounded-full text-sm">Agotado</span></div>}
       </div>
+      {/* Info */}
       <div className="p-4">
         <span className="text-[10px] font-bold text-blush-400 uppercase tracking-wider">{p.category}</span>
         <h3 className="font-display font-bold text-cocoa-700 mt-1 group-hover:text-blush-400 transition-colors line-clamp-1 text-sm">{p.title}</h3>
