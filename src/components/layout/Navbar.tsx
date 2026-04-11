@@ -14,14 +14,13 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-[#4A90D9] shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo — wide, no background box */}
-          <Link href="/" className="flex items-center group -my-2">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo — natural colors, no frame */}
+          <Link href="/" className="flex items-center group">
             <img
               src={LOGO}
               alt="Bubu & Dudu Crochet"
-              className="h-20 sm:h-24 w-auto object-contain group-hover:scale-105 transition-transform"
-              style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))', mixBlendMode: 'multiply' }}
+              className="h-14 sm:h-16 w-auto object-contain rounded-xl group-hover:scale-105 transition-transform"
             />
           </Link>
 
