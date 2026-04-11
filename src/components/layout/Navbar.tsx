@@ -14,10 +14,15 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-[#4A90D9] shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo — big, no text */}
-          <Link href="/" className="flex items-center gap-1 group">
-            <img src={LOGO} alt="Bubu & Dudu Crochet" className="h-12 w-auto object-contain drop-shadow-lg group-hover:scale-105 transition-transform" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
+        <div className="flex items-center justify-between h-20">
+          {/* Logo — wide, no background box */}
+          <Link href="/" className="flex items-center group -my-2">
+            <img
+              src={LOGO}
+              alt="Bubu & Dudu Crochet"
+              className="h-20 sm:h-24 w-auto object-contain group-hover:scale-105 transition-transform"
+              style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))', mixBlendMode: 'multiply' }}
+            />
           </Link>
 
           {/* Desktop nav */}
