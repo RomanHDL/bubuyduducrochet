@@ -6,6 +6,44 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
 
+// ═══ Cute sound system — Web Audio API, no files needed ═══
+const SOUNDS = [
+  // Sparkle / star ✨
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1200, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(2400, ctx.currentTime + 0.1); g.gain.setValueAtTime(0.08, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2); o.start(); o.stop(ctx.currentTime + 0.2); },
+  // Plush squeeze 🧸
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(600, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15); g.gain.setValueAtTime(0.07, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18); o.start(); o.stop(ctx.currentTime + 0.18); },
+  // Pop / bubble 🫧
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(800, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(1600, ctx.currentTime + 0.05); o.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.12); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15); o.start(); o.stop(ctx.currentTime + 0.15); },
+  // Chime / bell 🔔
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'triangle'; o.frequency.setValueAtTime(1400, ctx.currentTime); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); o.start(); o.stop(ctx.currentTime + 0.3); },
+  // Twinkle high ⭐
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1800, ctx.currentTime); o.frequency.setValueAtTime(2200, ctx.currentTime + 0.06); o.frequency.setValueAtTime(2600, ctx.currentTime + 0.12); g.gain.setValueAtTime(0.05, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2); o.start(); o.stop(ctx.currentTime + 0.2); },
+  // Soft boing 🎀
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(500, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05); o.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.15); g.gain.setValueAtTime(0.07, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2); o.start(); o.stop(ctx.currentTime + 0.2); },
+  // Xylophone tap 🎵
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'triangle'; o.frequency.setValueAtTime(1047, ctx.currentTime); g.gain.setValueAtTime(0.08, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25); o.start(); o.stop(ctx.currentTime + 0.25); },
+  // Whistle up 🌈
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(700, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.15); g.gain.setValueAtTime(0.05, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18); o.start(); o.stop(ctx.currentTime + 0.18); },
+  // Harp pluck 🧶
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'triangle'; o.frequency.setValueAtTime(880, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.2); g.gain.setValueAtTime(0.07, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25); o.start(); o.stop(ctx.currentTime + 0.25); },
+  // Pixie dust 💕
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const o2 = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); o2.connect(g); g.connect(ctx.destination); o.type = 'sine'; o2.type = 'sine'; o.frequency.setValueAtTime(2000, ctx.currentTime); o2.frequency.setValueAtTime(2500, ctx.currentTime); g.gain.setValueAtTime(0.04, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15); o.start(); o2.start(); o.stop(ctx.currentTime + 0.15); o2.stop(ctx.currentTime + 0.15); },
+  // Music box 🎶
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1319, ctx.currentTime); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35); o.start(); o.stop(ctx.currentTime + 0.35); },
+  // Droplet 💧
+  (ctx: AudioContext) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.setValueAtTime(1600, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.1); g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12); o.start(); o.stop(ctx.currentTime + 0.12); },
+];
+
+let _audioCtx: AudioContext | null = null;
+function playSound(id: string) {
+  try {
+    if (!_audioCtx) _audioCtx = new AudioContext();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    const idx = Math.abs(hashId(id)) % SOUNDS.length;
+    SOUNDS[idx](_audioCtx);
+  } catch {}
+}
+
 interface Product {
   _id: string; title: string; description: string; price: number; images: string[]; stock: number; category: string; featured: boolean;
 }
@@ -123,25 +161,25 @@ function Content() {
     <AnimatedBg theme="peach">
     {/* ═══ Sidebar — hover to expand ═══ */}
     <div className="fixed left-0 top-20 z-40 hidden md:block group/sb">
-      <div className="w-10 group-hover/sb:w-56 transition-all duration-300 overflow-hidden bg-white/90 backdrop-blur-md border-r border-b border-cream-200 rounded-r-2xl shadow-warm">
+      <div className="w-12 group-hover/sb:w-60 transition-all duration-300 overflow-hidden bg-white/90 backdrop-blur-md border-r border-b border-cream-200 rounded-r-2xl shadow-warm">
         {/* Tab indicator */}
-        <div className="w-10 h-full absolute left-0 top-0 flex flex-col items-center pt-4 gap-2 group-hover/sb:opacity-0 transition-opacity">
-          <span className="text-sm">🏷️</span>
-          <span className="text-[8px] text-cocoa-400 font-bold" style={{ writingMode: 'vertical-lr' }}>Categorias</span>
+        <div className="w-12 h-full absolute left-0 top-0 flex flex-col items-center pt-4 gap-2 group-hover/sb:opacity-0 transition-opacity">
+          <span className="text-lg">🏷️</span>
+          <span className="text-xs text-cocoa-500 font-bold" style={{ writingMode: 'vertical-lr' }}>Categorias</span>
         </div>
 
         {/* Expanded content */}
-        <div className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-300 p-4 min-w-[220px]">
-          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">🏷️ Categorias</h3>
+        <div className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-300 p-5 min-w-[240px]">
+          <h3 className="font-display font-bold text-base text-cocoa-700 mb-3">🏷️ Categorias</h3>
           <div className="space-y-1">
-            <button onClick={() => setCat('')} className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all ${cat === '' ? 'bg-blush-400 text-white' : 'text-cocoa-500 hover:bg-cream-50'}`}>✨ Todos</button>
+            <button onClick={() => setCat('')} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${cat === '' ? 'bg-blush-400 text-white' : 'text-cocoa-500 hover:bg-cream-50'}`}>✨ Todos</button>
             {dbCategories.map(c => (
-              <button key={c.slug} onClick={() => setCat(c.slug)} className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all ${cat === c.slug ? 'bg-blush-400 text-white' : 'text-cocoa-500 hover:bg-cream-50'}`}>
+              <button key={c.slug} onClick={() => setCat(c.slug)} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${cat === c.slug ? 'bg-blush-400 text-white' : 'text-cocoa-500 hover:bg-cream-50'}`}>
                 {c.emoji} {c.name}
               </button>
             ))}
             {isAdmin && (
-              <button onClick={() => setShowCatModal(true)} className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-lavender-400 hover:bg-lavender-50">➕ Nueva categoria</button>
+              <button onClick={() => setShowCatModal(true)} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-lavender-400 hover:bg-lavender-50">➕ Nueva categoria</button>
             )}
           </div>
         </div>
@@ -425,7 +463,7 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, big }: { p:
   const f = FRAMES[(hashId(p._id) + idx) % FRAMES.length];
 
   return (
-    <div className="relative group" style={{ padding: '12px' }}>
+    <div className="relative group" style={{ padding: '12px' }} onMouseEnter={() => playSound(p._id)}>
       {/* Museum frame — multi-layered border like a real painting */}
       <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ background: f.outer, boxShadow: `8px 8px 24px ${f.shadow}, -2px -2px 8px rgba(255,255,255,0.3), inset 0 0 0 3px ${f.accent}, inset 0 0 0 7px ${f.inner}, inset 0 0 0 9px ${f.accent}` }} />
 
