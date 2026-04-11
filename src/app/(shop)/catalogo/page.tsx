@@ -113,32 +113,79 @@ function Content() {
 
   return (
     <AnimatedBg theme="peach">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 bg-blush-50 border border-blush-200 rounded-full px-4 py-1.5 mb-4">
-          <span className="text-sm">🧶</span><span className="text-xs font-bold text-cocoa-500">{products.length} creaciones disponibles</span>
+    {/* ═══ Sidebar — hover to expand ═══ */}
+    <div className="fixed left-0 top-20 z-40 hidden md:block group/sb">
+      <div className="w-10 group-hover/sb:w-56 transition-all duration-300 overflow-hidden bg-white/90 backdrop-blur-md border-r border-b border-cream-200 rounded-r-2xl shadow-warm">
+        {/* Tab indicator */}
+        <div className="w-10 h-full absolute left-0 top-0 flex flex-col items-center pt-4 gap-2 group-hover/sb:opacity-0 transition-opacity">
+          <span className="text-sm">🏷️</span>
+          <span className="text-[8px] text-cocoa-400 font-bold" style={{ writingMode: 'vertical-lr' }}>Categorias</span>
         </div>
-        <h1 className="font-display font-bold text-4xl text-cocoa-700 mb-2">Nuestro Catalogo</h1>
-        <p className="text-cocoa-400 max-w-md mx-auto">Cada pieza es unica, hecha a mano con los mejores materiales y todo nuestro carino</p>
-        {isAdmin && (
-          <button onClick={openNew} className="mt-5 btn-cute bg-lavender-400 text-white px-6 py-2.5 hover:bg-lavender-500 shadow-soft inline-flex items-center gap-2">➕ Agregar Producto</button>
+
+        {/* Expanded content */}
+        <div className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-300 p-4 min-w-[220px]">
+          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">🏷️ Categorias</h3>
+          <div className="space-y-1">
+            <button onClick={() => setCat('')} className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all ${cat === '' ? 'bg-blush-400 text-white' : 'text-cocoa-500 hover:bg-cream-50'}`}>✨ Todos</button>
+            {dbCategories.map(c => (
+              <button key={c.slug} onClick={() => setCat(c.slug)} className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all ${cat === c.slug ? 'bg-blush-400 text-white' : 'text-cocoa-500 hover:bg-cream-50'}`}>
+                {c.emoji} {c.name}
+              </button>
+            ))}
+            {isAdmin && (
+              <button onClick={() => setShowCatModal(true)} className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-lavender-400 hover:bg-lavender-50">➕ Nueva categoria</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 md:pl-14 py-10">
+      {/* ═══ Header — title left + 3 featured right ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 items-start">
+        {/* Left: Title + description */}
+        <div>
+          <div className="inline-flex items-center gap-2 bg-blush-50 border border-blush-200 rounded-full px-4 py-1.5 mb-4">
+            <span className="text-sm">🧶</span><span className="text-xs font-bold text-cocoa-500">{products.length} creaciones disponibles</span>
+          </div>
+          <h1 className="font-display font-bold text-3xl lg:text-4xl text-cocoa-700 mb-2">Nuestro Catalogo</h1>
+          <p className="text-cocoa-400 max-w-md">Cada pieza es unica, hecha a mano con los mejores materiales y todo nuestro carino</p>
+          {isAdmin && (
+            <button onClick={openNew} className="mt-5 btn-cute bg-lavender-400 text-white px-6 py-2.5 hover:bg-lavender-500 shadow-soft inline-flex items-center gap-2">➕ Agregar Producto</button>
+          )}
+        </div>
+
+        {/* Right: 3 featured mini cards */}
+        {feat.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-3"><span className="text-sm">⭐</span><h3 className="font-display font-bold text-sm text-cocoa-700">Destacados</h3></div>
+            <div className="grid grid-cols-3 gap-3">
+              {feat.slice(0, 3).map((p, i) => (
+                <Link key={p._id} href={`/producto/${p._id}`} className="bg-white/70 rounded-xl border border-cream-200 overflow-hidden shadow-soft hover:shadow-warm hover:-translate-y-0.5 transition-all group">
+                  <div className="aspect-square overflow-hidden">
+                    {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <div className="w-full h-full bg-cream-100 flex items-center justify-center"><span className="text-2xl opacity-30">🧸</span></div>}
+                  </div>
+                  <div className="p-2">
+                    <p className="text-[10px] font-bold text-cocoa-700 truncate">{p.title}</p>
+                    <p className="text-xs font-bold text-blush-400">${p.price}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
       {/* Filters */}
-      <div className="mb-12 space-y-5">
-        {/* Categories — dynamic from DB */}
-        <div className="flex flex-wrap justify-center gap-2">
-          <button onClick={() => setCat('')} className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${cat === '' ? 'bg-blush-400 text-white shadow-glow scale-105' : 'bg-white text-cocoa-500 border border-cream-200 hover:border-blush-200 hover:text-blush-400'}`}>✨ Todos</button>
+      <div className="mb-10 space-y-4">
+        {/* Mobile categories (hidden on desktop since sidebar handles it) */}
+        <div className="flex flex-wrap justify-center gap-2 md:hidden">
+          <button onClick={() => setCat('')} className={`px-3 py-2 rounded-full text-xs font-semibold transition-all ${cat === '' ? 'bg-blush-400 text-white' : 'bg-white text-cocoa-500 border border-cream-200'}`}>✨ Todos</button>
           {dbCategories.map(c => (
-            <button key={c.slug} onClick={() => setCat(c.slug)} className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${cat === c.slug ? 'bg-blush-400 text-white shadow-glow scale-105' : 'bg-white text-cocoa-500 border border-cream-200 hover:border-blush-200 hover:text-blush-400'}`}>
+            <button key={c.slug} onClick={() => setCat(c.slug)} className={`px-3 py-2 rounded-full text-xs font-semibold transition-all ${cat === c.slug ? 'bg-blush-400 text-white' : 'bg-white text-cocoa-500 border border-cream-200'}`}>
               {c.emoji} {c.name}
             </button>
           ))}
-          {isAdmin && (
-            <button onClick={() => setShowCatModal(true)} className="px-3 py-2.5 rounded-full text-sm font-semibold bg-lavender-50 text-lavender-400 border border-lavender-200 hover:bg-lavender-100 transition-all">➕</button>
-          )}
         </div>
 
         {/* Search + Sort row */}
@@ -260,24 +307,7 @@ function Content() {
         </div>
       ) : (
         <>
-          {!search && !cat && feat.length > 0 && (
-            <div className="mb-14">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2"><span className="text-lg">⭐</span><h2 className="font-display font-bold text-xl text-cocoa-700">Destacados</h2></div>
-                {allFeat.length > 5 && (
-                  <div className="flex gap-1.5">
-                    {Array.from({ length: Math.ceil(allFeat.length / 5) }).map((_, i) => (
-                      <button key={i} onClick={() => setFeatPage(i)} className={`w-2 h-2 rounded-full transition-all ${featPage % Math.ceil(allFeat.length / 5) === i ? 'bg-blush-400 w-5' : 'bg-cream-300'}`} />
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" key={featPage}>
-                {feat.map((p, i) => <Card key={p._id + featPage} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
-              </div>
-            </div>
-          )}
-          {!search && !cat && <div className="flex items-center gap-2 mb-6"><span className="text-lg">🧶</span><h2 className="font-display font-bold text-xl text-cocoa-700">Todos los productos</h2></div>}
+          <div className="flex items-center gap-2 mb-6"><span className="text-lg">🧶</span><h2 className="font-display font-bold text-xl text-cocoa-700">Todos los productos</h2></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
             {sorted.map((p, i) => <Card key={p._id} p={p} idx={i} favs={favs} toggleFav={toggleFav} isAdmin={isAdmin} onEdit={openEdit} onDel={doDelete} />)}
           </div>
