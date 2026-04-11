@@ -3,7 +3,10 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'romanherrera548@gmail.com';
+const ADMIN_EMAILS = [
+  process.env.ADMIN_EMAIL || 'romanherrera548@gmail.com',
+  'veroguadalupita@gmail.com',
+];
 
 export async function POST(req: NextRequest) {
   await connectDB();
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
-  const role = email === ADMIN_EMAIL ? 'admin' : 'customer';
+  const role = ADMIN_EMAILS.includes(email) ? 'admin' : 'customer';
 
   const user = await User.create({
     name,

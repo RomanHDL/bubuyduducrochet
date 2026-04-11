@@ -5,7 +5,11 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from './mongodb';
 import User from '@/models/User';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'romanherrera548@gmail.com';
+const ADMIN_EMAILS = [
+  process.env.ADMIN_EMAIL || 'romanherrera548@gmail.com',
+  'veroguadalupita@gmail.com',
+];
+const isAdminEmail = (email: string) => ADMIN_EMAILS.includes(email);
 
 /* ── Build providers list conditionally ── */
 const providers: NextAuthOptions['providers'] = [];
@@ -66,7 +70,7 @@ export const authOptions: NextAuthOptions = {
           const existing = await User.findOne({ email: user.email });
 
           if (!existing) {
-            const role = user.email === ADMIN_EMAIL ? 'admin' : 'customer';
+            const role = isAdminEmail(user.email || '') ? 'admin' : 'customer';
             await User.create({
               name: user.name,
               email: user.email,
@@ -74,7 +78,7 @@ export const authOptions: NextAuthOptions = {
               provider: 'google',
               role,
             });
-          } else if (existing.email === ADMIN_EMAIL && existing.role !== 'admin') {
+          } else if (isAdminEmail(existing.email) && existing.role !== 'admin') {
             existing.role = 'admin';
             await existing.save();
           }
@@ -107,8 +111,8 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // Always ensure admin email gets admin role
-      if (token.email === ADMIN_EMAIL) {
+      // Always ensure admin emails get admin role
+      if (isAdminEmail(token.email || '')) {
         token.role = 'admin';
       }
 
