@@ -1,12 +1,6 @@
 import Link from 'next/link';
 import Testimonials from '@/components/Testimonials';
-
-const CATEGORIES = [
-  { name: 'Amigurumis', emoji: '🧸', desc: 'Munequitos adorables tejidos a mano', color: 'bg-blush-50 border-blush-200', href: '/catalogo?category=amigurumis' },
-  { name: 'Accesorios', emoji: '🎀', desc: 'Monas, diademas, llaveros y mas', color: 'bg-lavender-50 border-lavender-200', href: '/catalogo?category=accesorios' },
-  { name: 'Decoracion', emoji: '🌸', desc: 'Detalles lindos para tu hogar', color: 'bg-mint-50 border-mint-200', href: '/catalogo?category=decoracion' },
-  { name: 'Ropa Bebe', emoji: '👶', desc: 'Ropita tejida con mucho carino', color: 'bg-sky-50 border-sky-200', href: '/catalogo?category=ropa-bebe' },
-];
+import HomeCategories from '@/components/HomeCategories';
 
 const BENEFITS = [
   { emoji: '🧶', title: 'Hecho a mano', desc: 'Cada pieza tejida con amor y dedicacion' },
@@ -75,15 +69,7 @@ export default function HomePage() {
             <h2 className="font-display font-bold text-3xl text-cocoa-700 mb-2">Nuestras Categorias</h2>
             <p className="text-cocoa-400">Encuentra el regalo perfecto hecho a mano</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-6">
-            {CATEGORIES.map((cat) => (
-              <Link key={cat.name} href={cat.href} className={`${cat.color} border-2 rounded-cute p-6 text-center hover:shadow-warm hover:-translate-y-2 transition-all duration-300 group backdrop-blur-sm`}>
-                <span className="text-5xl block mb-3 group-hover:scale-125 transition-transform duration-300">{cat.emoji}</span>
-                <h3 className="font-display font-bold text-cocoa-700 mb-1">{cat.name}</h3>
-                <p className="text-xs text-cocoa-400">{cat.desc}</p>
-              </Link>
-            ))}
-          </div>
+          <HomeCategories />
         </div>
       </section>
 

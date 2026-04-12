@@ -65,11 +65,13 @@ export default function ContactPage() {
   const [stats, setStats] = useState({ itemsSold: 0, uniqueCustomers: 0, avgRating: 5, reviewCount: 0 });
   const [loaded, setLoaded] = useState(false);
 
+  const fetchStats = () => {
+    fetch('/api/stats').then(r => r.json()).then(d => { setStats(d); setLoaded(true); }).catch(() => setLoaded(true));
+  };
   useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.json())
-      .then(d => { setStats(d); setLoaded(true); })
-      .catch(() => setLoaded(true));
+    fetchStats();
+    const interval = setInterval(fetchStats, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const totalPieces = BASE_PIECES + stats.itemsSold;
