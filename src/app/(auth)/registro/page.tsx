@@ -1,60 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import AnimatedBg from '@/components/AnimatedBg';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Error al registrarse');
-        setLoading(false);
-        return;
-      }
-
-      // Auto login after register
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.ok) {
-        router.push('/');
-        router.refresh();
-      }
-    } catch {
-      setError('Error de conexion');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <AnimatedBg theme="pink">
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-lavender-50 via-cream-50 to-mint-50">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <span className="text-5xl block mb-3">🧶</span>
@@ -62,12 +14,14 @@ export default function RegisterPage() {
           <p className="text-cocoa-400 mt-1">Unete a nuestra comunidad de crochet</p>
         </div>
 
-        <div className="bg-white rounded-cute shadow-warm p-8 border border-cream-200">
+        <div className="bg-white rounded-cute shadow-warm p-8 border border-cream-200 text-center">
+          <p className="text-cocoa-400 text-sm mb-6">Registrate facilmente con tu cuenta de Google</p>
+
           <button
             onClick={() => signIn('google', { callbackUrl: '/' })}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-cream-200 rounded-2xl text-sm font-semibold text-cocoa-600 hover:bg-cream-50 hover:border-blush-200 transition-all mb-6"
+            className="w-full flex items-center justify-center gap-3 px-4 py-4 border-2 border-cream-200 rounded-bubble text-base font-bold text-cocoa-600 hover:bg-cream-50 hover:border-blush-200 hover:shadow-soft transition-all"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -76,38 +30,7 @@ export default function RegisterPage() {
             Registrarse con Google
           </button>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-cream-200"></div></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-white px-4 text-cocoa-300 font-medium">o con email</span></div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-blush-50 border border-blush-200 rounded-2xl px-4 py-3 text-sm text-blush-500 font-medium">{error}</div>
-            )}
-
-            <div>
-              <label className="block text-sm font-semibold text-cocoa-600 mb-1.5">Nombre</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-cute" placeholder="Tu nombre" required />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-cocoa-600 mb-1.5">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-cute" placeholder="tu@email.com" required />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-cocoa-600 mb-1.5">Contrasena</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input-cute" placeholder="Minimo 6 caracteres" required minLength={6} />
-            </div>
-
-            <button type="submit" disabled={loading} className="w-full btn-cute bg-lavender-400 text-white py-3 hover:bg-lavender-300 disabled:opacity-50">
-              {loading ? 'Creando cuenta...' : 'Crear Cuenta 🧶'}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-cocoa-400 mt-6">
-            Ya tienes cuenta?{' '}
-            <Link href="/login" className="text-blush-400 font-semibold hover:text-blush-500">Inicia sesion</Link>
-          </p>
+          <p className="text-xs text-cocoa-300 mt-6">Tu cuenta se crea automaticamente al iniciar con Google</p>
         </div>
       </div>
     </div>
