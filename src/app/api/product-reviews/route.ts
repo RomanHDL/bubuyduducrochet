@@ -9,6 +9,15 @@ export async function GET(req: NextRequest) {
   await connectDB();
   const { searchParams } = new URL(req.url);
   const productId = searchParams.get('productId');
+  const all = searchParams.get('all');
+  // Admin can fetch ALL product reviews
+  if (all === 'true') {
+    const session = await getServerSession(authOptions);
+    if (session && (session.user as any).role === 'admin') {
+      const reviews = await ProductReview.find({}).sort({ createdAt: -1 });
+      return NextResponse.json(reviews);
+    }
+  }
   if (!productId) return NextResponse.json([]);
   const reviews = await ProductReview.find({ productId }).sort({ createdAt: -1 });
   return NextResponse.json(reviews);

@@ -224,6 +224,7 @@ function ReviewSection({ productId }: { productId: string }) {
   const [rating, setRating] = useState(5);
   const [imgPreviews, setImgPreviews] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
+  const [reviewLightbox, setReviewLightbox] = useState<{ images: string[]; idx: number } | null>(null);
 
   useEffect(() => {
     fetch(`/api/product-reviews?productId=${productId}`).then(r => r.json()).then(setReviews).catch(() => {});
@@ -316,11 +317,46 @@ function ReviewSection({ productId }: { productId: string }) {
               </div>
               <p className="text-sm text-cocoa-500 leading-relaxed">{r.text}</p>
               {r.images?.length > 0 && (
-                <div className="flex gap-2 mt-3">{r.images.map((img: string, i: number) => <img key={i} src={img} alt="" className="w-16 h-16 rounded-lg object-cover border border-cream-200" />)}</div>
+                <div className="flex gap-3 mt-3 overflow-x-auto pb-1">
+                  {r.images.map((img: string, i: number) => (
+                    <button key={i} onClick={() => setReviewLightbox({ images: r.images, idx: i })} className="flex-shrink-0 cursor-zoom-in">
+                      <img src={img} alt="" className="w-28 h-28 sm:w-36 sm:h-36 rounded-xl object-cover border-2 border-cream-200 hover:border-blush-300 hover:shadow-warm transition-all" />
+                    </button>
+                  ))}
+                </div>
               )}
               <p className="text-[10px] text-cocoa-300 mt-2">{new Date(r.createdAt).toLocaleDateString('es-MX')}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ═══ Review image lightbox — swipeable gallery ═══ */}
+      {reviewLightbox && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setReviewLightbox(null)}>
+          <button className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white text-xl hover:bg-white/20 z-10">✕</button>
+
+          {reviewLightbox.images.length > 1 && (
+            <>
+              <button onClick={e => { e.stopPropagation(); setReviewLightbox(prev => prev ? { ...prev, idx: prev.idx > 0 ? prev.idx - 1 : prev.images.length - 1 } : null); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white text-2xl hover:bg-white/20 z-10">‹</button>
+              <button onClick={e => { e.stopPropagation(); setReviewLightbox(prev => prev ? { ...prev, idx: prev.idx < prev.images.length - 1 ? prev.idx + 1 : 0 } : null); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white text-2xl hover:bg-white/20 z-10">›</button>
+            </>
+          )}
+
+          <img src={reviewLightbox.images[reviewLightbox.idx]} alt="" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" onClick={e => e.stopPropagation()} />
+
+          {reviewLightbox.images.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+              {reviewLightbox.images.map((_: string, i: number) => (
+                <button key={i} onClick={e => { e.stopPropagation(); setReviewLightbox(prev => prev ? { ...prev, idx: i } : null); }}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${reviewLightbox.idx === i ? 'bg-white w-6' : 'bg-white/40'}`} />
+              ))}
+            </div>
+          )}
+
+          <p className="absolute top-5 left-1/2 -translate-x-1/2 text-white/60 text-sm font-medium">{reviewLightbox.idx + 1} / {reviewLightbox.images.length}</p>
         </div>
       )}
     </div>
