@@ -31,7 +31,7 @@ export default function PedidosPage() {
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [ticketPreview, setTicketPreview] = useState<{ img: string; orderId: string } | null>(null);
+  const [ticketPreview, setTicketPreview] = useState<{ img: string; orderId: string; orderNum: number } | null>(null);
   const [generatingTicket, setGeneratingTicket] = useState<string | null>(null);
 
   const fetchOrders = async () => {
@@ -46,7 +46,7 @@ export default function PedidosPage() {
     fetchOrders();
   };
 
-  // Admin: generate ticket and open WhatsApp to send to customer
+  // Admin: generate ticket image, auto-download it, show preview, then open WhatsApp
   const handleSendTicket = async (order: any) => {
     setGeneratingTicket(order._id);
     try {
@@ -58,19 +58,30 @@ export default function PedidosPage() {
         payMethod,
         order.userName || 'Cliente',
       );
-      setTicketPreview({ img: ticketImg, orderId: order._id });
 
-      // Build WhatsApp message to customer
-      const msg = buildTicketWhatsAppMsg(
-        order.orderNumber || 0,
-        order.items || [],
-        order.total || 0,
-        payMethod,
+      // Auto-download the ticket image so admin can attach it in WhatsApp
+      const link = document.createElement('a');
+      link.href = ticketImg;
+      link.download = `ticket-${order.orderNumber || order._id.slice(-6)}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Show preview modal
+      setTicketPreview({ img: ticketImg, orderId: order._id, orderNum: order.orderNumber || 0 });
+
+      // Open WhatsApp with instructions to attach the downloaded image
+      const msg = encodeURIComponent(
+        `🧾 *TICKET DE COMPRA #${order.orderNumber || 0}*\n\n` +
+        `Hola ${order.userName}! Tu pago ha sido confirmado ✅\n` +
+        `Adjunto tu ticket de compra.\n\n` +
+        `Total: $${order.total?.toFixed(2)} MXN\n` +
+        `Gracias por tu compra! 🧶💕\n` +
+        `— Mundo A Crochet`
       );
-      // Open WhatsApp (admin sends to customer's number or the store's WA)
       setTimeout(() => {
         window.open(`https://wa.me/${WA}?text=${msg}`, '_blank');
-      }, 800);
+      }, 1000);
     } catch {} finally { setGeneratingTicket(null); }
   };
 
@@ -128,14 +139,24 @@ export default function PedidosPage() {
             <div className="fixed inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setTicketPreview(null)} />
             <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-5 my-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display font-bold text-lg text-cocoa-700">🧾 Ticket generado</h2>
+                <h2 className="font-display font-bold text-lg text-cocoa-700">🧾 Ticket #{ticketPreview.orderNum}</h2>
                 <button onClick={() => setTicketPreview(null)} className="w-8 h-8 rounded-full bg-cream-100 flex items-center justify-center text-cocoa-400 hover:bg-cream-200">✕</button>
               </div>
+
+              {/* Instruction */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4 flex items-start gap-2">
+                <span className="text-lg">✅</span>
+                <div>
+                  <p className="text-xs font-bold text-green-700">Ticket descargado e imagen lista</p>
+                  <p className="text-[11px] text-green-600 mt-0.5">En WhatsApp, adjunta la imagen del ticket (📎 → Galeria) junto con el mensaje.</p>
+                </div>
+              </div>
+
               <div className="rounded-xl overflow-hidden border border-cream-200 mb-4">
                 <img src={ticketPreview.img} alt="Ticket" className="w-full" />
               </div>
               <div className="flex gap-2">
-                <a href={ticketPreview.img} download={`ticket-${ticketPreview.orderId.slice(-6)}.png`} className="flex-1 btn-cute bg-lavender-100 text-lavender-600 text-xs py-2.5 border border-lavender-200 text-center">📥 Descargar</a>
+                <a href={ticketPreview.img} download={`ticket-${ticketPreview.orderNum}.png`} className="flex-1 btn-cute bg-lavender-100 text-lavender-600 text-xs py-2.5 border border-lavender-200 text-center">📥 Descargar otra vez</a>
                 <button onClick={() => setTicketPreview(null)} className="flex-1 btn-cute bg-blush-400 text-white text-xs py-2.5">✓ Listo</button>
               </div>
             </div>
