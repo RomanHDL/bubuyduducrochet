@@ -292,40 +292,45 @@ function Content() {
               🔽 Ordenar y filtrar
               {(sort !== 'recent' || priceMin || priceMax) && <span className="w-2 h-2 rounded-full bg-blush-400" />}
             </button>
-
-            {showFilters && (
-              <div className="fixed inset-x-3 sm:inset-x-auto sm:absolute sm:right-0 top-auto mt-2 w-auto sm:w-64 bg-white rounded-cute shadow-warm border border-cream-200 p-4 z-30">
-                <h4 className="text-xs font-bold text-cocoa-600 mb-3">Ordenar por</h4>
-                <div className="space-y-1 mb-4">
-                  {[
-                    { value: 'recent', label: 'Mas recientes', icon: '🕐' },
-                    { value: 'price-low', label: 'Menor precio', icon: '💰' },
-                    { value: 'price-high', label: 'Mayor precio', icon: '💎' },
-                    { value: 'name', label: 'Nombre A-Z', icon: '🔤' },
-                    { value: 'featured', label: 'Destacados primero', icon: '⭐' },
-                  ].map(o => (
-                    <button key={o.value} onClick={() => setSort(o.value)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left ${sort === o.value ? 'bg-blush-50 text-blush-500 font-bold border border-blush-200' : 'text-cocoa-500 hover:bg-cream-50'}`}>
-                      <span>{o.icon}</span> {o.label} {sort === o.value && <span className="ml-auto">✓</span>}
-                    </button>
-                  ))}
-                </div>
-
-                <h4 className="text-xs font-bold text-cocoa-600 mb-2">Rango de precio</h4>
-                <div className="flex items-center gap-2 mb-4">
-                  <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min" className="w-20 px-2 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
-                  <span className="text-cocoa-300 text-xs">—</span>
-                  <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max" className="w-20 px-2 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
-                </div>
-
-                <div className="flex gap-2">
-                  <button onClick={() => { setPriceMin(''); setPriceMax(''); setSort('recent'); setShowFilters(false); }} className="flex-1 py-2 rounded-xl border border-cream-200 text-xs font-semibold text-cocoa-400">Limpiar</button>
-                  <button onClick={() => setShowFilters(false)} className="flex-1 py-2 rounded-xl bg-blush-400 text-white text-xs font-bold">Aplicar</button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Filter panel — full width on mobile, absolute on desktop */}
+        {showFilters && (
+          <>
+            <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setShowFilters(false)} />
+            <div className="fixed bottom-0 left-0 right-0 z-50 sm:relative sm:z-auto bg-white rounded-t-3xl sm:rounded-cute shadow-warm border border-cream-200 p-5 sm:p-4 sm:max-w-xs sm:ml-auto">
+              <div className="w-10 h-1 bg-cream-300 rounded-full mx-auto mb-4 sm:hidden" />
+              <h4 className="text-xs font-bold text-cocoa-600 mb-3">Ordenar por</h4>
+              <div className="space-y-1 mb-4">
+                {[
+                  { value: 'recent', label: 'Mas recientes', icon: '🕐' },
+                  { value: 'price-low', label: 'Menor precio', icon: '💰' },
+                  { value: 'price-high', label: 'Mayor precio', icon: '💎' },
+                  { value: 'name', label: 'Nombre A-Z', icon: '🔤' },
+                  { value: 'featured', label: 'Destacados primero', icon: '⭐' },
+                ].map(o => (
+                  <button key={o.value} onClick={() => setSort(o.value)}
+                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${sort === o.value ? 'bg-blush-50 text-blush-500 font-bold border border-blush-200' : 'text-cocoa-500 hover:bg-cream-50'}`}>
+                    <span>{o.icon}</span> {o.label} {sort === o.value && <span className="ml-auto">✓</span>}
+                  </button>
+                ))}
+              </div>
+
+              <h4 className="text-xs font-bold text-cocoa-600 mb-2">Rango de precio</h4>
+              <div className="flex items-center gap-2 mb-4">
+                <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="$ Min" className="flex-1 px-3 py-2.5 rounded-xl border border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
+                <span className="text-cocoa-300 text-xs">—</span>
+                <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="$ Max" className="flex-1 px-3 py-2.5 rounded-xl border border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={() => { setPriceMin(''); setPriceMax(''); setSort('recent'); setShowFilters(false); }} className="flex-1 py-2.5 rounded-xl border border-cream-200 text-sm font-semibold text-cocoa-400">Limpiar</button>
+                <button onClick={() => setShowFilters(false)} className="flex-1 py-2.5 rounded-xl bg-blush-400 text-white text-sm font-bold">Aplicar</button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Results count */}
         <p className="text-sm text-cocoa-400 text-center">{loading ? '🔍 Buscando...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''} encontrado${sorted.length !== 1 ? 's' : ''}`}</p>

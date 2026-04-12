@@ -185,7 +185,7 @@ export default function AdminDashboard() {
         <QuickLink href="/admin/pagos" emoji="💰" title="Control Pagos" desc="Cobros y reembolsos" />
         <QuickLink href="/admin/usuarios" emoji="👥" title="Usuarios" desc="Clientes registrados" />
         <QuickLink href="/admin/productos" emoji="📦" title="Inventario" desc="Stock y productos" />
-        <QuickLink href="/preguntas" emoji="❓" title="FAQs" desc="Preguntas frecuentes" />
+        <QuickLink href="/admin/resenas" emoji="⭐" title="Reseñas" desc="Aprobar y gestionar" />
         <QuickLink href="/contacto" emoji="📝" title="Sobre Nosotros" desc="Pagina de contacto" />
         <QuickLink href="/" emoji="🏠" title="Ver Tienda" desc="Vista del cliente" />
       </div>
