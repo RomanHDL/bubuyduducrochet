@@ -29,6 +29,9 @@ export default function AdminOrdersPage() {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchOrders();
+    // Real-time: refresh every 10 seconds
+    const interval = setInterval(fetchOrders, 10000);
+    return () => clearInterval(interval);
   }, [session, status]);
 
   const fetchOrders = async () => {

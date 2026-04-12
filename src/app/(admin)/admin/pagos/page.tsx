@@ -31,8 +31,11 @@ export default function PagosAdmin() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
+  const fetchAll = () => { fetch('/api/orders').then(r => r.json()).then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); };
   useEffect(() => {
-    fetch('/api/orders').then(r => r.json()).then(d => setOrders(Array.isArray(d) ? d : [])).catch(() => {}).finally(() => setLoading(false));
+    fetchAll();
+    const interval = setInterval(fetchAll, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const updatePayment = async (id: string, status: string) => {

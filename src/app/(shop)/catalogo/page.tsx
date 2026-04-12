@@ -72,7 +72,9 @@ const SOUNDS: SoundFn[] = [
 ];
 
 let _audioCtx: AudioContext | null = null;
+let _soundEnabled = true;
 function playSound(id: string) {
+  if (!_soundEnabled) return;
   try {
     if (!_audioCtx) _audioCtx = new AudioContext();
     if (_audioCtx.state === 'suspended') _audioCtx.resume();
@@ -126,6 +128,7 @@ function Content() {
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [showCatModal, setShowCatModal] = useState(false);
   const [catForm, setCatForm] = useState({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
+  const [soundOn, setSoundOn] = useState(true);
 
   // Load categories from DB
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -221,7 +224,18 @@ function Content() {
           </div>
         </div>
       </div>
+      {/* Sound toggle — below sidebar */}
+      <button onClick={() => { const next = !soundOn; setSoundOn(next); _soundEnabled = next; }}
+        className={`mt-2 w-12 h-12 rounded-r-2xl flex items-center justify-center transition-all shadow-soft border border-cream-200 ${soundOn ? 'bg-white/90 text-cocoa-600' : 'bg-cream-200/90 text-cocoa-300'}`}
+        title={soundOn ? 'Desactivar sonidos' : 'Activar sonidos'}>
+        <span className="text-lg">{soundOn ? '🔊' : '🔇'}</span>
+      </button>
     </div>
+    {/* Mobile sound toggle */}
+    <button onClick={() => { const next = !soundOn; setSoundOn(next); _soundEnabled = next; }}
+      className={`fixed bottom-20 left-3 z-40 md:hidden w-11 h-11 rounded-full flex items-center justify-center shadow-warm border border-cream-200 transition-all ${soundOn ? 'bg-white/90 text-cocoa-600' : 'bg-cream-200/90 text-cocoa-300'}`}>
+      <span className="text-base">{soundOn ? '🔊' : '🔇'}</span>
+    </button>
 
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:pl-14 py-10">
       {/* ═══ Header — title left + 4 featured right, tight ═══ */}
@@ -280,7 +294,7 @@ function Content() {
             </button>
 
             {showFilters && (
-              <div className="fixed inset-x-3 sm:inset-x-auto sm:absolute sm:right-0 top-auto mt-2 sm:w-72 bg-white rounded-cute shadow-warm border border-cream-200 p-4 z-30">
+              <div className="fixed inset-x-3 sm:inset-x-auto sm:absolute sm:right-0 top-auto mt-2 w-auto sm:w-64 bg-white rounded-cute shadow-warm border border-cream-200 p-4 z-30">
                 <h4 className="text-xs font-bold text-cocoa-600 mb-3">Ordenar por</h4>
                 <div className="space-y-1 mb-4">
                   {[
@@ -299,9 +313,9 @@ function Content() {
 
                 <h4 className="text-xs font-bold text-cocoa-600 mb-2">Rango de precio</h4>
                 <div className="flex items-center gap-2 mb-4">
-                  <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="$ Min" className="flex-1 px-2.5 py-2 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
+                  <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min" className="w-20 px-2 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
                   <span className="text-cocoa-300 text-xs">—</span>
-                  <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="$ Max" className="flex-1 px-2.5 py-2 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
+                  <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max" className="w-20 px-2 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-700 focus:outline-none focus:border-blush-300" />
                 </div>
 
                 <div className="flex gap-2">

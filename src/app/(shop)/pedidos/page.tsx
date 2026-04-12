@@ -39,7 +39,12 @@ export default function PedidosPage() {
     catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { if (session) fetchOrders(); else setLoading(false); }, [session]);
+  useEffect(() => {
+    if (!session) { setLoading(false); return; }
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 10000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   const updateOrder = async (id: string, updates: any) => {
     await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
