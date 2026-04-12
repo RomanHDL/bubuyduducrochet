@@ -13,6 +13,7 @@ export default function AdminReviewsPage() {
   const [tab, setTab] = useState<Tab>('testimonials');
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [productReviews, setProductReviews] = useState<any[]>([]);
+  const [products, setProducts] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
 
@@ -26,12 +27,17 @@ export default function AdminReviewsPage() {
 
   const fetchAll = async () => {
     try {
-      const [t, p] = await Promise.all([
+      const [t, p, prods] = await Promise.all([
         fetch('/api/reviews').then(r => r.json()),
         fetch('/api/product-reviews?all=true').then(r => r.json()),
+        fetch('/api/products').then(r => r.json()),
       ]);
       setTestimonials(Array.isArray(t) ? t : []);
       setProductReviews(Array.isArray(p) ? p : []);
+      // Build product lookup by ID
+      const map: Record<string, any> = {};
+      (Array.isArray(prods) ? prods : []).forEach((prod: any) => { map[prod._id] = prod; });
+      setProducts(map);
     } catch {} finally { setLoading(false); }
   };
 
@@ -153,15 +159,29 @@ export default function AdminReviewsPage() {
             <div className="text-center py-12 bg-white rounded-cute shadow-soft border border-cream-200"><span className="text-4xl block mb-3">📦</span><p className="text-cocoa-400">Sin reseñas de productos aun</p></div>
           ) : (
             <div className="space-y-3">
-              {productReviews.map(r => (
+              {productReviews.map(r => {
+                const prod = products[r.productId];
+                return (
                 <div key={r._id} className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
+                  {/* Product info bar */}
+                  <Link href={`/producto/${r.productId}`} className="flex items-center gap-3 mb-4 p-3 bg-gradient-to-r from-lavender-50 to-blush-50 rounded-xl border border-lavender-200 hover:shadow-soft transition-all group">
+                    {prod?.images?.[0] ? (
+                      <img src={prod.images[0]} alt="" className="w-12 h-12 rounded-lg object-cover border border-cream-200 flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-cream-100 flex items-center justify-center flex-shrink-0"><span>🧸</span></div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-cocoa-700 group-hover:text-blush-400 transition-colors truncate">{prod?.title || 'Producto eliminado'}</p>
+                      <p className="text-[10px] text-cocoa-400">{prod?.category || '—'} · ${prod?.price?.toFixed(2) || '0.00'} MXN</p>
+                    </div>
+                    <span className="text-xs text-lavender-400 font-bold group-hover:text-blush-400">Ver producto →</span>
+                  </Link>
+
                   <div className="flex items-start gap-4">
                     <div className="w-11 h-11 rounded-full bg-blush-100 flex items-center justify-center text-sm font-bold text-blush-500 flex-shrink-0">{(r.userName || '?')[0]}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="font-bold text-sm text-cocoa-700">{r.userName}</span>
-                        <span className="text-[10px] font-bold text-lavender-400 bg-lavender-50 px-2 py-0.5 rounded-full border border-lavender-200">📦 Producto</span>
-                        <span className="text-[10px] font-mono text-cocoa-300">ID: {r.productId?.slice(-8)}</span>
                       </div>
                       <div className="flex gap-0.5 mb-2">{[1,2,3,4,5].map(s => <span key={s} className={`text-sm ${s <= r.rating ? '' : 'opacity-20'}`}>⭐</span>)}</div>
                       <p className="text-sm text-cocoa-500 italic">"{r.text}"</p>
@@ -173,7 +193,8 @@ export default function AdminReviewsPage() {
                     <button onClick={() => deleteProductReview(r._id)} className="btn-cute bg-red-50 text-red-500 text-[11px] px-3 py-1.5 border border-red-200 flex-shrink-0">🗑️ Eliminar</button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
