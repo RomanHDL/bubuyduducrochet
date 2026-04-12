@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchStats();
     // Real-time: refresh every 10 seconds
-    const interval = setInterval(fetchStats, 10000);
+    const interval = setInterval(fetchStats, 3000);
     return () => clearInterval(interval);
   }, [session, status, router]);
 
@@ -45,6 +45,7 @@ export default function AdminDashboard() {
           <Link href="/catalogo" className="btn-cute bg-blush-400 text-white text-xs px-4 py-2 hover:bg-blush-500">🧶 Catalogo</Link>
           <Link href="/pedidos" className="btn-cute bg-lavender-400 text-white text-xs px-4 py-2 hover:bg-lavender-500">📋 Pedidos</Link>
           <Link href="/admin/pagos" className="btn-cute bg-green-500 text-white text-xs px-4 py-2 hover:bg-green-600">💰 Pagos</Link>
+          <Link href="/admin/materiales" className="btn-cute bg-amber-500 text-white text-xs px-4 py-2 hover:bg-amber-600">🧶 Materiales</Link>
         </div>
       </div>
 
@@ -184,6 +185,7 @@ export default function AdminDashboard() {
         <QuickLink href="/pedidos" emoji="📋" title="Gestion Pedidos" desc="Estado, tickets, pagos" />
         <QuickLink href="/admin/pagos" emoji="💰" title="Control Pagos" desc="Cobros y reembolsos" />
         <QuickLink href="/admin/usuarios" emoji="👥" title="Usuarios" desc="Clientes registrados" />
+        <QuickLink href="/admin/materiales" emoji="🧶" title="Materiales" desc="Inventario de insumos" />
         <QuickLink href="/admin/productos" emoji="📦" title="Inventario" desc="Stock y productos" />
         <QuickLink href="/admin/resenas" emoji="⭐" title="Reseñas" desc="Aprobar y gestionar" />
         <QuickLink href="/contacto" emoji="📝" title="Sobre Nosotros" desc="Pagina de contacto" />

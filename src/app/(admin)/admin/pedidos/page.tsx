@@ -30,7 +30,7 @@ export default function AdminOrdersPage() {
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchOrders();
     // Real-time: refresh every 10 seconds
-    const interval = setInterval(fetchOrders, 10000);
+    const interval = setInterval(fetchOrders, 3000);
     return () => clearInterval(interval);
   }, [session, status]);
 

@@ -42,7 +42,7 @@ export default function PedidosPage() {
   useEffect(() => {
     if (!session) { setLoading(false); return; }
     fetchOrders();
-    const interval = setInterval(fetchOrders, 10000);
+    const interval = setInterval(fetchOrders, 3000);
     return () => clearInterval(interval);
   }, [session]);
 
