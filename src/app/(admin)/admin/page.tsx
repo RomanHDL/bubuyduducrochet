@@ -42,6 +42,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/catalogo" className="btn-cute bg-blush-400 text-white text-xs px-4 py-2 hover:bg-blush-500">🧶 Catalogo</Link>
+          <Link href="/admin/productos" className="btn-cute bg-orange-400 text-white text-xs px-4 py-2 hover:bg-orange-500">📋 Proceso</Link>
           <Link href="/pedidos" className="btn-cute bg-lavender-400 text-white text-xs px-4 py-2 hover:bg-lavender-500">📋 Pedidos</Link>
           <Link href="/admin/pagos" className="btn-cute bg-green-500 text-white text-xs px-4 py-2 hover:bg-green-600">💰 Pagos</Link>
           <Link href="/admin/materiales" className="btn-cute bg-amber-500 text-white text-xs px-4 py-2 hover:bg-amber-600">🧶 Materiales</Link>
