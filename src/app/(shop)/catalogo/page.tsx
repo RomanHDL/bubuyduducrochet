@@ -84,10 +84,10 @@ function playSound(id: string) {
 }
 
 interface Product {
-  _id: string; title: string; description: string; price: number; images: string[]; stock: number; category: string; featured: boolean; elaboration?: any;
+  _id: string; title: string; description: string; price: number; images: string[]; stock: number; availability?: 'disponible' | 'por_pedido'; category: string; featured: boolean; elaboration?: any;
 }
 
-const EMPTY: Omit<Product, '_id'> = { title: '', description: '', price: 0, images: [''], stock: 1, category: 'amigurumis', featured: false };
+const EMPTY: Omit<Product, '_id'> = { title: '', description: '', price: 0, images: [''], stock: 1, availability: 'disponible', category: 'amigurumis', featured: false };
 
 export default function Wrapper() {
   return <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🧶</span></div>}><Content /></Suspense>;
@@ -174,7 +174,7 @@ function Content() {
 
   // Admin actions
   const openNew = () => { if (!session) { router.push('/login'); return; } setEditId(null); setForm({ ...EMPTY }); setErr(''); setModal(true); };
-  const openEdit = (p: Product, e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setEditId(p._id); setForm({ title: p.title, description: p.description, price: p.price, images: p.images.length ? p.images : [''], stock: p.stock, category: p.category, featured: p.featured }); setErr(''); setModal(true); };
+  const openEdit = (p: Product, e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setEditId(p._id); setForm({ title: p.title, description: p.description, price: p.price, images: p.images.length ? p.images : [''], stock: p.stock, availability: (p as any).availability || (p.stock > 0 ? 'disponible' : 'por_pedido'), category: p.category, featured: p.featured }); setErr(''); setModal(true); };
   const doDelete = async (id: string, t: string, e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); if (!confirm(`Eliminar "${t}"?`)) return; await fetch(`/api/products/${id}`, { method: 'DELETE' }); load(); };
 
   const openProceso = (p: Product, e: React.MouseEvent) => {
@@ -209,7 +209,7 @@ function Content() {
     if (!form.title.trim()) { setErr('Titulo requerido'); return; }
     if (form.price <= 0) { setErr('Precio debe ser mayor a 0'); return; }
     setSaving(true); setErr('');
-    const body = { ...form, images: form.images.filter(u => u.trim()), price: Number(form.price), stock: Number(form.stock) };
+    const body = { ...form, images: form.images.filter(u => u.trim()), price: Number(form.price), stock: Number(form.stock), availability: form.availability || 'disponible' };
     try {
       const url = editId ? `/api/products/${editId}` : '/api/products';
       const res = await fetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -464,7 +464,17 @@ function Content() {
               <div><label className="block text-xs font-semibold text-cocoa-600 mb-1">Descripcion *</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Adorable osito tejido a mano..." rows={2} className="input-cute text-sm py-2 resize-none" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Precio (MXN) *</label><input type="number" min="0" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} className="input-cute" /></div>
-                <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Stock</label><input type="number" min="0" value={form.stock} onChange={e => setForm({...form, stock: Number(e.target.value)})} className="input-cute" /></div>
+                <div>
+                  <label className="block text-sm font-semibold text-cocoa-600 mb-1">Disponibilidad</label>
+                  <select
+                    value={form.availability || 'disponible'}
+                    onChange={e => { const v = e.target.value as 'disponible' | 'por_pedido'; setForm({...form, availability: v, stock: v === 'disponible' ? Math.max(form.stock, 1) : 0 }); }}
+                    className="input-cute"
+                  >
+                    <option value="disponible">✅ Disponible</option>
+                    <option value="por_pedido">📝 Por pedido</option>
+                  </select>
+                </div>
               </div>
               <div><label className="block text-sm font-semibold text-cocoa-600 mb-1">Categoria</label><select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="input-cute">{dbCategories.map(c => <option key={c.slug} value={c.slug}>{c.emoji} {c.name}</option>)}</select></div>
               <div>
@@ -705,7 +715,9 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, onProceso, 
         <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} relative overflow-hidden`}>
           {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" /> : <div className="w-full h-full bg-gradient-to-br from-cream-100 to-blush-50 flex items-center justify-center"><span className="text-5xl opacity-20">🧸</span></div>}
           {p.featured && <span className="absolute bottom-2 left-2 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft animate-pulse">⭐ Destacado</span>}
-          {p.stock <= 0 && <div className="absolute inset-0 bg-cocoa-800/40 flex items-center justify-center backdrop-blur-[2px]"><span className="bg-white/90 text-cocoa-700 font-bold px-4 py-2 rounded-full text-sm">Agotado</span></div>}
+          {((p as any).availability || (p.stock > 0 ? 'disponible' : 'por_pedido')) === 'por_pedido' && (
+            <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft">📝 Por pedido</span>
+          )}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-700 -translate-x-full" />
         </div>
 
@@ -716,7 +728,11 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, onProceso, 
           {big && <p className="text-xs text-cocoa-400 mt-1 line-clamp-2">{p.description}</p>}
           <div className="flex items-center justify-between mt-2">
             <span className="font-display font-bold text-lg text-cocoa-700">${p.price}</span>
-            <span className="text-[10px] text-cocoa-300 font-medium">{p.stock > 0 ? (p.stock <= 3 ? `Ultimos ${p.stock}!` : 'Disponible') : 'Agotado'}</span>
+            {((p as any).availability || (p.stock > 0 ? 'disponible' : 'por_pedido')) === 'disponible' ? (
+              <span className="text-[10px] text-green-600 font-bold">✅ Disponible</span>
+            ) : (
+              <span className="text-[10px] text-amber-600 font-bold">📝 Por pedido</span>
+            )}
           </div>
         </div>
       </Link>

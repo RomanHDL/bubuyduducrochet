@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const CATEGORIES = ['amigurumis', 'accesorios', 'decoracion', 'ropa-bebe', 'llaveros', 'otro'];
 
@@ -14,7 +14,7 @@ const DIFFICULTY_OPTIONS = [
   { value: 'avanzado', label: 'Avanzado', emoji: '🔴' },
 ];
 
-const emptyProduct = { title: '', description: '', price: 0, images: [''], stock: 0, category: 'amigurumis', isActive: true, featured: false };
+const emptyProduct = { title: '', description: '', price: 0, images: [''], stock: 1, availability: 'disponible', category: 'amigurumis', isActive: true, featured: false };
 
 const emptyElaboration = {
   materials: [] as { name: string; type: string; quantity: string; notes: string }[],
@@ -32,6 +32,7 @@ const emptyPattern = { name: '', imageUrl: '', description: '' };
 export default function AdminProductsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -53,6 +54,21 @@ export default function AdminProductsPage() {
     fetchProducts();
   }, [session, status]);
 
+  // Abrir modal de edición/proceso automáticamente si llega ?edit= o ?proceso=
+  useEffect(() => {
+    if (!products.length) return;
+    const editIdParam = searchParams?.get('edit');
+    const procesoIdParam = searchParams?.get('proceso');
+    const targetId = editIdParam || procesoIdParam;
+    if (!targetId) return;
+    const target = products.find((p) => p._id === targetId);
+    if (!target) return;
+    if (editIdParam) openEdit(target);
+    else if (procesoIdParam) openProceso(target);
+    // limpiar la URL para que el modal no se reabra al navegar atrás
+    router.replace('/admin/productos');
+  }, [products, searchParams]);
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -70,7 +86,17 @@ export default function AdminProductsPage() {
 
   const openEdit = (p: any) => {
     setEditing(p);
-    setForm({ title: p.title, description: p.description, price: p.price, images: p.images?.length ? p.images : [''], stock: p.stock, category: p.category, isActive: p.isActive, featured: p.featured });
+    setForm({
+      title: p.title,
+      description: p.description,
+      price: p.price,
+      images: p.images?.length ? p.images : [''],
+      stock: p.stock ?? 1,
+      availability: p.availability || (p.stock > 0 ? 'disponible' : 'por_pedido'),
+      category: p.category,
+      isActive: p.isActive,
+      featured: p.featured,
+    });
     setModalOpen(true);
   };
 
@@ -208,7 +234,7 @@ export default function AdminProductsPage() {
                   <th className="text-left px-4 py-3 font-semibold text-cocoa-500 text-xs uppercase tracking-wider">Producto</th>
                   <th className="text-left px-4 py-3 font-semibold text-cocoa-500 text-xs uppercase tracking-wider">Categoria</th>
                   <th className="text-right px-4 py-3 font-semibold text-cocoa-500 text-xs uppercase tracking-wider">Precio</th>
-                  <th className="text-center px-4 py-3 font-semibold text-cocoa-500 text-xs uppercase tracking-wider">Stock</th>
+                  <th className="text-center px-4 py-3 font-semibold text-cocoa-500 text-xs uppercase tracking-wider">Disponibilidad</th>
                   <th className="text-center px-4 py-3 font-semibold text-cocoa-500 text-xs uppercase tracking-wider">Estado</th>
                   <th className="text-center px-4 py-3 font-semibold text-cocoa-500 text-xs uppercase tracking-wider">Acciones</th>
                 </tr>
@@ -229,7 +255,9 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-4 py-3 text-cocoa-400">{p.category}</td>
                     <td className="px-4 py-3 text-right font-semibold text-cocoa-700">${p.price?.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-center"><span className={`font-semibold ${p.stock > 0 ? 'text-green-600' : 'text-blush-500'}`}>{p.stock}</span></td>
+                    <td className="px-4 py-3 text-center">
+                      <AvailabilityToggle product={p} onChanged={fetchProducts} />
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${p.isActive ? 'bg-mint-100 text-green-700' : 'bg-cream-200 text-cocoa-400'}`}>
                         {p.isActive ? 'Activo' : 'Inactivo'}
@@ -279,8 +307,18 @@ export default function AdminProductsPage() {
                   <input className="input-cute" type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-cocoa-600 mb-1">Stock</label>
-                  <input className="input-cute" type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: parseInt(e.target.value) || 0 })} />
+                  <label className="block text-sm font-semibold text-cocoa-600 mb-1">Disponibilidad</label>
+                  <select
+                    className="input-cute"
+                    value={form.availability}
+                    onChange={(e) => {
+                      const availability = e.target.value as 'disponible' | 'por_pedido';
+                      setForm({ ...form, availability, stock: availability === 'disponible' ? 1 : 0 });
+                    }}
+                  >
+                    <option value="disponible">✅ Disponible</option>
+                    <option value="por_pedido">📝 Por pedido</option>
+                  </select>
                 </div>
               </div>
               <div>
@@ -610,6 +648,50 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Toggle inline de disponibilidad (Disponible / Por pedido)
+function AvailabilityToggle({ product, onChanged }: { product: any; onChanged: () => void }) {
+  const current: 'disponible' | 'por_pedido' = product.availability || (product.stock > 0 ? 'disponible' : 'por_pedido');
+  const [value, setValue] = useState<'disponible' | 'por_pedido'>(current);
+  const [saving, setSaving] = useState(false);
+
+  const update = async (next: 'disponible' | 'por_pedido') => {
+    if (next === value) return;
+    setValue(next);
+    setSaving(true);
+    try {
+      await fetch(`/api/products/${product._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...product, availability: next, stock: next === 'disponible' ? Math.max(product.stock || 1, 1) : 0 }),
+      });
+      onChanged();
+    } catch {
+      setValue(current);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="inline-flex rounded-full bg-cream-100 p-0.5" title="Cambiar disponibilidad">
+      <button
+        onClick={() => update('disponible')}
+        disabled={saving}
+        className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${value === 'disponible' ? 'bg-green-500 text-white shadow-sm' : 'text-cocoa-500 hover:bg-cream-200'}`}
+      >
+        ✅ Disponible
+      </button>
+      <button
+        onClick={() => update('por_pedido')}
+        disabled={saving}
+        className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${value === 'por_pedido' ? 'bg-amber-500 text-white shadow-sm' : 'text-cocoa-500 hover:bg-cream-200'}`}
+      >
+        📝 Por pedido
+      </button>
     </div>
   );
 }

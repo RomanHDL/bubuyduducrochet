@@ -7,15 +7,27 @@ import Link from 'next/link';
 
 type Tab = 'testimonials' | 'products';
 
+const FILTERS_KEY = 'admin:resenas:filters';
+function readStoredFilters() {
+  if (typeof window === 'undefined') return null;
+  try { const v = localStorage.getItem(FILTERS_KEY); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+
 export default function AdminReviewsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('testimonials');
+  const initialFilters = typeof window !== 'undefined' ? readStoredFilters() : null;
+  const [tab, setTab] = useState<Tab>(initialFilters?.tab || 'testimonials');
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [productReviews, setProductReviews] = useState<any[]>([]);
   const [products, setProducts] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>(initialFilters?.filter || 'all');
+
+  // Persistir filtros
+  useEffect(() => {
+    try { localStorage.setItem(FILTERS_KEY, JSON.stringify({ tab, filter })); } catch {}
+  }, [tab, filter]);
 
   useEffect(() => {
     if (status === 'loading') return;

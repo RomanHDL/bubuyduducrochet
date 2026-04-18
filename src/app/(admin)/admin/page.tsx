@@ -84,14 +84,23 @@ export default function AdminDashboard() {
         <KPI emoji="📈" label="Conversion" value={`${(s.convRate || 0).toFixed(0)}%`} sub="pagados/total" color="from-amber-50 to-amber-100 border-amber-200" onClick={() => setDetailModal({ type: 'conversion', title: '📈 Conversion — Detalle' })} />
       </div>
 
-      {/* ═══ Row 2: Status pipeline ═══ */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-6">
-        <Mini emoji="⏳" label="Pendientes" value={s.pendingCount || 0} color="text-amber-600 bg-amber-50 border-amber-200" onClick={() => setDetailModal({ type: 'status-pending', title: '⏳ Pedidos Pendientes' })} />
-        <Mini emoji="✅" label="Confirmados" value={s.confirmedCount || 0} color="text-sky-600 bg-sky-50 border-sky-200" onClick={() => setDetailModal({ type: 'status-confirmed', title: '✅ Pedidos Confirmados' })} />
-        <Mini emoji="📦" label="Enviados" value={s.shippedCount || 0} color="text-indigo-600 bg-indigo-50 border-indigo-200" onClick={() => setDetailModal({ type: 'status-shipped', title: '📦 Pedidos Enviados' })} />
-        <Mini emoji="🎉" label="Entregados" value={s.deliveredCount || 0} color="text-green-600 bg-green-50 border-green-200" onClick={() => setDetailModal({ type: 'status-delivered', title: '🎉 Pedidos Entregados' })} />
-        <Mini emoji="❌" label="Cancelados" value={s.cancelledCount || 0} color="text-red-500 bg-red-50 border-red-200" onClick={() => setDetailModal({ type: 'status-cancelled', title: '❌ Pedidos Cancelados' })} />
-        <Mini emoji="💳" label="Pagados" value={s.paidCount || 0} color="text-green-600 bg-green-50 border-green-200" onClick={() => setDetailModal({ type: 'status-paid', title: '💳 Pedidos Pagados' })} />
+      {/* ═══ Row 2: Pipeline de pedidos (gráfica combinada reemplaza 6 cards) ═══ */}
+      <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display font-bold text-sm text-cocoa-700">📊 Pipeline de pedidos</h3>
+          <span className="text-[10px] text-cocoa-300">Toca una barra para ver el detalle</span>
+        </div>
+        <PipelineChart
+          items={[
+            { key: 'pending', label: 'Pendientes', emoji: '⏳', value: s.pendingCount || 0, color: '#f59e0b', modal: { type: 'status-pending', title: '⏳ Pedidos Pendientes' } },
+            { key: 'confirmed', label: 'Confirmados', emoji: '✅', value: s.confirmedCount || 0, color: '#0ea5e9', modal: { type: 'status-confirmed', title: '✅ Pedidos Confirmados' } },
+            { key: 'shipped', label: 'Enviados', emoji: '📦', value: s.shippedCount || 0, color: '#6366f1', modal: { type: 'status-shipped', title: '📦 Pedidos Enviados' } },
+            { key: 'delivered', label: 'Entregados', emoji: '🎉', value: s.deliveredCount || 0, color: '#16a34a', modal: { type: 'status-delivered', title: '🎉 Pedidos Entregados' } },
+            { key: 'cancelled', label: 'Cancelados', emoji: '❌', value: s.cancelledCount || 0, color: '#dc2626', modal: { type: 'status-cancelled', title: '❌ Pedidos Cancelados' } },
+            { key: 'paid', label: 'Pagados', emoji: '💳', value: s.paidCount || 0, color: '#10b981', modal: { type: 'status-paid', title: '💳 Pedidos Pagados' } },
+          ]}
+          onBarClick={(m) => setDetailModal(m)}
+        />
       </div>
 
       {/* ═══ Alerts ═══ */}
@@ -141,48 +150,6 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
           <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">💰 Ingresos — 7 días</h3>
           <BarChart data={(s.last7Sales || []).map((d: any) => ({ label: d.day, value: d.revenue }))} color="from-green-500 to-emerald-400" prefix="$" />
-        </div>
-      </div>
-
-      {/* ═══ Row 4: Donut charts + Top products ═══ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {/* Status donut */}
-        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">📋 Estado de pedidos</h3>
-          <DonutChart data={s.statusDist || []} total={s.totalOrders || 0} />
-        </div>
-        {/* Payment donut */}
-        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">💳 Estado de pagos</h3>
-          <DonutChart data={s.payDist || []} total={s.totalOrders || 0} />
-        </div>
-        {/* Categories chart */}
-        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">🏷️ Productos por categoria</h3>
-          <div className="space-y-2 mt-2">
-            {(s.catDist || []).map((c: any) => {
-              const max = Math.max(...(s.catDist || []).map((x: any) => x.count), 1);
-              return (
-                <div key={c.cat}>
-                  <div className="flex justify-between text-xs mb-0.5"><span className="text-cocoa-600 font-medium">{c.cat}</span><span className="text-cocoa-400 font-bold">{c.count}</span></div>
-                  <div className="h-2 bg-cream-100 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-lavender-400 to-blush-400 rounded-full transition-all duration-700" style={{ width: `${(c.count / max) * 100}%` }} /></div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        {/* Top products */}
-        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">🏆 Mas vendidos</h3>
-          <div className="space-y-2.5">
-            {(s.topProducts || []).map((p: any, i: number) => (
-              <div key={p._id || p.productId || p.title} className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-blush-100 text-blush-500 text-[10px] font-bold flex items-center justify-center">{i + 1}</span>
-                <div className="flex-1 min-w-0"><p className="text-xs font-semibold text-cocoa-700 truncate">{p.title}</p><p className="text-[9px] text-cocoa-400">{p.qty} uds · ${p.revenue.toFixed(0)}</p></div>
-              </div>
-            ))}
-            {(!s.topProducts || s.topProducts.length === 0) && <p className="text-xs text-cocoa-400 text-center py-3">Sin ventas aun</p>}
-          </div>
         </div>
       </div>
 
@@ -267,12 +234,7 @@ export default function AdminDashboard() {
 
       {/* ═══ Quick Actions ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <QLink href="/catalogo" emoji="🧶" title="Catalogo" />
-        <QLink href="/pedidos" emoji="📋" title="Pedidos" />
-        <QLink href="/admin/pagos" emoji="💰" title="Pagos" />
         <QLink href="/admin/materiales" emoji="🧵" title="Materiales" />
-        <QLink href="/admin/usuarios" emoji="👥" title="Usuarios" />
-        <QLink href="/admin/resenas" emoji="⭐" title="Reseñas" />
         <QLink href="/admin/productos" emoji="📦" title="Inventario" />
         <QLink href="/preguntas" emoji="❓" title="FAQs" />
         <QLink href="/" emoji="🏠" title="Tienda" />
@@ -307,6 +269,46 @@ function Alert({ emoji, text, sub, color }: { emoji: string; text: string; sub: 
 
 function QLink({ href, emoji, title }: { href: string; emoji: string; title: string }) {
   return <Link href={href} className="bg-white rounded-cute shadow-soft border border-cream-200 p-3 text-center hover:shadow-warm hover:-translate-y-0.5 transition-all"><span className="text-xl block">{emoji}</span><p className="text-[11px] font-bold text-cocoa-700 mt-1">{title}</p></Link>;
+}
+
+// Gráfica única que reemplaza las 6 mini-cards del pipeline
+function PipelineChart({ items, onBarClick }: {
+  items: { key: string; label: string; emoji: string; value: number; color: string; modal: { type: string; title: string } }[];
+  onBarClick: (modal: { type: string; title: string }) => void;
+}) {
+  const max = Math.max(...items.map(i => i.value), 1);
+  const total = items.reduce((a, b) => a + b.value, 0);
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-[10px] text-cocoa-400 mb-1">
+        <span className="font-semibold">Total pedidos en pipeline:</span>
+        <span className="font-bold text-cocoa-700 tabular-nums">{total}</span>
+      </div>
+      {items.map(it => {
+        const pct = (it.value / max) * 100;
+        return (
+          <button
+            key={it.key}
+            onClick={() => onBarClick(it.modal)}
+            className="w-full flex items-center gap-3 text-left group"
+            title={`Ver detalle de ${it.label}`}
+          >
+            <div className="w-28 md:w-32 flex-shrink-0 flex items-center gap-1.5">
+              <span className="text-sm">{it.emoji}</span>
+              <span className="text-xs font-semibold text-cocoa-600 group-hover:text-cocoa-800 truncate">{it.label}</span>
+            </div>
+            <div className="flex-1 h-6 bg-cream-100 rounded-full overflow-hidden relative">
+              <div
+                className="h-full rounded-full transition-all duration-700 group-hover:brightness-110"
+                style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: it.color }}
+              />
+            </div>
+            <span className="w-12 text-right text-sm font-bold text-cocoa-700 tabular-nums">{it.value}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function KpiRow({ label, value, pct, color }: { label: string; value: string; pct: number; color: string }) {
@@ -524,6 +526,20 @@ function DetailModal({ modal, stats, onClose }: { modal: { type: string; title: 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
+
+  // Bloquear scroll del body mientras el modal está abierto (el fondo no se mueve)
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    // Compensar el scrollbar que se oculta
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, []);
 
   const renderContent = () => {
     switch (modal.type) {

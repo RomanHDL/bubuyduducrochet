@@ -28,6 +28,8 @@ export interface IElaboration {
   estimatedTime: string;
 }
 
+export type ProductAvailability = 'disponible' | 'por_pedido';
+
 export interface IProduct {
   _id: string;
   title: string;
@@ -35,6 +37,7 @@ export interface IProduct {
   price: number;
   images: string[];
   stock: number;
+  availability: ProductAvailability;
   category: string;
   isActive: boolean;
   featured: boolean;
@@ -77,6 +80,7 @@ const ProductSchema = new Schema<IProduct>({
   price: { type: Number, required: true, min: 0 },
   images: [{ type: String }],
   stock: { type: Number, default: 0, min: 0 },
+  availability: { type: String, enum: ['disponible', 'por_pedido'], default: 'disponible' },
   category: { type: String, required: true },
   isActive: { type: Boolean, default: true },
   featured: { type: Boolean, default: false },

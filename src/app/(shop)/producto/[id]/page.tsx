@@ -7,7 +7,7 @@ import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
 
 interface Product {
-  _id: string; title: string; description: string; price: number; images: string[]; stock: number; category: string; featured: boolean;
+  _id: string; title: string; description: string; price: number; images: string[]; stock: number; availability?: 'disponible' | 'por_pedido'; category: string; featured: boolean;
 }
 
 // Same frame system as catalog
@@ -29,6 +29,7 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const { data: session } = useSession();
   const router = useRouter();
+  const isAdmin = (session?.user as any)?.role === 'admin';
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -36,6 +37,17 @@ export default function ProductDetailPage() {
   const [lightbox, setLightbox] = useState(false);
   const [added, setAdded] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleAdminDelete = async () => {
+    if (!product) return;
+    if (!confirm(`¿Eliminar "${product.title}"? Esta acción no se puede deshacer.`)) return;
+    setDeleting(true);
+    try {
+      await fetch(`/api/products/${product._id}`, { method: 'DELETE' });
+      router.push('/catalogo');
+    } catch { setDeleting(false); }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -75,18 +87,47 @@ export default function ProductDetailPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
         {/* ═══ Breadcrumb — decorative ═══ */}
-        <nav className="flex items-center gap-0 mb-8">
-          <Link href="/" className="flex items-center gap-1.5 px-4 py-2 bg-white/70 backdrop-blur-sm border border-cream-200 rounded-l-full text-sm font-semibold text-cocoa-500 hover:text-blush-400 hover:bg-blush-50 transition-all shadow-soft">
-            <span className="text-base">🏠</span> Inicio
-          </Link>
-          <Link href="/catalogo" className="flex items-center gap-1.5 px-4 py-2 bg-white/60 backdrop-blur-sm border-y border-cream-200 text-sm font-semibold text-cocoa-500 hover:text-blush-400 hover:bg-blush-50 transition-all shadow-soft">
-            <span className="text-base">🧶</span> Catalogo
-          </Link>
-          <div className="flex items-center gap-1.5 px-4 py-2 bg-blush-50/80 backdrop-blur-sm border border-blush-200 rounded-r-full text-sm font-bold text-blush-500 shadow-soft">
-            <span className="text-base">{f.deco}</span>
-            <span className="truncate max-w-[200px]">{product.title}</span>
-          </div>
-        </nav>
+        <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
+          <nav className="flex items-center gap-0">
+            <Link href="/" className="flex items-center gap-1.5 px-4 py-2 bg-white/70 backdrop-blur-sm border border-cream-200 rounded-l-full text-sm font-semibold text-cocoa-500 hover:text-blush-400 hover:bg-blush-50 transition-all shadow-soft">
+              <span className="text-base">🏠</span> Inicio
+            </Link>
+            <Link href="/catalogo" className="flex items-center gap-1.5 px-4 py-2 bg-white/60 backdrop-blur-sm border-y border-cream-200 text-sm font-semibold text-cocoa-500 hover:text-blush-400 hover:bg-blush-50 transition-all shadow-soft">
+              <span className="text-base">🧶</span> Catalogo
+            </Link>
+            <div className="flex items-center gap-1.5 px-4 py-2 bg-blush-50/80 backdrop-blur-sm border border-blush-200 rounded-r-full text-sm font-bold text-blush-500 shadow-soft">
+              <span className="text-base">{f.deco}</span>
+              <span className="truncate max-w-[200px]">{product.title}</span>
+            </div>
+          </nav>
+
+          {isAdmin && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link
+                href={`/admin/productos?edit=${product._id}`}
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-lavender-100 text-lavender-600 border border-lavender-200 hover:bg-lavender-200 shadow-soft transition-colors"
+                title="Editar este producto"
+              >
+                ✏️ Editar
+              </Link>
+              <Link
+                href={`/admin/productos?proceso=${product._id}`}
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 shadow-soft transition-colors"
+                title="Ver/editar proceso de elaboración"
+              >
+                📋 Proceso
+              </Link>
+              <button
+                onClick={handleAdminDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 shadow-soft transition-colors disabled:opacity-50"
+                title="Eliminar producto"
+              >
+                🗑️ {deleting ? '...' : 'Eliminar'}
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
 
@@ -124,7 +165,7 @@ export default function ProductDetailPage() {
             </div>
 
             <h1 className="font-display font-bold text-3xl text-cocoa-800 mb-3">{product.title}</h1>
-            <p className="text-cocoa-400 leading-relaxed mb-6">{product.description}</p>
+            <p className="text-cocoa-400 leading-relaxed mb-6 whitespace-pre-wrap break-words">{product.description}</p>
 
             <div className="flex items-baseline gap-3 mb-6 p-4 bg-gradient-to-r from-cream-50 to-blush-50/50 rounded-2xl border border-cream-200">
               <span className="font-display font-bold text-4xl text-cocoa-800">${product.price.toFixed(2)}</span>
@@ -132,37 +173,47 @@ export default function ProductDetailPage() {
               {product.featured && <span className="ml-auto text-xs font-bold text-blush-400 bg-blush-50 px-2.5 py-1 rounded-full border border-blush-200">⭐ Destacado</span>}
             </div>
 
-            {/* Stock */}
+            {/* Disponibilidad */}
             <div className="flex items-center gap-2 mb-6">
-              {product.stock > 0 ? (
-                <><span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span><span className="text-sm font-medium text-cocoa-500">{product.stock} disponibles</span></>
+              {(product.availability || (product.stock > 0 ? 'disponible' : 'por_pedido')) === 'disponible' ? (
+                <><span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span><span className="text-sm font-medium text-green-600">✅ Disponible — entrega inmediata</span></>
               ) : (
-                <><span className="w-2.5 h-2.5 rounded-full bg-blush-400"></span><span className="text-sm font-medium text-blush-500">Agotado</span></>
+                <><span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span className="text-sm font-medium text-amber-600">📝 Por pedido — tejido especialmente para ti</span></>
               )}
             </div>
 
             {/* Quantity + Add to cart */}
-            {product.stock > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-semibold text-cocoa-600">Cantidad:</span>
-                  <div className="flex items-center border-2 border-cream-200 rounded-2xl overflow-hidden bg-white">
-                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-4 py-2.5 text-cocoa-400 hover:bg-cream-50 transition-colors font-bold text-lg">-</button>
-                    <span className="px-5 py-2.5 font-bold text-cocoa-700 min-w-[3.5rem] text-center text-lg">{qty}</span>
-                    <button onClick={() => setQty(Math.min(product.stock, qty + 1))} className="px-4 py-2.5 text-cocoa-400 hover:bg-cream-50 transition-colors font-bold text-lg">+</button>
+            {(() => {
+              const avail = product.availability || (product.stock > 0 ? 'disponible' : 'por_pedido');
+              const isPorPedido = avail === 'por_pedido';
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-semibold text-cocoa-600">Cantidad:</span>
+                    <div className="flex items-center border-2 border-cream-200 rounded-2xl overflow-hidden bg-white">
+                      <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-4 py-2.5 text-cocoa-400 hover:bg-cream-50 transition-colors font-bold text-lg">-</button>
+                      <span className="px-5 py-2.5 font-bold text-cocoa-700 min-w-[3.5rem] text-center text-lg">{qty}</span>
+                      <button onClick={() => setQty(qty + 1)} className="px-4 py-2.5 text-cocoa-400 hover:bg-cream-50 transition-colors font-bold text-lg">+</button>
+                    </div>
                   </div>
+
+                  <button onClick={addToCart} disabled={adding}
+                    className={`w-full btn-cute text-white text-lg py-4 disabled:opacity-50 shadow-glow ${isPorPedido ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blush-400 hover:bg-blush-500'}`}>
+                    {added ? '¡Agregado al carrito! 💕' : adding ? '🧶 Agregando...' : isPorPedido ? 'Encargar por pedido 📝' : 'Agregar al carrito 🛒'}
+                  </button>
+
+                  {isPorPedido && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+                      ⏳ Este producto se teje especialmente para ti. Tiempo estimado: 5–15 días.
+                    </p>
+                  )}
+
+                  <Link href="/carrito" className="block text-center text-sm text-cocoa-400 font-semibold hover:text-blush-400 transition-colors">
+                    Ir al carrito →
+                  </Link>
                 </div>
-
-                <button onClick={addToCart} disabled={adding}
-                  className="w-full btn-cute bg-blush-400 text-white text-lg py-4 hover:bg-blush-500 disabled:opacity-50 shadow-glow">
-                  {added ? 'Agregado al carrito! 💕' : adding ? '🧶 Agregando...' : 'Agregar al carrito 🛒'}
-                </button>
-
-                <Link href="/carrito" className="block text-center text-sm text-cocoa-400 font-semibold hover:text-blush-400 transition-colors">
-                  Ir al carrito →
-                </Link>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Benefits */}
             <div className="mt-8 pt-6 border-t border-cream-200 space-y-3">

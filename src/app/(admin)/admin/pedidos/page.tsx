@@ -14,16 +14,28 @@ const STATUS_COLORS: Record<string, string> = { pending: 'bg-amber-50 text-amber
 const PAY_LABELS: Record<string, string> = { pending: '💳 Pendiente', paid: '✅ Pagado', refunded: '↩️ Reembolsado' };
 const PAY_COLORS: Record<string, string> = { pending: 'text-amber-600', paid: 'text-green-600', refunded: 'text-red-500' };
 
+const FILTERS_KEY = 'admin:pedidos:filters';
+function readStoredFilters() {
+  if (typeof window === 'undefined') return null;
+  try { const v = localStorage.getItem(FILTERS_KEY); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+
 export default function AdminOrdersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const [payFilter, setPayFilter] = useState('all');
-  const [search, setSearch] = useState('');
+  const initialFilters = typeof window !== 'undefined' ? readStoredFilters() : null;
+  const [filter, setFilter] = useState<string>(initialFilters?.filter || 'all');
+  const [payFilter, setPayFilter] = useState<string>(initialFilters?.payFilter || 'all');
+  const [search, setSearch] = useState<string>(initialFilters?.search || '');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [generatingTicket, setGeneratingTicket] = useState<string | null>(null);
+
+  // Persistir filtros (sobreviven al refresh)
+  useEffect(() => {
+    try { localStorage.setItem(FILTERS_KEY, JSON.stringify({ filter, payFilter, search })); } catch {}
+  }, [filter, payFilter, search]);
 
   useEffect(() => {
     if (status === 'loading') return;
