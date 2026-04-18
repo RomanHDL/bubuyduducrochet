@@ -136,7 +136,11 @@ export default function AdminReviewsPage() {
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${r.isApproved ? 'bg-green-50 text-green-600 border-green-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>{r.isApproved ? '✅ Visible' : '⏳ Pendiente'}</span>
                       </div>
                       <div className="flex gap-0.5 mb-2">{[1,2,3,4,5].map(s => <span key={s} className={`text-sm ${s <= (r.rating || 5) ? '' : 'opacity-20'}`}>⭐</span>)}</div>
-                      <p className="text-sm text-cocoa-500 italic">"{r.text}"</p>
+                      {r.text && r.text.trim().length > 0 ? (
+                        <p className="text-sm text-cocoa-500 italic">"{r.text}"</p>
+                      ) : (
+                        <p className="text-xs italic text-cocoa-300">Calificación sin comentario</p>
+                      )}
                       <p className="text-[10px] text-cocoa-300 mt-2">{new Date(r.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                     </div>
                     <div className="flex flex-col gap-1.5 flex-shrink-0">
@@ -184,7 +188,11 @@ export default function AdminReviewsPage() {
                         <span className="font-bold text-sm text-cocoa-700">{r.userName}</span>
                       </div>
                       <div className="flex gap-0.5 mb-2">{[1,2,3,4,5].map(s => <span key={s} className={`text-sm ${s <= r.rating ? '' : 'opacity-20'}`}>⭐</span>)}</div>
-                      <p className="text-sm text-cocoa-500 italic">"{r.text}"</p>
+                      {r.text && r.text.trim().length > 0 ? (
+                        <p className="text-sm text-cocoa-500 italic">"{r.text}"</p>
+                      ) : (
+                        <p className="text-xs italic text-cocoa-300">Calificación sin comentario</p>
+                      )}
                       {r.images?.length > 0 && (
                         <div className="flex gap-2 mt-3">{r.images.map((img: string, i: number) => <img key={i} src={img} alt="" className="w-20 h-20 rounded-lg object-cover border border-cream-200" />)}</div>
                       )}

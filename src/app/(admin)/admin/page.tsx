@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -15,14 +15,25 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [detailModal, setDetailModal] = useState<{ type: string; title: string } | null>(null);
+  const [paused, setPaused] = useState(false);
+  // Refs used to skip refetch when user is interacting (modal open, hovering cards, scrolling)
+  const pausedRef = useRef(false);
+  const modalOpenRef = useRef(false);
+  pausedRef.current = paused;
+  modalOpenRef.current = detailModal !== null;
 
-  const fetchStats = () => { fetch('/api/admin/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false); }).catch(() => setLoading(false)); };
+  const fetchStats = () => {
+    // Skip update while the admin is reading a detail modal or has paused live refresh
+    if (pausedRef.current || modalOpenRef.current) return;
+    fetch('/api/admin/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false); }).catch(() => setLoading(false));
+  };
 
   useEffect(() => {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
-    fetchStats();
-    const interval = setInterval(fetchStats, 3000);
+    // First load ignores pause
+    fetch('/api/admin/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false); }).catch(() => setLoading(false));
+    const interval = setInterval(fetchStats, 5000);
     return () => clearInterval(interval);
   }, [session, status, router]);
 
@@ -38,7 +49,21 @@ export default function AdminDashboard() {
         <div>
           <h1 className="font-display font-bold text-3xl text-cocoa-700">Panel Admin 🔧</h1>
           <p className="text-cocoa-400 mt-1">Bienvenida, {session.user?.name} 👑</p>
-          <div className="flex items-center gap-2 mt-1"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /><span className="text-[10px] text-green-600 font-bold">En vivo · Actualiza cada 3s</span></div>
+          <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${paused ? 'bg-amber-400' : 'bg-green-400 animate-pulse'}`} />
+              <span className={`text-[10px] font-bold ${paused ? 'text-amber-600' : 'text-green-600'}`}>
+                {paused ? 'Pausado · Datos congelados' : 'En vivo · Actualiza cada 5s'}
+              </span>
+            </div>
+            <button
+              onClick={() => setPaused(p => !p)}
+              title={paused ? 'Reanudar la actualización automática' : 'Congelar los datos para revisarlos sin interrupciones'}
+              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition-colors ${paused ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+            >
+              {paused ? '▶ Reanudar' : '⏸ Pausar'}
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/catalogo" className="btn-cute bg-blush-400 text-white text-xs px-4 py-2 hover:bg-blush-500">🧶 Catalogo</Link>
@@ -79,16 +104,42 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ═══ Row 3: Charts — Orders + Revenue ═══ */}
+      {/* ═══ Row 3a: Executive trend — Area chart ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2 bg-white rounded-cute shadow-soft border border-cream-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-display font-bold text-sm text-cocoa-700">📈 Tendencia de ingresos — 7 días</h3>
+              <p className="text-[10px] text-cocoa-400">Total: <span className="font-bold text-green-600">${((s.last7Sales || []).reduce((a: number, b: any) => a + (b.revenue || 0), 0)).toFixed(0)}</span> · Promedio diario: <span className="font-bold text-cocoa-600">${(((s.last7Sales || []).reduce((a: number, b: any) => a + (b.revenue || 0), 0)) / Math.max((s.last7Sales || []).length, 1)).toFixed(0)}</span></p>
+            </div>
+            <span className="text-[10px] text-cocoa-300">Últimos 7 días</span>
+          </div>
+          <AreaChart data={(s.last7Sales || []).map((d: any) => ({ label: d.day, value: d.revenue }))} color="#10b981" prefix="$" />
+        </div>
+        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display font-bold text-sm text-cocoa-700">🎯 KPIs clave</h3>
+            <span className="text-[10px] text-cocoa-300">Semanal</span>
+          </div>
+          <div className="space-y-2.5">
+            <KpiRow label="Tasa conversión" value={`${(s.convRate || 0).toFixed(1)}%`} pct={Math.min(s.convRate || 0, 100)} color="#b39ddb" />
+            <KpiRow label="% Pagados" value={`${s.totalOrders ? Math.round(((s.paidCount || 0) / s.totalOrders) * 100) : 0}%`} pct={s.totalOrders ? ((s.paidCount || 0) / s.totalOrders) * 100 : 0} color="#34d399" />
+            <KpiRow label="% Entregados" value={`${s.totalOrders ? Math.round(((s.deliveredCount || 0) / s.totalOrders) * 100) : 0}%`} pct={s.totalOrders ? ((s.deliveredCount || 0) / s.totalOrders) * 100 : 0} color="#60a5fa" />
+            <KpiRow label="% Stock saludable" value={`${s.totalProducts ? Math.round((((s.totalProducts || 0) - (s.lowStock || 0) - (s.outOfStock || 0)) / s.totalProducts) * 100) : 0}%`} pct={s.totalProducts ? (((s.totalProducts || 0) - (s.lowStock || 0) - (s.outOfStock || 0)) / s.totalProducts) * 100 : 0} color="#fbbf24" />
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ Row 3b: Charts — Orders + Revenue ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Orders chart */}
         <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">📊 Pedidos — 7 dias</h3>
+          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">📊 Pedidos — 7 días</h3>
           <BarChart data={(s.last7 || []).map((d: any) => ({ label: d.day, value: d.count }))} color="from-blush-400 to-blush-300" />
         </div>
         {/* Revenue chart */}
         <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
-          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">💰 Ingresos — 7 dias</h3>
+          <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">💰 Ingresos — 7 días</h3>
           <BarChart data={(s.last7Sales || []).map((d: any) => ({ label: d.day, value: d.revenue }))} color="from-green-500 to-emerald-400" prefix="$" />
         </div>
       </div>
@@ -109,12 +160,12 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
           <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">🏷️ Productos por categoria</h3>
           <div className="space-y-2 mt-2">
-            {(s.catDist || []).map((c: any, i: number) => {
+            {(s.catDist || []).map((c: any) => {
               const max = Math.max(...(s.catDist || []).map((x: any) => x.count), 1);
               return (
-                <div key={i}>
-                  <div className="flex justify-between text-xs mb-0.5"><span className="text-cocoa-600 font-medium">{c.cat}</span><span className="text-cocoa-400">{c.count}</span></div>
-                  <div className="h-2 bg-cream-100 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-lavender-400 to-blush-400 rounded-full transition-all" style={{ width: `${(c.count / max) * 100}%` }} /></div>
+                <div key={c.cat}>
+                  <div className="flex justify-between text-xs mb-0.5"><span className="text-cocoa-600 font-medium">{c.cat}</span><span className="text-cocoa-400 font-bold">{c.count}</span></div>
+                  <div className="h-2 bg-cream-100 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-lavender-400 to-blush-400 rounded-full transition-all duration-700" style={{ width: `${(c.count / max) * 100}%` }} /></div>
                 </div>
               );
             })}
@@ -125,7 +176,7 @@ export default function AdminDashboard() {
           <h3 className="font-display font-bold text-sm text-cocoa-700 mb-3">🏆 Mas vendidos</h3>
           <div className="space-y-2.5">
             {(s.topProducts || []).map((p: any, i: number) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={p._id || p.productId || p.title} className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-blush-100 text-blush-500 text-[10px] font-bold flex items-center justify-center">{i + 1}</span>
                 <div className="flex-1 min-w-0"><p className="text-xs font-semibold text-cocoa-700 truncate">{p.title}</p><p className="text-[9px] text-cocoa-400">{p.qty} uds · ${p.revenue.toFixed(0)}</p></div>
               </div>
@@ -179,7 +230,7 @@ export default function AdminDashboard() {
 
       {/* ═══ Row 6: Recent orders + Recent users ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
+        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5 min-h-[280px]">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-bold text-sm text-cocoa-700">📦 Pedidos recientes</h3>
             <Link href="/pedidos" className="text-[10px] font-bold text-blush-400 hover:text-blush-500">Ver todos →</Link>
@@ -197,7 +248,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
+        <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5 min-h-[280px]">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-bold text-sm text-cocoa-700">👥 Nuevos clientes</h3>
             <Link href="/admin/usuarios" className="text-[10px] font-bold text-blush-400 hover:text-blush-500">Ver todos →</Link>
@@ -238,16 +289,16 @@ export default function AdminDashboard() {
 
 function KPI({ emoji, label, value, sub, color, onClick }: { emoji: string; label: string; value: string | number; sub: string; color: string; onClick?: () => void }) {
   return (
-    <div className={`bg-gradient-to-br ${color} rounded-cute border p-4 cursor-pointer hover:shadow-warm hover:-translate-y-0.5 transition-all`} onClick={onClick}>
+    <div className={`bg-gradient-to-br ${color} rounded-cute border p-4 cursor-pointer hover:shadow-warm transition-shadow`} onClick={onClick}>
       <div className="flex items-center gap-2 mb-1"><span className="text-xl">{emoji}</span><span className="text-[10px] font-bold text-cocoa-400">{label}</span></div>
-      <p className="font-display font-bold text-xl text-cocoa-700">{value}</p>
+      <p className="font-display font-bold text-xl text-cocoa-700 tabular-nums">{value}</p>
       <p className="text-[9px] text-cocoa-400">{sub}</p>
     </div>
   );
 }
 
 function Mini({ emoji, label, value, color, onClick }: { emoji: string; label: string; value: number; color: string; onClick?: () => void }) {
-  return <div className={`${color} rounded-cute border p-2.5 text-center cursor-pointer hover:shadow-warm hover:-translate-y-0.5 transition-all`} onClick={onClick}><span className="text-base">{emoji}</span><p className="font-bold text-base">{value}</p><p className="text-[9px] font-semibold">{label}</p></div>;
+  return <div className={`${color} rounded-cute border p-2.5 text-center cursor-pointer hover:shadow-warm transition-shadow`} onClick={onClick}><span className="text-base">{emoji}</span><p className="font-bold text-base tabular-nums">{value}</p><p className="text-[9px] font-semibold">{label}</p></div>;
 }
 
 function Alert({ emoji, text, sub, color }: { emoji: string; text: string; sub: string; color: string }) {
@@ -258,53 +309,207 @@ function QLink({ href, emoji, title }: { href: string; emoji: string; title: str
   return <Link href={href} className="bg-white rounded-cute shadow-soft border border-cream-200 p-3 text-center hover:shadow-warm hover:-translate-y-0.5 transition-all"><span className="text-xl block">{emoji}</span><p className="text-[11px] font-bold text-cocoa-700 mt-1">{title}</p></Link>;
 }
 
-function BarChart({ data, color, prefix = '' }: { data: { label: string; value: number }[]; color: string; prefix?: string }) {
-  const max = Math.max(...data.map(d => d.value), 1);
+function KpiRow({ label, value, pct, color }: { label: string; value: string; pct: number; color: string }) {
   return (
-    <div className="flex items-end gap-1.5 h-32">
-      {data.map((d, i) => {
-        const h = Math.max((d.value / max) * 100, 6);
-        return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-            <span className="text-[9px] font-bold text-cocoa-500">{prefix}{d.value > 0 ? (d.value >= 1000 ? `${(d.value / 1000).toFixed(1)}k` : d.value) : ''}</span>
-            <div className={`w-full bg-gradient-to-t ${color} rounded-t-md transition-all duration-500`} style={{ height: `${h}%` }} />
-            <span className="text-[8px] text-cocoa-400 font-medium truncate w-full text-center">{d.label}</span>
-          </div>
-        );
-      })}
+    <div>
+      <div className="flex justify-between text-[10px] mb-1">
+        <span className="text-cocoa-500 font-medium">{label}</span>
+        <span className="text-cocoa-700 font-bold">{value}</span>
+      </div>
+      <div className="h-1.5 bg-cream-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.max(Math.min(pct, 100), 0)}%`, backgroundColor: color }} />
+      </div>
     </div>
   );
 }
 
-function DonutChart({ data, total }: { data: { label: string; value: number; color: string }[]; total: number }) {
-  if (data.length === 0) return <p className="text-xs text-cocoa-400 text-center py-6">Sin datos</p>;
-  // CSS conic-gradient donut
-  let cumulative = 0;
-  const segments = data.map(d => {
-    const start = cumulative;
-    const pct = total > 0 ? (d.value / total) * 100 : 0;
-    cumulative += pct;
-    return { ...d, start, pct };
-  });
-  const gradient = segments.map(s => `${s.color} ${s.start}% ${s.start + s.pct}%`).join(', ');
+function fmtNum(n: number, prefix = '') {
+  if (n >= 1_000_000) return `${prefix}${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1000) return `${prefix}${(n / 1000).toFixed(1)}k`;
+  return `${prefix}${n}`;
+}
+
+// Enterprise bar chart — SVG with gridlines, axis, hover tooltip
+function BarChart({ data, color, prefix = '' }: { data: { label: string; value: number }[]; color: string; prefix?: string }) {
+  const [hover, setHover] = useState<number | null>(null);
+  if (!data.length) return <p className="text-xs text-cocoa-400 text-center py-6">Sin datos</p>;
+  const max = Math.max(...data.map(d => d.value), 1);
+  const niceMax = Math.ceil(max * 1.1);
+  // gradient colors from tailwind class (map popular classes → hex)
+  const GRAD: Record<string, [string, string]> = {
+    'from-blush-400 to-blush-300': ['#f3a6bf', '#fbd0db'],
+    'from-green-500 to-emerald-400': ['#10b981', '#34d399'],
+    'from-lavender-400 to-blush-400': ['#b39ddb', '#f3a6bf'],
+  };
+  const [c1, c2] = GRAD[color] || ['#94a3b8', '#cbd5e1'];
+  const W = 320, H = 140, pad = { t: 10, r: 6, b: 20, l: 28 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+  const bw = cw / data.length;
+  const gid = `bar-${c1.replace('#', '')}`;
+  const gridLines = [0, 0.25, 0.5, 0.75, 1];
 
   return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-36" onMouseLeave={() => setHover(null)}>
+        <defs>
+          <linearGradient id={gid} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor={c1} stopOpacity="0.95" />
+            <stop offset="100%" stopColor={c2} stopOpacity="0.75" />
+          </linearGradient>
+        </defs>
+        {/* gridlines + Y labels */}
+        {gridLines.map((g, i) => {
+          const y = pad.t + ch * (1 - g);
+          const val = Math.round(niceMax * g);
+          return (
+            <g key={i}>
+              <line x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke="#f1e9e0" strokeDasharray="3 3" />
+              <text x={pad.l - 4} y={y + 3} textAnchor="end" fontSize="8" fill="#a8998a">{fmtNum(val, prefix)}</text>
+            </g>
+          );
+        })}
+        {/* bars */}
+        {data.map((d, i) => {
+          const h = (d.value / niceMax) * ch;
+          const x = pad.l + bw * i + bw * 0.15;
+          const y = pad.t + ch - h;
+          const w = bw * 0.7;
+          const isHover = hover === i;
+          return (
+            <g key={i} onMouseEnter={() => setHover(i)}>
+              <rect x={pad.l + bw * i} y={pad.t} width={bw} height={ch} fill="transparent" />
+              <rect x={x} y={y} width={w} height={Math.max(h, 1)} rx="3" fill={`url(#${gid})`} opacity={isHover ? 1 : 0.9} />
+              {isHover && (
+                <text x={x + w / 2} y={y - 3} textAnchor="middle" fontSize="9" fontWeight="700" fill="#6b5a4a">
+                  {prefix}{d.value}
+                </text>
+              )}
+              <text x={pad.l + bw * i + bw / 2} y={H - 6} textAnchor="middle" fontSize="8" fill="#a8998a">{d.label}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// Enterprise area/line chart for trends — smooth curve + area fill
+function AreaChart({ data, color = '#10b981', prefix = '' }: { data: { label: string; value: number }[]; color?: string; prefix?: string }) {
+  const [hover, setHover] = useState<number | null>(null);
+  if (!data.length) return <p className="text-xs text-cocoa-400 text-center py-6">Sin datos</p>;
+  const max = Math.max(...data.map(d => d.value), 1);
+  const niceMax = Math.ceil(max * 1.15) || 1;
+  const W = 320, H = 140, pad = { t: 10, r: 10, b: 20, l: 28 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+  const step = data.length > 1 ? cw / (data.length - 1) : 0;
+  const points = data.map((d, i) => ({ x: pad.l + step * i, y: pad.t + ch - (d.value / niceMax) * ch, v: d.value, l: d.label }));
+  // smooth path
+  const linePath = points.map((p, i) => {
+    if (i === 0) return `M ${p.x} ${p.y}`;
+    const prev = points[i - 1];
+    const cx = (prev.x + p.x) / 2;
+    return `Q ${cx} ${prev.y}, ${cx} ${(prev.y + p.y) / 2} T ${p.x} ${p.y}`;
+  }).join(' ');
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${pad.t + ch} L ${points[0].x} ${pad.t + ch} Z`;
+  const gid = `area-${color.replace('#', '')}`;
+  const gridLines = [0, 0.5, 1];
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-36" onMouseLeave={() => setHover(null)}>
+      <defs>
+        <linearGradient id={gid} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      {gridLines.map((g, i) => {
+        const y = pad.t + ch * (1 - g);
+        const val = Math.round(niceMax * g);
+        return (
+          <g key={i}>
+            <line x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke="#f1e9e0" strokeDasharray="3 3" />
+            <text x={pad.l - 4} y={y + 3} textAnchor="end" fontSize="8" fill="#a8998a">{fmtNum(val, prefix)}</text>
+          </g>
+        );
+      })}
+      <path d={areaPath} fill={`url(#${gid})`} />
+      <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {points.map((p, i) => (
+        <g key={i} onMouseEnter={() => setHover(i)}>
+          <circle cx={p.x} cy={p.y} r={hover === i ? 5 : 3} fill="white" stroke={color} strokeWidth="2" />
+          <rect x={p.x - step / 2} y={pad.t} width={step} height={ch} fill="transparent" />
+          {hover === i && (
+            <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="9" fontWeight="700" fill="#6b5a4a">{prefix}{p.v}</text>
+          )}
+          <text x={p.x} y={H - 6} textAnchor="middle" fontSize="8" fill="#a8998a">{p.l}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+// Enterprise donut — SVG with hover segments + legend
+function DonutChart({ data, total }: { data: { label: string; value: number; color: string }[]; total: number }) {
+  const [hover, setHover] = useState<number | null>(null);
+  if (data.length === 0 || total === 0) return <p className="text-xs text-cocoa-400 text-center py-6">Sin datos</p>;
+  const cx = 50, cy = 50, r = 40, ir = 28;
+  let acc = 0;
+  const arcs = data.map((d, i) => {
+    const pct = total > 0 ? d.value / total : 0;
+    const start = acc;
+    acc += pct;
+    const end = acc;
+    const a1 = start * 2 * Math.PI - Math.PI / 2;
+    const a2 = end * 2 * Math.PI - Math.PI / 2;
+    const large = end - start > 0.5 ? 1 : 0;
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+    const x3 = cx + ir * Math.cos(a2), y3 = cy + ir * Math.sin(a2);
+    const x4 = cx + ir * Math.cos(a1), y4 = cy + ir * Math.sin(a1);
+    const path = `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${ir} ${ir} 0 ${large} 0 ${x4} ${y4} Z`;
+    return { ...d, path, pct };
+  });
+  const hv = hover !== null ? arcs[hover] : null;
+  return (
     <div className="flex items-center gap-4">
-      <div className="w-24 h-24 rounded-full flex-shrink-0 relative" style={{ background: `conic-gradient(${gradient})` }}>
-        <div className="absolute inset-3 bg-white rounded-full flex items-center justify-center">
-          <span className="font-bold text-sm text-cocoa-700">{total}</span>
-        </div>
-      </div>
+      <svg viewBox="0 0 100 100" className="w-24 h-24 flex-shrink-0" onMouseLeave={() => setHover(null)}>
+        {arcs.map((a, i) => (
+          <path key={i} d={a.path} fill={a.color} opacity={hover === null || hover === i ? 1 : 0.35}
+            onMouseEnter={() => setHover(i)}
+            style={{ transition: 'opacity 0.2s' }} />
+        ))}
+        <text x="50" y={hv ? 47 : 52} textAnchor="middle" fontSize={hv ? '10' : '14'} fontWeight="800" fill="#6b5a4a">
+          {hv ? `${Math.round(hv.pct * 100)}%` : total}
+        </text>
+        {hv && <text x="50" y="60" textAnchor="middle" fontSize="6" fill="#a8998a">{hv.label}</text>}
+      </svg>
       <div className="flex-1 space-y-1">
-        {segments.map((s, i) => (
-          <div key={i} className="flex items-center gap-2">
+        {arcs.map((s, i) => (
+          <div key={i} className={`flex items-center gap-2 px-1 rounded transition-colors ${hover === i ? 'bg-cream-50' : ''}`}
+               onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
             <span className="text-[10px] text-cocoa-600 flex-1">{s.label}</span>
             <span className="text-[10px] font-bold text-cocoa-700">{s.value}</span>
+            <span className="text-[9px] text-cocoa-400 w-8 text-right">{Math.round(s.pct * 100)}%</span>
           </div>
         ))}
       </div>
     </div>
+  );
+}
+
+// Tiny sparkline for KPI cards
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  if (!data.length) return null;
+  const max = Math.max(...data, 1);
+  const W = 80, H = 22;
+  const step = data.length > 1 ? W / (data.length - 1) : 0;
+  const pts = data.map((v, i) => `${i * step},${H - (v / max) * H}`).join(' ');
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-20 h-5 mt-1">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
   );
 }
 

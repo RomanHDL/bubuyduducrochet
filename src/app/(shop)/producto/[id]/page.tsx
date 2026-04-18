@@ -245,12 +245,14 @@ function ReviewSection({ productId }: { productId: string }) {
   const removeImg = (idx: number) => setImgPreviews(prev => prev.filter((_, i) => i !== idx));
 
   const submit = async () => {
-    if (!text.trim()) return;
+    if (!rating || rating < 1) return;
     setSending(true);
-    await fetch('/api/product-reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, text, rating, images: imgPreviews }) });
+    await fetch('/api/product-reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, text: text.trim(), rating, images: imgPreviews }) });
     setSending(false); setText(''); setImgPreviews([]); setShowForm(false);
     const r = await fetch(`/api/product-reviews?productId=${productId}`); setReviews(await r.json());
   };
+
+  const ratingLabel = (n: number) => ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'][n] || '';
 
   const avg = reviews.length > 0 ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1) : '0';
 
@@ -274,9 +276,13 @@ function ReviewSection({ productId }: { productId: string }) {
       {/* Write review form */}
       {showForm && (
         <div className="bg-cream-50 rounded-cute border border-cream-200 p-5 mb-6">
-          <h3 className="font-semibold text-cocoa-700 mb-3">Tu resena</h3>
-          <div className="flex gap-1 mb-3">{[1,2,3,4,5].map(i => <button key={i} onClick={() => setRating(i)} className={`text-2xl ${i <= rating ? '' : 'opacity-25'}`}>⭐</button>)}</div>
-          <textarea value={text} onChange={e => setText(e.target.value)} rows={3} placeholder="Cuenta tu experiencia con este producto..." className="input-cute text-sm mb-3 resize-none" />
+          <h3 className="font-semibold text-cocoa-700 mb-1">Tu reseña</h3>
+          <p className="text-[11px] text-cocoa-400 mb-3">Puedes calificar solo con estrellas ⭐ o también escribir un comentario (opcional).</p>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex gap-1">{[1,2,3,4,5].map(i => <button type="button" key={i} onClick={() => setRating(i)} className={`text-2xl transition-transform hover:scale-110 ${i <= rating ? '' : 'opacity-25'}`}>⭐</button>)}</div>
+            <span className="text-xs font-semibold text-blush-500">{ratingLabel(rating)}</span>
+          </div>
+          <textarea value={text} onChange={e => setText(e.target.value)} rows={3} placeholder="Comentario opcional — cuéntanos tu experiencia..." className="input-cute text-sm mb-3 resize-none" />
 
           {/* Image upload */}
           <div className="mb-3">
@@ -298,7 +304,7 @@ function ReviewSection({ productId }: { productId: string }) {
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400">Cancelar</button>
-            <button onClick={submit} disabled={sending || !text.trim()} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500 disabled:opacity-50">{sending ? '🧶...' : '✨ Publicar'}</button>
+            <button onClick={submit} disabled={sending || rating < 1} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500 disabled:opacity-50">{sending ? '🧶...' : '✨ Publicar'}</button>
           </div>
         </div>
       )}
@@ -320,7 +326,11 @@ function ReviewSection({ productId }: { productId: string }) {
                 </div>
                 <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <span key={j} className="text-xs">⭐</span>)}</div>
               </div>
-              <p className="text-sm text-cocoa-500 leading-relaxed">{r.text}</p>
+              {r.text && r.text.trim().length > 0 ? (
+                <p className="text-sm text-cocoa-500 leading-relaxed">{r.text}</p>
+              ) : (
+                <p className="text-xs italic text-cocoa-300">Calificación sin comentario</p>
+              )}
               {r.images?.length > 0 && (
                 <div className="flex gap-3 mt-3 overflow-x-auto pb-1">
                   {r.images.map((img: string, i: number) => (

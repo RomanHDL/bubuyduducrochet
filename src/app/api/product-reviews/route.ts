@@ -29,13 +29,13 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Inicia sesion' }, { status: 401 });
   await connectDB();
   const body = await req.json();
-  if (!body.productId || !body.text || !body.rating) return NextResponse.json({ error: 'Campos requeridos' }, { status: 400 });
+  if (!body.productId || !body.rating) return NextResponse.json({ error: 'Campos requeridos' }, { status: 400 });
   const review = await ProductReview.create({
     productId: body.productId,
     userId: (session.user as any).id,
     userName: session.user?.name || 'Cliente',
     rating: Math.min(5, Math.max(1, body.rating)),
-    text: body.text,
+    text: typeof body.text === 'string' ? body.text.trim() : '',
     images: body.images || [],
   });
   return NextResponse.json(review, { status: 201 });

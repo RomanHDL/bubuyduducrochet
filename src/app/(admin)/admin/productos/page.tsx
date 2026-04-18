@@ -236,9 +236,17 @@ export default function AdminProductsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button onClick={() => openEdit(p)} className="text-xs font-semibold text-cocoa-400 hover:text-blush-400 mr-3 transition-colors">Editar</button>
-                      <button onClick={() => openProceso(p)} className="text-xs font-semibold text-cocoa-400 hover:text-blush-400 mr-3 transition-colors">📋 Proceso</button>
-                      <button onClick={() => setDeleteConfirm(p._id)} className="text-xs font-semibold text-cocoa-300 hover:text-red-400 transition-colors">Eliminar</button>
+                      <div className="inline-flex items-center gap-2 flex-wrap justify-center">
+                        <button onClick={() => openEdit(p)} className="text-xs font-semibold px-3 py-1.5 rounded-full bg-cream-100 text-cocoa-500 hover:bg-cream-200 transition-colors">✏️ Editar</button>
+                        <button
+                          onClick={() => openProceso(p)}
+                          title="Ver y editar el proceso de elaboración de este producto"
+                          className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors ${p.elaboration ? 'bg-lavender-100 text-lavender-600 border-lavender-200 hover:bg-lavender-200' : 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'}`}
+                        >
+                          📋 Procesos{p.elaboration ? ' ✓' : ''}
+                        </button>
+                        <button onClick={() => setDeleteConfirm(p._id)} className="text-xs font-semibold px-3 py-1.5 rounded-full bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors">🗑️ Eliminar</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
