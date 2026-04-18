@@ -104,11 +104,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* ═══ Alerts ═══ */}
-      {((s.pendingPayments || 0) > 0 || (s.outOfStock || 0) > 0 || (s.lowStock || 0) > 0 || (s.matOut || 0) > 0) && (
+      {((s.pendingPayments || 0) > 0 || (s.outOfStock || 0) > 0 || (s.matOut || 0) > 0) && (
         <div className="flex flex-wrap gap-3 mb-6">
           {(s.pendingPayments || 0) > 0 && <Alert emoji="⚠️" text={`$${(s.pendingPayments || 0).toFixed(0)} pendiente de cobro`} sub={`${s.pendingCount} pedidos`} color="bg-amber-50 border-amber-200 text-amber-700" />}
           {(s.outOfStock || 0) > 0 && <Alert emoji="🚨" text={`${s.outOfStock} productos agotados`} sub="Sin stock" color="bg-red-50 border-red-200 text-red-600" />}
-          {(s.lowStock || 0) > 0 && <Alert emoji="📉" text={`${s.lowStock} productos poco stock`} sub="≤3 unidades" color="bg-orange-50 border-orange-200 text-orange-600" />}
           {(s.matOut || 0) > 0 && <Alert emoji="🧶" text={`${s.matOut} materiales agotados`} sub="Revisar inventario" color="bg-red-50 border-red-200 text-red-600" />}
         </div>
       )}

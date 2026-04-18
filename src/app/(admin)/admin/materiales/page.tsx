@@ -42,7 +42,7 @@ export default function MaterialesPage() {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchMaterials();
-    const interval = setInterval(fetchMaterials, 3000);
+    const interval = setInterval(fetchMaterials, 15000);
     return () => clearInterval(interval);
   }, [session, status]);
 

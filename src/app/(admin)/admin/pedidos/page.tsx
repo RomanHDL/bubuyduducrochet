@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { generateTicket } from '@/lib/ticket';
+
+// Carga diferida: ticket.ts trae html2canvas/jspdf (~200KB). Se carga sólo al pedir generar un ticket.
+const loadTicket = () => import('@/lib/ticket').then(m => m.generateTicket);
 
 const WA = '528187087288';
 
@@ -42,7 +44,7 @@ export default function AdminOrdersPage() {
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchOrders();
     // Real-time: refresh every 10 seconds
-    const interval = setInterval(fetchOrders, 3000);
+    const interval = setInterval(fetchOrders, 15000);
     return () => clearInterval(interval);
   }, [session, status]);
 
@@ -65,6 +67,7 @@ export default function AdminOrdersPage() {
     setGeneratingTicket(order._id);
     try {
       const payMethod = order.notes?.includes('OXXO') ? 'oxxo' : 'transfer';
+      const generateTicket = await loadTicket();
       const ticketImg = await generateTicket(order.orderNumber || 0, order.items || [], order.total || 0, payMethod, order.userName || 'Cliente');
 
       // Auto-download

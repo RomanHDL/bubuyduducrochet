@@ -19,19 +19,22 @@ export default function FavoritosPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load from localStorage
-    const saved = JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]');
-    if (saved.length > 0) {
-      fetch('/api/products')
-        .then(r => r.json())
-        .then(products => {
-          setFavorites(products.filter((p: Product) => saved.includes(p._id)));
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    const saved: string[] = JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]');
+    if (saved.length === 0) { setLoading(false); return; }
+
+    fetch('/api/products')
+      .then(r => r.json())
+      .then((products: Product[]) => {
+        const existingIds = new Set(products.map(p => p._id));
+        // Limpiar localStorage de IDs huérfanos (productos eliminados)
+        const pruned = saved.filter(id => existingIds.has(id));
+        if (pruned.length !== saved.length) {
+          localStorage.setItem('bdcrochet_favs', JSON.stringify(pruned));
+        }
+        setFavorites(products.filter(p => pruned.includes(p._id)));
+      })
+      .catch(() => { /* silent */ })
+      .finally(() => setLoading(false));
   }, []);
 
   const removeFav = (id: string) => {

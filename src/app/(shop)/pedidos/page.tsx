@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
-import { generateTicket, buildTicketWhatsAppMsg } from '@/lib/ticket';
+// Carga diferida: ticket.ts trae html2canvas/jspdf (~200KB). Sólo se carga al presionar generar ticket.
+const loadTicket = () => import('@/lib/ticket');
 
 const WA = '528187087288';
 
@@ -42,7 +43,7 @@ export default function PedidosPage() {
   useEffect(() => {
     if (!session) { setLoading(false); return; }
     fetchOrders();
-    const interval = setInterval(fetchOrders, 3000);
+    const interval = setInterval(fetchOrders, 15000);
     return () => clearInterval(interval);
   }, [session]);
 
@@ -56,6 +57,7 @@ export default function PedidosPage() {
     setGeneratingTicket(order._id);
     try {
       const payMethod = order.notes?.includes('OXXO') ? 'oxxo' : 'transfer';
+      const { generateTicket } = await loadTicket();
       const ticketImg = await generateTicket(
         order.orderNumber || 0,
         order.items || [],

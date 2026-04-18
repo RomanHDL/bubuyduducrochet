@@ -1,5 +1,17 @@
 import mongoose, { Schema, models, model } from 'mongoose';
 
+export type ProfileFrame =
+  | 'none'
+  | 'gold'
+  | 'rose'
+  | 'lavender'
+  | 'mint'
+  | 'glitter'
+  | 'rainbow'
+  | 'crown'
+  | 'hearts'
+  | 'stars';
+
 export interface IUser {
   _id: string;
   name: string;
@@ -8,6 +20,12 @@ export interface IUser {
   image?: string;
   provider: 'local' | 'google';
   role: 'admin' | 'customer';
+  profile?: {
+    frame?: ProfileFrame;
+    accentColor?: string;
+    badge?: string;
+    bio?: string;
+  };
   createdAt: Date;
 }
 
@@ -18,6 +36,12 @@ const UserSchema = new Schema<IUser>({
   image: { type: String },
   provider: { type: String, enum: ['local', 'google'], default: 'local' },
   role: { type: String, enum: ['admin', 'customer'], default: 'customer' },
+  profile: {
+    frame: { type: String, enum: ['none','gold','rose','lavender','mint','glitter','rainbow','crown','hearts','stars'], default: 'none' },
+    accentColor: { type: String, default: '' },
+    badge: { type: String, default: '' },
+    bio: { type: String, default: '' },
+  },
 }, { timestamps: true });
 
 export default models.User || model<IUser>('User', UserSchema);

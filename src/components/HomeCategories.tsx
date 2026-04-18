@@ -20,7 +20,7 @@ export default function HomeCategories() {
       fetch('/api/categories').then(r => r.json()).then(d => setCategories(Array.isArray(d) ? d : [])).catch(() => {});
     };
     fetchCats();
-    const interval = setInterval(fetchCats, 3000);
+    const interval = setInterval(fetchCats, 30000);
     return () => clearInterval(interval);
   }, []);
 

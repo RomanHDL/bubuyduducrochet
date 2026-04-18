@@ -33,7 +33,7 @@ export default function AdminReviewsPage() {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchAll();
-    const interval = setInterval(fetchAll, 3000);
+    const interval = setInterval(fetchAll, 15000);
     return () => clearInterval(interval);
   }, [session, status]);
 

@@ -3,6 +3,8 @@ import { connectDB } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Review from '@/models/Review';
 
+export const dynamic = 'force-dynamic';
+
 // GET public stats — no auth needed
 export async function GET() {
   await connectDB();
