@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -30,6 +30,14 @@ const emptyMeasurement = { name: '', value: '', unit: 'cm' };
 const emptyPattern = { name: '', imageUrl: '', description: '' };
 
 export default function AdminProductsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🧸</span></div>}>
+      <AdminProductsPageInner />
+    </Suspense>
+  );
+}
+
+function AdminProductsPageInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
