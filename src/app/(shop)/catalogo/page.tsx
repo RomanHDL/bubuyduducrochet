@@ -153,12 +153,40 @@ function Content() {
     fetch('/api/products?featured=true').then(r => r.json()).then(d => setFeaturedProducts(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
-  useEffect(() => { setFavs(JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]')); }, []);
+  // Cargar favoritos desde la DB; fallback a localStorage para invitados no logueados.
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/favorites', { cache: 'no-store' });
+        if (r.ok) {
+          const data = await r.json();
+          if (Array.isArray(data)) { setFavs(data.map((p: any) => p._id)); return; }
+        }
+      } catch { /* ignore */ }
+      // Fallback invitado
+      try { setFavs(JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]')); } catch {}
+    })();
+  }, []);
 
-  const toggleFav = (id: string, e: React.MouseEvent) => {
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    const next = favs.includes(id) ? favs.filter(f => f !== id) : [...favs, id];
-    setFavs(next); localStorage.setItem('bdcrochet_favs', JSON.stringify(next));
+    const isFav = favs.includes(id);
+    const next = isFav ? favs.filter(f => f !== id) : [...favs, id];
+    setFavs(next); // optimistic
+    try {
+      if (isFav) {
+        await fetch(`/api/favorites?productId=${id}`, { method: 'DELETE' });
+      } else {
+        const r = await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: id }) });
+        if (r.status === 401) {
+          // Invitado: guarda en localStorage como fallback
+          localStorage.setItem('bdcrochet_favs', JSON.stringify(next));
+        }
+      }
+    } catch {
+      // Fallback offline / invitado
+      localStorage.setItem('bdcrochet_favs', JSON.stringify(next));
+    }
   };
 
   const load = async () => {

@@ -12,7 +12,19 @@ export async function GET() {
 
   await connectDB();
   const isAdmin = (session.user as any).role === 'admin';
-  const filter = isAdmin ? {} : { userId: (session.user as any).id };
+  const userId = (session.user as any).id;
+  const userEmail = (session.user?.email || '').toLowerCase();
+
+  // Match por userId O por email. Cubre casos en los que el ID cambió entre
+  // sesiones (reautenticación, cambios en el provider) pero el email sigue siendo el mismo.
+  const filter: any = isAdmin
+    ? {}
+    : {
+        $or: [
+          { userId },
+          ...(userEmail ? [{ userEmail: { $regex: `^${userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' } }] : []),
+        ],
+      };
 
   const orders = await Order.find(filter).sort({ createdAt: -1 });
   return NextResponse.json(orders);
@@ -40,7 +52,7 @@ export async function POST(req: NextRequest) {
     orderNumber: nextNumber,
     userId,
     userName: session.user?.name || 'Cliente',
-    userEmail: session.user?.email || '',
+    userEmail: (session.user?.email || '').toLowerCase(),
     items: cart.items,
     total: cart.total,
     shippingAddress: body.shippingAddress || '',

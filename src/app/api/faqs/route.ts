@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import FAQ from '@/models/FAQ';
 
-// Default FAQs to seed if empty
+// Default FAQs — sólo se siembran si la colección está completamente vacía.
 const DEFAULTS = [
   { category: '🧶 Productos', question: 'Todos los productos son hechos a mano?', answer: 'Si! Cada pieza es tejida a mano con crochet. Por eso cada producto es unico y puede tener pequenas variaciones que lo hacen especial.', order: 1 },
   { category: '🧶 Productos', question: 'Que materiales usan?', answer: 'Usamos hilos de algodon y acrilico de alta calidad, hipoalergenicos y lavables. Todos nuestros rellenos son seguros para bebes y ninos.', order: 2 },
@@ -15,9 +15,25 @@ const DEFAULTS = [
   { category: '🔄 Devoluciones', question: 'Aceptan devoluciones?', answer: 'Si tu producto llega danado o con algun defecto, lo reemplazamos sin costo. Contactanos dentro de los primeros 7 dias.', order: 7 },
 ];
 
-// GET público: aprobadas. Admin puede pedir ?status=pending o ?all=true
+// Backfill idempotente: a las FAQs antiguas sin `status`, les asigna 'approved'.
+let backfilled = false;
+async function ensureStatusBackfill() {
+  if (backfilled) return;
+  try {
+    await FAQ.updateMany(
+      { $or: [{ status: { $exists: false } }, { status: null }] },
+      { $set: { status: 'approved' } },
+    );
+    backfilled = true;
+  } catch { /* silent */ }
+}
+
+// GET público: aprobadas (incluye documentos legacy sin campo status).
+// Admin: ?status=pending o ?all=true
 export async function GET(req: NextRequest) {
   await connectDB();
+  await ensureStatusBackfill();
+
   const { searchParams } = new URL(req.url);
   const statusParam = searchParams.get('status');
   const all = searchParams.get('all');
@@ -25,26 +41,27 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const isAdmin = session && (session.user as any).role === 'admin';
 
-  // Seed inicial si está vacía
+  // Seed inicial sólo si no hay NADA en la colección.
   const total = await FAQ.countDocuments();
   if (total === 0) {
     await FAQ.insertMany(DEFAULTS.map(f => ({ ...f, isActive: true, status: 'approved' })));
   }
 
-  let filter: any = { isActive: true, status: 'approved' };
+  // Por default: aprobadas (status 'approved' O sin campo status = legacy).
+  let filter: any = { isActive: true, status: { $ne: 'pending' } };
   if (isAdmin && statusParam === 'pending') {
     filter = { isActive: true, status: 'pending' };
   } else if (isAdmin && all === 'true') {
     filter = { isActive: true };
   }
 
-  const faqs = await FAQ.find(filter).sort({ status: 1, category: 1, order: 1 });
+  const faqs = await FAQ.find(filter).sort({ category: 1, order: 1 });
   return NextResponse.json(faqs);
 }
 
 // POST:
-//   - admin crea directamente (status approved por default)
-//   - usuario autenticado envía pregunta para revisión (status pending, answer vacía)
+//   - admin crea directamente (status 'approved' por default)
+//   - usuario autenticado envía propuesta (status 'pending')
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Inicia sesion' }, { status: 401 });

@@ -14,37 +14,47 @@ interface Product {
 }
 
 export default function FavoritosPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = async () => {
+    try {
+      const r = await fetch('/api/favorites', { cache: 'no-store' });
+      const data = await r.json();
+      setFavorites(Array.isArray(data) ? data : []);
+    } catch {
+      setFavorites([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const saved: string[] = JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]');
-    if (saved.length === 0) { setLoading(false); return; }
-
-    fetch('/api/products')
-      .then(r => r.json())
-      .then((products: Product[]) => {
-        const existingIds = new Set(products.map(p => p._id));
-        // Limpiar localStorage de IDs huérfanos (productos eliminados)
-        const pruned = saved.filter(id => existingIds.has(id));
-        if (pruned.length !== saved.length) {
-          localStorage.setItem('bdcrochet_favs', JSON.stringify(pruned));
+    if (status === 'loading') return;
+    if (!session) { setLoading(false); return; }
+    // Migración automática: si el usuario tiene favoritos en localStorage (flujo viejo),
+    // los sube a la DB la primera vez y luego limpia localStorage.
+    (async () => {
+      try {
+        const saved: string[] = JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]');
+        if (saved.length > 0) {
+          await Promise.all(saved.map(productId =>
+            fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId }) }).catch(() => null)
+          ));
+          localStorage.removeItem('bdcrochet_favs');
         }
-        setFavorites(products.filter(p => pruned.includes(p._id)));
-      })
-      .catch(() => { /* silent */ })
-      .finally(() => setLoading(false));
-  }, []);
+      } catch { /* ignore */ }
+      await load();
+    })();
+  }, [session, status]);
 
-  const removeFav = (id: string) => {
-    const saved = JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]');
-    const next = saved.filter((fid: string) => fid !== id);
-    localStorage.setItem('bdcrochet_favs', JSON.stringify(next));
+  const removeFav = async (id: string) => {
+    await fetch(`/api/favorites?productId=${id}`, { method: 'DELETE' });
     setFavorites(prev => prev.filter(p => p._id !== id));
   };
 
-  if (!session) {
+  if (status !== 'loading' && !session) {
     return (
       <AnimatedBg theme="pink">
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16 bg-gradient-to-br from-cream-50 via-blush-50 to-lavender-50">
@@ -90,7 +100,8 @@ export default function FavoritosPage() {
           {favorites.map(product => (
             <div key={product._id} className="card-cute group relative">
               <button onClick={() => removeFav(product._id)}
-                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-blush-400 hover:bg-blush-50 hover:text-blush-500 transition-all shadow-soft">
+                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-blush-400 hover:bg-blush-50 hover:text-blush-500 transition-all shadow-soft"
+                title="Quitar de favoritos">
                 ❤️
               </button>
               <Link href={`/producto/${product._id}`}>

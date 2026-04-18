@@ -21,22 +21,13 @@ export default function MiCuentaPage() {
 
   useEffect(() => {
     if (!session) return;
-    fetch('/api/orders').then(r => r.json()).then(orders => setOrderCount(Array.isArray(orders) ? orders.length : 0)).catch(() => {});
+    fetch('/api/orders', { cache: 'no-store' }).then(r => r.json()).then(orders => setOrderCount(Array.isArray(orders) ? orders.length : 0)).catch(() => {});
 
-    // Contar favoritos SOLO con productos que aún existen
-    const saved: string[] = JSON.parse(localStorage.getItem('bdcrochet_favs') || '[]');
-    if (saved.length === 0) setFavCount(0);
-    else {
-      fetch('/api/products')
-        .then(r => r.json())
-        .then((products: any[]) => {
-          const ids = new Set(products.map(p => p._id));
-          const pruned = saved.filter(id => ids.has(id));
-          if (pruned.length !== saved.length) localStorage.setItem('bdcrochet_favs', JSON.stringify(pruned));
-          setFavCount(pruned.length);
-        })
-        .catch(() => setFavCount(saved.length));
-    }
+    // Conteo de favoritos desde la DB (validos: productos que aún existen)
+    fetch('/api/favorites/count', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => setFavCount(Number(d?.count) || 0))
+      .catch(() => setFavCount(0));
 
     // Cargar perfil extendido
     fetch('/api/profile').then(r => r.json()).then(p => {
@@ -121,60 +112,20 @@ export default function MiCuentaPage() {
         )}
       </div>
 
-      {/* Personalización admin */}
+      {/* Modal flotante de personalización admin (fondo estático, sólo el modal visible) */}
       {isAdmin && editProfile && (
-        <div className="bg-white rounded-cute border border-cream-200 shadow-soft p-5 mb-8">
-          <h2 className="font-display font-bold text-lg text-cocoa-700 mb-4">🎨 Personaliza tu perfil</h2>
-
-          <div className="mb-5">
-            <p className="text-xs font-semibold text-cocoa-600 mb-2">Marco del avatar</p>
-            <div className="grid grid-cols-5 gap-3">
-              {FRAMES.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setDraftFrame(f.key)}
-                  className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${draftFrame === f.key ? 'border-blush-400 bg-blush-50' : 'border-cream-200 hover:border-blush-200'}`}
-                  title={f.label}
-                >
-                  <ProfileAvatar src={user?.image} name={user?.name} frame={f.key} size={44} />
-                  <span className="text-[10px] font-semibold text-cocoa-600">{f.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="text-xs font-semibold text-cocoa-600 mb-1 block">Badge / Título</label>
-            <input
-              value={draftBadge}
-              onChange={e => setDraftBadge(e.target.value)}
-              placeholder="Ej: 🧶 Fundadora · CEO · Diseñadora jefe"
-              maxLength={64}
-              className="input-cute text-sm"
-            />
-            <p className="text-[10px] text-cocoa-400 mt-1">Se muestra debajo del avatar. Máx 64 caracteres.</p>
-          </div>
-
-          <div className="mb-4">
-            <label className="text-xs font-semibold text-cocoa-600 mb-1 block">Bio</label>
-            <textarea
-              value={draftBio}
-              onChange={e => setDraftBio(e.target.value)}
-              rows={3}
-              maxLength={240}
-              placeholder="Cuenta algo sobre ti..."
-              className="input-cute text-sm resize-none"
-            />
-            <p className="text-[10px] text-cocoa-400 mt-1">{draftBio.length}/240</p>
-          </div>
-
-          <div className="flex gap-3">
-            <button onClick={() => setEditProfile(false)} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400">Cancelar</button>
-            <button onClick={saveProfile} disabled={savingProfile} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500 disabled:opacity-50">
-              {savingProfile ? '🧶...' : '💾 Guardar'}
-            </button>
-          </div>
-        </div>
+        <ProfileCustomizeModal
+          user={user}
+          draftFrame={draftFrame}
+          setDraftFrame={setDraftFrame}
+          draftBadge={draftBadge}
+          setDraftBadge={setDraftBadge}
+          draftBio={draftBio}
+          setDraftBio={setDraftBio}
+          saving={savingProfile}
+          onSave={saveProfile}
+          onClose={() => setEditProfile(false)}
+        />
       )}
 
       {/* Stats */}
@@ -227,5 +178,115 @@ export default function MiCuentaPage() {
       </button>
     </div>
     </AnimatedBg>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Modal flotante de personalización — fondo estático (scroll lock)
+// ═══════════════════════════════════════════════════════════════════
+function ProfileCustomizeModal({
+  user, draftFrame, setDraftFrame, draftBadge, setDraftBadge, draftBio, setDraftBio,
+  saving, onSave, onClose,
+}: {
+  user: any;
+  draftFrame: ProfileFrame; setDraftFrame: (f: ProfileFrame) => void;
+  draftBadge: string; setDraftBadge: (v: string) => void;
+  draftBio: string; setDraftBio: (v: string) => void;
+  saving: boolean; onSave: () => void; onClose: () => void;
+}) {
+  // Body scroll lock con compensación de scrollbar
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, []);
+
+  // Cerrar con Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-cocoa-900/45 backdrop-blur-sm" onClick={onClose} />
+      {/* Modal */}
+      <div
+        className="relative bg-white rounded-cute shadow-warm border border-cream-200 w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header fijo */}
+        <div className="flex items-center justify-between p-4 border-b border-cream-100 bg-gradient-to-r from-blush-50 via-cream-50 to-lavender-50">
+          <h2 className="font-display font-bold text-base text-cocoa-700">🎨 Personaliza tu perfil</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white hover:bg-cream-100 border border-cream-200 flex items-center justify-center text-cocoa-400 hover:text-cocoa-600 transition-colors">✕</button>
+        </div>
+        {/* Content scroll interno */}
+        <div className="p-5 overflow-y-auto flex-1">
+          {/* Preview arriba */}
+          <div className="flex flex-col items-center mb-5 p-4 rounded-xl bg-cream-50 border border-cream-200">
+            <ProfileAvatar src={user?.image} name={user?.name} frame={draftFrame} size={72} badge={draftBadge || undefined} />
+            <p className="font-semibold text-sm text-cocoa-700 mt-3">{user?.name}</p>
+            {draftBio && <p className="text-[11px] italic text-cocoa-500 mt-2 max-w-xs text-center whitespace-pre-wrap">{draftBio}</p>}
+          </div>
+
+          <div className="mb-5">
+            <p className="text-xs font-semibold text-cocoa-600 mb-2">Marco del avatar</p>
+            <div className="grid grid-cols-5 gap-3">
+              {FRAMES.map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setDraftFrame(f.key)}
+                  className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${draftFrame === f.key ? 'border-blush-400 bg-blush-50' : 'border-cream-200 hover:border-blush-200'}`}
+                  title={f.label}
+                >
+                  <ProfileAvatar src={user?.image} name={user?.name} frame={f.key} size={44} />
+                  <span className="text-[10px] font-semibold text-cocoa-600">{f.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="text-xs font-semibold text-cocoa-600 mb-1 block">Badge / Título</label>
+            <input
+              value={draftBadge}
+              onChange={e => setDraftBadge(e.target.value)}
+              placeholder="Ej: 🧶 Fundadora · CEO · Diseñadora jefe"
+              maxLength={64}
+              className="input-cute text-sm"
+            />
+            <p className="text-[10px] text-cocoa-400 mt-1">Se muestra debajo del avatar. Máx 64 caracteres.</p>
+          </div>
+
+          <div className="mb-2">
+            <label className="text-xs font-semibold text-cocoa-600 mb-1 block">Bio</label>
+            <textarea
+              value={draftBio}
+              onChange={e => setDraftBio(e.target.value)}
+              rows={3}
+              maxLength={240}
+              placeholder="Cuenta algo sobre ti..."
+              className="input-cute text-sm resize-none"
+            />
+            <p className="text-[10px] text-cocoa-400 mt-1">{draftBio.length}/240</p>
+          </div>
+        </div>
+        {/* Footer fijo */}
+        <div className="p-4 border-t border-cream-100 flex gap-3">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400 hover:bg-cream-50">Cancelar</button>
+          <button onClick={onSave} disabled={saving} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500 disabled:opacity-50">
+            {saving ? '🧶...' : '💾 Guardar'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
