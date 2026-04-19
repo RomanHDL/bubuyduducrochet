@@ -81,11 +81,30 @@ export default function ProductEditModal({
   };
 
   const uploadFile = async (i: number, file: File) => {
-    if (file.size > 5 * 1024 * 1024) { setErr('Imagen muy grande (máx 5MB)'); return; }
+    if (file.size > 10 * 1024 * 1024) { setErr('Imagen muy grande (max 10MB)'); return; }
     setErr('');
-    const fd = new FormData();
-    fd.append('file', file);
     try {
+      // Compacta en el cliente (max 1280px, JPEG 85%) — evita exceder el limite
+      // de 16MB por documento de MongoDB cuando se guarda la imagen en base64.
+      const compressed = await (async () => {
+        if (file.size < 400 * 1024) return file;
+        try {
+          const bitmap = await createImageBitmap(file);
+          const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
+          const w = Math.round(bitmap.width * scale);
+          const h = Math.round(bitmap.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return file;
+          ctx.drawImage(bitmap, 0, 0, w, h);
+          const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.85));
+          if (!blob) return file;
+          return new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+        } catch { return file; }
+      })();
+      const fd = new FormData();
+      fd.append('file', compressed);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (data.url) {
@@ -95,7 +114,7 @@ export default function ProductEditModal({
       } else {
         setErr(data.error || 'Error al subir');
       }
-    } catch { setErr('Error al subir imagen'); }
+    } catch (e: any) { setErr(e?.message || 'Error al subir imagen'); }
   };
 
   return (

@@ -16,16 +16,24 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 // PUT update product (admin only)
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).role !== 'admin') {
+      return NextResponse.json({ error: 'No autorizado (inicia sesion como admin)' }, { status: 401 });
+    }
 
-  await connectDB();
-  const body = await req.json();
-  const product = await Product.findByIdAndUpdate(params.id, body, { new: true });
-  if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
-  return NextResponse.json(product);
+    await connectDB();
+    const body = await req.json();
+    const product = await Product.findByIdAndUpdate(params.id, body, { new: true, runValidators: true });
+    if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+    return NextResponse.json(product);
+  } catch (err: any) {
+    console.error('[PUT /api/products/:id] error:', err);
+    const msg = err?.name === 'ValidationError'
+      ? Object.values((err as any).errors || {}).map((e: any) => e?.message).filter(Boolean).join('; ') || 'Datos invalidos'
+      : (err?.message || 'Error al actualizar el producto');
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 // DELETE product (admin only)

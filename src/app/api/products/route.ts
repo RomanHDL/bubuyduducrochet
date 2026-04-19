@@ -45,18 +45,42 @@ export async function GET(req: NextRequest) {
 
 // POST create product (admin only)
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).role !== 'admin') {
+      return NextResponse.json({ error: 'No autorizado (inicia sesion como admin)' }, { status: 401 });
+    }
+
+    await connectDB();
+    const body = await req.json();
+
+    // Normalizar payload — evita que campos vacios/tipicos del form rompan el schema
+    const doc: any = {
+      title: (body.title || '').trim(),
+      description: (body.description || '').trim(),
+      price: Number(body.price) || 0,
+      images: Array.isArray(body.images) ? body.images.filter((u: any) => typeof u === 'string' && u.trim()) : [],
+      stock: Number(body.stock) || 0,
+      availability: body.availability === 'por_pedido' ? 'por_pedido' : 'disponible',
+      category: (body.category || 'otro').trim() || 'otro',
+      isActive: body.isActive !== false,
+      featured: !!body.featured,
+      createdBy: (session.user as any).id,
+    };
+    if (body.elaboration && typeof body.elaboration === 'object') {
+      doc.elaboration = body.elaboration;
+    }
+
+    if (!doc.title) return NextResponse.json({ error: 'El titulo es obligatorio' }, { status: 400 });
+    if (!doc.description) return NextResponse.json({ error: 'La descripcion es obligatoria' }, { status: 400 });
+
+    const product = await Product.create(doc);
+    return NextResponse.json(product, { status: 201 });
+  } catch (err: any) {
+    console.error('[POST /api/products] error:', err);
+    const msg = err?.name === 'ValidationError'
+      ? Object.values((err as any).errors || {}).map((e: any) => e?.message).filter(Boolean).join('; ') || 'Datos invalidos'
+      : (err?.message || 'Error al crear el producto');
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
-
-  await connectDB();
-  const body = await req.json();
-
-  const product = await Product.create({
-    ...body,
-    createdBy: (session.user as any).id,
-  });
-
-  return NextResponse.json(product, { status: 201 });
 }

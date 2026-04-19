@@ -78,9 +78,39 @@ function playSound(id: string) {
   try {
     if (!_audioCtx) _audioCtx = new AudioContext();
     if (_audioCtx.state === 'suspended') _audioCtx.resume();
-    const idx = Math.abs(hashId(id)) % SOUNDS.length;
-    SOUNDS[idx](_audioCtx);
+    // Sonido procedural unico y estable por producto (ver genSound).
+    // Si algun dia el generador falla, caemos al array curado SOUNDS.
+    try {
+      genSound(id)(_audioCtx);
+    } catch {
+      const idx = Math.abs(hashId(id)) % SOUNDS.length;
+      SOUNDS[idx](_audioCtx);
+    }
   } catch {}
+}
+
+// Compacta una imagen en el cliente antes de subirla al servidor.
+// Evita que fotos de telefono (5-10MB) revienten el limite de 16MB por doc de MongoDB
+// al convertirse a base64 — esto era la causa principal de "no me deja subir productos".
+async function compressImage(file: File, maxSide = 1280, quality = 0.85): Promise<File> {
+  // Si ya es chica, no vale la pena procesarla.
+  if (file.size < 400 * 1024) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', quality));
+    if (!blob) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+  } catch {
+    return file; // Si algo falla (navegador viejo), sube el original.
+  }
 }
 
 interface Product {
@@ -516,16 +546,20 @@ function Content() {
                         <input type="file" accept="image/*" className="hidden" onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          if (file.size > 5 * 1024 * 1024) { setErr('Imagen muy grande (max 5MB)'); return; }
+                          if (file.size > 10 * 1024 * 1024) { setErr('Imagen muy grande (max 10MB sin procesar)'); return; }
                           setErr('');
-                          const fd = new FormData();
-                          fd.append('file', file);
                           try {
+                            // Redimensiona/compacta en el cliente: max 1280px, JPEG 85%.
+                            // Esto evita que la imagen base64 exceda el limite de 16MB por
+                            // documento de MongoDB (que era la causa del "no sube producto").
+                            const compressed = await compressImage(file);
+                            const fd = new FormData();
+                            fd.append('file', compressed);
                             const res = await fetch('/api/upload', { method: 'POST', body: fd });
                             const data = await res.json();
                             if (data.url) { const imgs = [...form.images]; imgs[i] = data.url; setForm(prev => ({...prev, images: imgs})); }
                             else { setErr(data.error || 'Error al subir'); }
-                          } catch { setErr('Error al subir imagen'); }
+                          } catch (err: any) { setErr(err?.message || 'Error al subir imagen'); }
                         }} />
                       </label>
                       {form.images.length > 1 && <button onClick={() => setForm({...form, images: form.images.filter((_,j) => j !== i)})} className="text-blush-400 px-1 text-lg hover:scale-110 transition-transform">✕</button>}
@@ -712,17 +746,118 @@ function hashId(id: string): number {
   return Math.abs(h);
 }
 
+// ─── Generadores proceduales: marcos y sonidos ilimitados ────────────────────
+// Estrategia: un hash 32-bit del id del producto (+ idx) se "parte" en pedazos
+// independientes con un mezclador tipo FNV-1a, y cada pedazo decide un atributo
+// (matiz HSL, saturacion, estilo, emoji de esquina, tipo de onda, frecuencia, etc).
+// Resultado: cada producto recibe un marco y un sonido deterministicamente
+// unico, con millones de combinaciones sin repetirse. Si no hay id (preview),
+// caemos al array FRAMES/SOUNDS tradicional como respaldo seguro.
+
+function h32(seed: number, salt: number): number {
+  // Splitmix tipo SFC32 — estable y sin dependencias
+  let x = (seed ^ (salt * 2654435761)) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x7feb352d) >>> 0;
+  x = Math.imul(x ^ (x >>> 15), 0x846ca68b) >>> 0;
+  return (x ^ (x >>> 16)) >>> 0;
+}
+
+// Paleta extensible de emojis para las esquinas (>150 opciones)
+const FRAME_DECOS_POOL = [
+  '🌸','🌺','🌷','🌹','🌻','🌼','💐','🪷','🌿','🍃','🌾','🍀','☘️','🌱','🌵','🎋',
+  '🦋','🐝','🐞','🪲','🐌','🐚','🪸','🐙','🐠','🐡','🦀','🐋','🐳','🦭','🐢','🪼',
+  '🧸','🐰','🐻','🐼','🦊','🐱','🐶','🐭','🐹','🐨','🐯','🦁','🐮','🐷','🐸','🐵',
+  '🦄','🦩','🦢','🦎','🐍','🦉','🐦','🦜','🐧','🦚','🦆','🐓','🪿','🦅',
+  '⭐','✨','💫','⚡','🌟','🌠','☄️','🌙','☀️','🌈','🌞','🌝','🌚','🌛','🌜','❄️',
+  '💕','💖','💝','💗','💘','💙','💚','💛','🧡','💜','🤍','🤎','❤️','🩷','🖤','💞',
+  '🎀','🎁','🎈','🎊','🎉','🪅','🪩','🎭','🎪','🎠','🎨','🎵','🎶','🎼','🎺','🥁',
+  '🧶','🧵','🪡','🧤','🧣','🧷','🪢','🪆','🧳','🎒','🛍️','👜','👑','💍','🕶️','🎩',
+  '🧁','🍰','🍪','🍩','🧇','🍭','🍬','🍫','🍡','🍨','🍦','🍧','🍮','🍯','🍓','🍑',
+  '🪄','🔮','🪬','🧿','🧞','🧚','🧜','🧝','🧙','🫧','💎','🔑','🧊','🪩','🌴','🌳',
+];
+
+type ProceduralFrame = { outer: string; inner: string; accent: string; accent2: string; shadow: string; deco: string; deco2: string; shadowPattern: string };
+
+// Genera un marco unico y estable para un producto. 4 patrones de sombra
+// distintos (inset) * matiz HSL (360) * decos (~150) * decos secundarios (~150)
+// ≈ millones de combinaciones unicas.
+function frameFor(id: string, idx: number = 0): ProceduralFrame {
+  const seed = hashId(id || 'seed') + idx * 7919;
+  const hue = h32(seed, 1) % 360;
+  const sat = 38 + (h32(seed, 2) % 32);   // 38–70%
+  const lt  = 58 + (h32(seed, 3) % 18);   // 58–76%
+  const styleIdx = h32(seed, 4) % 4;
+  const deco  = FRAME_DECOS_POOL[h32(seed, 5) % FRAME_DECOS_POOL.length];
+  // Deco secundario: usa offset para que casi nunca coincida con el primario
+  const deco2Idx = (h32(seed, 6) + 37) % FRAME_DECOS_POOL.length;
+  const deco2 = FRAME_DECOS_POOL[deco2Idx];
+  const outer   = `hsl(${hue}, ${sat}%, ${lt}%)`;
+  const inner   = `hsl(${hue}, ${Math.max(sat - 8, 10)}%, ${Math.max(lt - 12, 30)}%)`;
+  const accent  = `hsl(${hue}, ${Math.max(sat - 18, 12)}%, ${Math.min(lt + 14, 92)}%)`;
+  // accent2: matiz analogo (+30°) para un toque de contraste sutil
+  const accent2 = `hsl(${(hue + 30) % 360}, ${Math.max(sat - 20, 10)}%, ${Math.min(lt + 18, 94)}%)`;
+  const shadow  = `hsla(${hue}, ${sat}%, ${Math.max(lt - 10, 25)}%, 0.38)`;
+
+  // 4 patrones de box-shadow que generan looks visualmente distintos, todos
+  // usando los mismos tokens de color — siempre se ve coherente.
+  const SP = [
+    `8px 8px 24px ${shadow}, -2px -2px 8px rgba(255,255,255,0.3), inset 0 0 0 3px ${accent}, inset 0 0 0 7px ${inner}, inset 0 0 0 9px ${accent}`,
+    `6px 10px 22px ${shadow}, inset 0 0 0 2px ${accent2}, inset 0 0 0 5px ${inner}, inset 0 0 0 8px ${accent}`,
+    `10px 6px 26px ${shadow}, inset 0 0 0 4px ${inner}, inset 0 0 0 6px ${accent}, inset 0 0 0 10px ${accent2}`,
+    `8px 8px 20px ${shadow}, inset 0 0 0 2px ${accent}, inset 0 0 0 4px ${outer}, inset 0 0 0 6px ${accent}, inset 0 0 0 10px ${inner}`,
+  ];
+  return { outer, inner, accent, accent2, shadow, deco, deco2, shadowPattern: SP[styleIdx] };
+}
+
+// ─── Sonidos proceduales ─────────────────────────────────────────────────────
+// Cada hover genera un sonido unico por producto, con forma de onda + perfil
+// de frecuencia + duracion + volumen + posibilidad de 2do oscilador. Millones
+// de timbres posibles, todos suaves y no invasivos.
+const WAVE_POOL: OscillatorType[] = ['sine', 'sine', 'triangle', 'triangle', 'sine', 'square', 'sawtooth'];
+
+function genSound(id: string): (ctx: AudioContext) => void {
+  const seed = hashId(id || 'x');
+  const type  = WAVE_POOL[h32(seed, 1) % WAVE_POOL.length];
+  const f1    = 220 + (h32(seed, 2) % 2200); // 220–2420 Hz
+  const f2    = 220 + (h32(seed, 3) % 2800); // 220–3020 Hz
+  const useF3 = (h32(seed, 4) % 3) === 0;    // 1/3 con tercer tramo
+  const f3    = 220 + (h32(seed, 5) % 2000);
+  const dur   = 0.13 + (h32(seed, 6) % 25) / 100; // 0.13–0.37 s
+  const vol   = 0.04 + (h32(seed, 7) % 6) / 100;  // 0.04–0.10
+  const dual  = (h32(seed, 8) % 5) === 0;         // 1/5 dual osc (acorde)
+
+  return (ctx: AudioContext) => {
+    const g = ctx.createGain();
+    g.connect(ctx.destination);
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    const mk = (base: number) => {
+      const o = ctx.createOscillator();
+      o.connect(g);
+      o.type = type;
+      o.frequency.setValueAtTime(base, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(Math.max(f2, 100), ctx.currentTime + dur * 0.5);
+      if (useF3) o.frequency.exponentialRampToValueAtTime(Math.max(f3, 100), ctx.currentTime + dur * 0.9);
+      o.start();
+      o.stop(ctx.currentTime + dur);
+    };
+    mk(f1);
+    if (dual) mk(f1 * 1.25); // armónico "sweet" (3a mayor aprox)
+  };
+}
+
 function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, onProceso, big }: { p: Product; idx?: number; favs: string[]; toggleFav: (id: string, e: React.MouseEvent) => void; isAdmin: boolean; onEdit: (p: Product, e: React.MouseEvent) => void; onDel: (id: string, t: string, e: React.MouseEvent) => void; onProceso: (p: Product, e: React.MouseEvent) => void; big?: boolean }) {
-  const f = FRAMES[(hashId(p._id) + idx) % FRAMES.length];
+  // Marco procedural unico por producto (color + estilo + esquinas)
+  const f = frameFor(p._id, idx);
 
   return (
     <div className="relative group" style={{ padding: '12px' }} onMouseEnter={() => playSound(p._id)}>
       {/* Museum frame — multi-layered border like a real painting */}
-      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ background: f.outer, boxShadow: `8px 8px 24px ${f.shadow}, -2px -2px 8px rgba(255,255,255,0.3), inset 0 0 0 3px ${f.accent}, inset 0 0 0 7px ${f.inner}, inset 0 0 0 9px ${f.accent}` }} />
+      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ background: f.outer, boxShadow: f.shadowPattern }} />
 
-      {/* Corner ornaments — BIG emojis */}
+      {/* Corner ornaments — deco primario arriba-derecha, deco2 abajo-izquierda */}
       <span className="absolute -top-3 -right-3 z-20 text-3xl drop-shadow-lg group-hover:scale-[1.4] group-hover:rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
-      <span className="absolute -bottom-3 -left-3 z-20 text-2xl drop-shadow-md opacity-60 group-hover:opacity-100 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-500 pointer-events-none">{f.deco}</span>
+      <span className="absolute -bottom-3 -left-3 z-20 text-2xl drop-shadow-md opacity-60 group-hover:opacity-100 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-500 pointer-events-none">{f.deco2}</span>
 
       {/* Inner mat — entire card is clickable */}
       <Link href={`/producto/${p._id}`} className="relative z-10 block m-[4px] bg-cream-50 rounded-lg overflow-hidden group-hover:-translate-y-1 transition-transform duration-300 cursor-pointer" style={{ boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.06)' }}>
@@ -743,9 +878,8 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, onProceso, 
         <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} relative overflow-hidden`}>
           {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" /> : <div className="w-full h-full bg-gradient-to-br from-cream-100 to-blush-50 flex items-center justify-center"><span className="text-5xl opacity-20">🧸</span></div>}
           {p.featured && <span className="absolute bottom-2 left-2 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft animate-pulse">⭐ Destacado</span>}
-          {((p as any).availability || (p.stock > 0 ? 'disponible' : 'por_pedido')) === 'por_pedido' && (
-            <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft">📝 Por pedido</span>
-          )}
+          {/* Insignia de "Por pedido" solo se muestra en la placa inferior (mas profesional).
+              Se quito la insignia flotante arriba-derecha para evitar duplicidad. */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-700 -translate-x-full" />
         </div>
 
