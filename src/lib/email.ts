@@ -66,13 +66,15 @@ function escapeHtml(s: string) {
 
 /**
  * Envía un email a todos los admins con los detalles del pedido.
- * No-op silencioso si no hay RESEND_API_KEY (no rompe el flujo de checkout).
+ * Devuelve detalles del intento (ok + error si falló) para poder debuggear.
  */
-export async function sendOrderNotificationEmail(order: OrderLike): Promise<boolean> {
+export async function sendOrderNotificationEmail(order: OrderLike): Promise<{ ok: boolean; error?: string; data?: any; to: string[]; from: string }> {
   const c = client();
+  const to = [...ADMIN_NOTIFY_EMAILS];
   if (!c) {
-    console.warn('[email] RESEND_API_KEY no configurada — email de pedido no enviado');
-    return false;
+    const msg = 'RESEND_API_KEY no configurada';
+    console.warn('[email]', msg);
+    return { ok: false, error: msg, to, from: FROM };
   }
 
   const subject = `🛒 Nuevo pedido #${order.orderNumber} · ${money(order.total)}`;
@@ -118,17 +120,18 @@ export async function sendOrderNotificationEmail(order: OrderLike): Promise<bool
   try {
     const res = await c.emails.send({
       from: FROM,
-      to: ADMIN_NOTIFY_EMAILS,
+      to,
       subject,
       html,
     });
     if ((res as any)?.error) {
-      console.error('[email] Resend error:', (res as any).error);
-      return false;
+      const e = (res as any).error;
+      console.error('[email] Resend error:', e);
+      return { ok: false, error: e?.message || JSON.stringify(e), data: res, to, from: FROM };
     }
-    return true;
-  } catch (err) {
+    return { ok: true, data: res, to, from: FROM };
+  } catch (err: any) {
     console.error('[email] Fallo al enviar:', err);
-    return false;
+    return { ok: false, error: err?.message || String(err), to, from: FROM };
   }
 }

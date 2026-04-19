@@ -78,7 +78,9 @@ export async function POST(req: NextRequest) {
     shippingAddress: order.shippingAddress,
     notes: order.notes,
     createdAt: order.createdAt,
-  }).catch(err => console.error('[orders] email notify failed:', err));
+  }).then(r => {
+    if (!r.ok) console.error('[orders] email notify failed:', r.error);
+  }).catch(err => console.error('[orders] email notify exception:', err));
 
   return NextResponse.json(order, { status: 201 });
 }
