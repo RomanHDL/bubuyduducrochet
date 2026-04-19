@@ -41,6 +41,101 @@ body {
   background: inherit; animation: rgb-spin-kf 3s linear infinite; z-index: 0;
 }
 
+/* ═══ Systems dashboard animations ═══ */
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.sys-scanline::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,255,65,0.08) 50%, transparent 100%);
+  animation: scanline 3.5s linear infinite;
+}
+
+@keyframes sys-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.sys-blink { animation: sys-blink 1s step-end infinite; }
+
+@keyframes sys-flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: 0 0 4px rgba(0,255,70,0.8), 0 0 11px rgba(0,255,70,0.6); opacity: 1; }
+  20%, 24%, 55% { text-shadow: none; opacity: 0.9; }
+}
+.sys-flicker { animation: sys-flicker 4s infinite; }
+
+@keyframes sys-glitch-x {
+  0%, 100% { transform: translate(0); }
+  20%      { transform: translate(-1px, 1px); }
+  40%      { transform: translate(-1px, -1px); }
+  60%      { transform: translate(1px, 1px); }
+  80%      { transform: translate(1px, -1px); }
+}
+.sys-glitch:hover { animation: sys-glitch-x 0.35s steps(4) both; }
+
+@keyframes sys-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0px rgba(34,197,94,0.0), 0 0 12px rgba(34,197,94,0.0); }
+  50%      { box-shadow: 0 0 6px rgba(34,197,94,0.25), 0 0 18px rgba(34,197,94,0.15); }
+}
+.sys-pulse-glow { animation: sys-pulse-glow 2.8s ease-in-out infinite; }
+
+@keyframes sys-shift-bg {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+.sys-grid-bg {
+  background-image:
+    linear-gradient(rgba(0,255,65,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,65,0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: sys-shift-bg 20s linear infinite;
+}
+
+@keyframes sys-dots-drift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 20px 40px; }
+}
+.sys-dots-bg {
+  background-image: radial-gradient(rgba(34,211,238,0.18) 1px, transparent 1px);
+  background-size: 12px 12px;
+  animation: sys-dots-drift 22s linear infinite;
+}
+
+@keyframes sys-stripes-slide {
+  0%   { background-position: 0 0; }
+  100% { background-position: 60px 0; }
+}
+.sys-stripes-bg {
+  background-image: repeating-linear-gradient(-45deg,
+    rgba(236,72,153,0.08) 0 6px,
+    transparent 6px 12px);
+  animation: sys-stripes-slide 30s linear infinite;
+}
+
+@keyframes sys-rotate-hue {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+.sys-hue { animation: sys-rotate-hue 8s linear infinite; }
+
+@keyframes sys-typing {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+.sys-typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: sys-typing 1.4s steps(24, end);
+}
+
+@keyframes sys-cursor-blink {
+  50% { opacity: 0; }
+}
+.sys-cursor { animation: sys-cursor-blink 0.9s steps(1) infinite; }
+
+@keyframes sys-bar-grow {
+  from { width: 0; }
+}
+.sys-bar-grow { animation: sys-bar-grow 0.9s ease-out both; }
+
 /* ═══ Animations ═══ */
 @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(4deg); } }
 @keyframes float-reverse { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(-4deg); } }
