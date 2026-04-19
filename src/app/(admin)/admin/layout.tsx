@@ -1,10 +1,5 @@
-import NewOrderNotifier from '@/components/NewOrderNotifier';
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <NewOrderNotifier />
-      {children}
-    </>
-  );
+  // NewOrderNotifier se monta en el root layout (src/app/layout.tsx) para notificar
+  // a los admins estén donde estén del sitio, no sólo en /admin.
+  return <>{children}</>;
 }

@@ -16,7 +16,7 @@ type OrderItem = {
 };
 
 const STORAGE_KEY = 'admin:lastSeenOrderNumber';
-const POLL_MS = 5000;
+const POLL_MS = 3000;
 
 // Generador de "ding" sintético (no requiere archivo de audio)
 function playDing() {
@@ -43,18 +43,27 @@ export default function NewOrderNotifier() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [queue, setQueue] = useState<OrderItem[]>([]);
+  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const lastSeenRef = useRef<number>(0);
   const firstLoadRef = useRef<boolean>(true);
   const isAdmin = status === 'authenticated' && (session?.user as any)?.role === 'admin';
 
-  // Pedir permiso de notificaciones del navegador en el primer render (solo admin)
+  // Estado del permiso
   useEffect(() => {
-    if (!isAdmin) return;
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    if (Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setPermission('unsupported');
+      return;
     }
+    setPermission(Notification.permission);
   }, [isAdmin]);
+
+  const requestPerm = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    try {
+      const p = await Notification.requestPermission();
+      setPermission(p);
+    } catch { /* ignore */ }
+  };
 
   // Polling
   useEffect(() => {
@@ -110,10 +119,36 @@ export default function NewOrderNotifier() {
 
   const dismiss = (id: string) => setQueue(prev => prev.filter(o => o._id !== id));
 
-  if (!isAdmin || queue.length === 0) return null;
+  if (!isAdmin) return null;
+
+  // Banner cuando el admin aún no otorgó permiso de notificaciones del navegador
+  const showPermBanner = permission === 'default' || permission === 'denied';
 
   return (
     <div className="fixed z-[100] bottom-4 right-4 flex flex-col gap-2 max-w-[360px]">
+      {showPermBanner && (
+        <div className="bg-amber-50 border-2 border-amber-300 shadow-warm rounded-cute p-3">
+          <div className="flex items-start gap-2">
+            <span className="text-base">🔔</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-amber-700">
+                {permission === 'denied' ? 'Notificaciones bloqueadas' : 'Activa notificaciones de pedidos'}
+              </p>
+              <p className="text-[10px] text-amber-600 mt-0.5">
+                {permission === 'denied'
+                  ? 'Habilítalas en la configuración del navegador para recibir alertas aunque tengas otra pestaña abierta.'
+                  : 'Recibirás un aviso cada vez que un cliente confirme un pedido, incluso con el sitio minimizado.'}
+              </p>
+              {permission === 'default' && (
+                <button onClick={requestPerm} className="mt-2 text-xs font-bold px-3 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600">
+                  ✨ Activar notificaciones
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {queue.map(o => (
         <div key={o._id} className="bg-white border-2 border-blush-300 shadow-warm rounded-cute p-4 animate-in slide-in-from-right-5">
           <div className="flex items-start justify-between gap-2">
