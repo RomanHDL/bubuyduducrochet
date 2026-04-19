@@ -79,7 +79,14 @@ export default function NewOrderNotifier() {
         const res = await fetch('/api/admin/new-orders?since=' + encodeURIComponent(String(lastSeenRef.current)), { cache: 'no-store' });
         if (!res.ok) return;
         const orders: OrderItem[] = await res.json();
-        if (cancelled || !Array.isArray(orders) || orders.length === 0) return;
+        if (cancelled) return;
+
+        // El primer tick SIEMPRE establece la baseline (aunque venga vacío),
+        // así el próximo pedido nuevo dispara notificación.
+        const isFirst = firstLoadRef.current;
+        firstLoadRef.current = false;
+
+        if (!Array.isArray(orders) || orders.length === 0) return;
 
         // Actualizar último número visto
         const maxNum = Math.max(...orders.map(o => o.orderNumber || 0), lastSeenRef.current);
@@ -88,11 +95,8 @@ export default function NewOrderNotifier() {
           try { localStorage.setItem(STORAGE_KEY, String(maxNum)); } catch { /* ignore */ }
         }
 
-        // En el primerísimo poll, no mostrar notificaciones (solo establecer baseline)
-        if (firstLoadRef.current) {
-          firstLoadRef.current = false;
-          return;
-        }
+        // En el primerísimo poll no mostramos (solo baseline)
+        if (isFirst) return;
 
         // Mostrar toast + notificación browser + sonido
         setQueue(prev => [...prev, ...orders].slice(-5));
@@ -114,10 +118,47 @@ export default function NewOrderNotifier() {
     // Arranque inmediato (establece baseline) y luego cada POLL_MS
     tick();
     const interval = setInterval(tick, POLL_MS);
-    return () => { cancelled = true; clearInterval(interval); };
+
+    // Cuando la pestaña regresa a foreground, forzar un tick inmediato.
+    // Algunos navegadores pausan los timers cuando la pestaña está en background.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tick();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, [isAdmin, router]);
 
   const dismiss = (id: string) => setQueue(prev => prev.filter(o => o._id !== id));
+
+  const testNotification = () => {
+    const fake: OrderItem = {
+      _id: 'test-' + Date.now(),
+      orderNumber: 9999,
+      userName: 'Cliente de Prueba',
+      userEmail: 'test@example.com',
+      total: 450,
+      status: 'pending',
+      paymentStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    setQueue(prev => [...prev, fake].slice(-5));
+    playDing();
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('🛒 Prueba · Nuevo pedido #' + fake.orderNumber, {
+          body: `${fake.userName} · $${fake.total.toFixed(2)} MXN`,
+          tag: 'test-notif',
+        });
+      } catch { /* ignore */ }
+    }
+  };
 
   if (!isAdmin) return null;
 
@@ -139,14 +180,30 @@ export default function NewOrderNotifier() {
                   ? 'Habilítalas en la configuración del navegador para recibir alertas aunque tengas otra pestaña abierta.'
                   : 'Recibirás un aviso cada vez que un cliente confirme un pedido, incluso con el sitio minimizado.'}
               </p>
-              {permission === 'default' && (
-                <button onClick={requestPerm} className="mt-2 text-xs font-bold px-3 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600">
-                  ✨ Activar notificaciones
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {permission === 'default' && (
+                  <button onClick={requestPerm} className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600">
+                    ✨ Activar notificaciones
+                  </button>
+                )}
+                <button onClick={testNotification} className="text-xs font-bold px-3 py-1 rounded-full bg-white text-amber-700 border border-amber-300 hover:bg-amber-50">
+                  🔔 Probar
                 </button>
-              )}
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Botón flotante discreto para probar si el permiso ya está otorgado */}
+      {!showPermBanner && queue.length === 0 && (
+        <button
+          onClick={testNotification}
+          title="Probar notificación"
+          className="self-end text-[10px] font-bold px-2 py-1 rounded-full bg-white/80 text-cocoa-500 border border-cream-200 hover:bg-cream-50 shadow-sm opacity-60 hover:opacity-100"
+        >
+          🔔 probar
+        </button>
       )}
 
       {queue.map(o => (
