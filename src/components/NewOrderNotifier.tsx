@@ -70,7 +70,13 @@ export default function NewOrderNotifier() {
     if (!isAdmin) return;
 
     const stored = Number(typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : 0) || 0;
+    // Si aún no hay baseline, hacemos un "fetch silencioso" inicial que
+    // establece la baseline al último orderNumber del DB. Así, en la primerísima
+    // vez que el admin abre el sistema, no se llena de pedidos antiguos —
+    // pero a partir de la segunda visita, cualquier pedido nuevo que entre
+    // mientras la pestaña estuvo cerrada SÍ se muestra.
     lastSeenRef.current = stored;
+    const silentBaselineOnFirstTick = stored === 0;
 
     let cancelled = false;
 
@@ -81,8 +87,6 @@ export default function NewOrderNotifier() {
         const orders: OrderItem[] = await res.json();
         if (cancelled) return;
 
-        // El primer tick SIEMPRE establece la baseline (aunque venga vacío),
-        // así el próximo pedido nuevo dispara notificación.
         const isFirst = firstLoadRef.current;
         firstLoadRef.current = false;
 
@@ -95,8 +99,8 @@ export default function NewOrderNotifier() {
           try { localStorage.setItem(STORAGE_KEY, String(maxNum)); } catch { /* ignore */ }
         }
 
-        // En el primerísimo poll no mostramos (solo baseline)
-        if (isFirst) return;
+        // Solo silenciamos si es la primerísima vez ABSOLUTA (sin baseline previa)
+        if (isFirst && silentBaselineOnFirstTick) return;
 
         // Mostrar toast + notificación browser + sonido
         setQueue(prev => [...prev, ...orders].slice(-5));
@@ -160,6 +164,15 @@ export default function NewOrderNotifier() {
     }
   };
 
+  // Re-mostrar pedidos recientes: borra la baseline local y marca el próximo
+  // tick como "ya no es primera vez" → trae los últimos 10 pedidos y los
+  // muestra como notificación, aunque el admin ya los haya visto antes.
+  const resetBaseline = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    lastSeenRef.current = 0;
+    firstLoadRef.current = false; // no silenciar el próximo tick
+  };
+
   if (!isAdmin) return null;
 
   // Banner cuando el admin aún no otorgó permiso de notificaciones del navegador
@@ -195,15 +208,24 @@ export default function NewOrderNotifier() {
         </div>
       )}
 
-      {/* Botón flotante discreto para probar si el permiso ya está otorgado */}
+      {/* Botones flotantes discretos: probar y recuperar */}
       {!showPermBanner && queue.length === 0 && (
-        <button
-          onClick={testNotification}
-          title="Probar notificación"
-          className="self-end text-[10px] font-bold px-2 py-1 rounded-full bg-white/80 text-cocoa-500 border border-cream-200 hover:bg-cream-50 shadow-sm opacity-60 hover:opacity-100"
-        >
-          🔔 probar
-        </button>
+        <div className="self-end flex gap-1">
+          <button
+            onClick={resetBaseline}
+            title="Volver a mostrar los últimos pedidos (útil si crees que te perdiste alguno)"
+            className="text-[10px] font-bold px-2 py-1 rounded-full bg-white/80 text-blush-500 border border-blush-200 hover:bg-blush-50 shadow-sm opacity-60 hover:opacity-100"
+          >
+            ↻ recuperar
+          </button>
+          <button
+            onClick={testNotification}
+            title="Probar notificación"
+            className="text-[10px] font-bold px-2 py-1 rounded-full bg-white/80 text-cocoa-500 border border-cream-200 hover:bg-cream-50 shadow-sm opacity-60 hover:opacity-100"
+          >
+            🔔 probar
+          </button>
+        </div>
       )}
 
       {queue.map(o => (
