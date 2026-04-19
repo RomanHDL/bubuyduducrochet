@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Cart from '@/models/Cart';
+import { sendOrderNotificationEmail } from '@/lib/email';
 
 // GET orders (user sees own, admin sees all)
 export async function GET() {
@@ -65,6 +66,19 @@ export async function POST(req: NextRequest) {
   cart.items = [];
   cart.total = 0;
   await cart.save();
+
+  // Email a los admins — no-blocking: si Resend falla, el pedido se crea de todas formas.
+  // Se dispara en el servidor (Vercel function) y no depende de que el admin tenga la pestaña abierta.
+  sendOrderNotificationEmail({
+    orderNumber: order.orderNumber,
+    userName: order.userName,
+    userEmail: order.userEmail,
+    total: order.total,
+    items: order.items,
+    shippingAddress: order.shippingAddress,
+    notes: order.notes,
+    createdAt: order.createdAt,
+  }).catch(err => console.error('[orders] email notify failed:', err));
 
   return NextResponse.json(order, { status: 201 });
 }
