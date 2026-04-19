@@ -741,7 +741,7 @@ function Card({ p, idx = 0, favs, toggleFav, isAdmin, onEdit, onDel, onProceso, 
 
         {/* Image — the "painting" */}
         <div className={`${big ? 'aspect-[4/5]' : 'aspect-square'} relative overflow-hidden`}>
-          {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" /> : <div className="w-full h-full bg-gradient-to-br from-cream-100 to-blush-50 flex items-center justify-center"><span className="text-5xl opacity-20">🧸</span></div>}
+          {p.images?.[0] ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" decoding="async" /> : <div className="w-full h-full bg-gradient-to-br from-cream-100 to-blush-50 flex items-center justify-center"><span className="text-5xl opacity-20">🧸</span></div>}
           {p.featured && <span className="absolute bottom-2 left-2 bg-blush-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft animate-pulse">⭐ Destacado</span>}
           {((p as any).availability || (p.stock > 0 ? 'disponible' : 'por_pedido')) === 'por_pedido' && (
             <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-soft">📝 Por pedido</span>

@@ -7,9 +7,11 @@ import Product from '@/models/Product';
 // GET single product (public)
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   await connectDB();
-  const product = await Product.findById(params.id);
+  const product = await Product.findById(params.id).lean();
   if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
-  return NextResponse.json(product);
+  const res = NextResponse.json(product);
+  res.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+  return res;
 }
 
 // PUT update product (admin only)

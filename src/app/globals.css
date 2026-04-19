@@ -24,6 +24,23 @@ body {
 ::-webkit-scrollbar-thumb { background: #E8C9B0; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #D4A574; }
 
+/* ═══ Gamer profile frames ═══ */
+@keyframes gamer-frame-rotate {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+.gamer-frame-spin { animation: gamer-frame-rotate 4s linear infinite; }
+
+@keyframes rgb-spin-kf {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.rgb-spin > * { position: relative; z-index: 1; }
+.rgb-spin::before {
+  content: ''; position: absolute; inset: -2px; border-radius: 9999px;
+  background: inherit; animation: rgb-spin-kf 3s linear infinite; z-index: 0;
+}
+
 /* ═══ Animations ═══ */
 @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(4deg); } }
 @keyframes float-reverse { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(-4deg); } }

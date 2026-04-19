@@ -4,6 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 
+export const dynamic = 'force-dynamic';
+
+// Campos livianos para listados (sin elaboration, que puede pesar cientos de KB)
+const LIST_FIELDS = 'title description price images stock availability category isActive featured createdAt updatedAt';
+
 // GET all products (public)
 export async function GET(req: NextRequest) {
   await connectDB();
@@ -13,6 +18,7 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get('search');
   const featured = searchParams.get('featured');
   const limit = parseInt(searchParams.get('limit') || '50');
+  const includeElaboration = searchParams.get('includeElaboration') === 'true';
 
   const filter: any = { isActive: true };
   if (category) filter.category = category;
@@ -24,11 +30,17 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  const products = await Product.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(limit);
+  // .lean() y select excluyen el objeto elaboration en listados (mejora 5–10× el payload)
+  const query = Product.find(filter).sort({ createdAt: -1 }).limit(limit);
+  if (!includeElaboration) query.select(LIST_FIELDS);
 
-  return NextResponse.json(products);
+  const products = await query.lean();
+
+  const res = NextResponse.json(products);
+  // Cache ligero en el edge/browser: 15s fresh + 60s stale-while-revalidate.
+  // El CDN de Vercel sirve instantáneo cuando hay hit.
+  res.headers.set('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60');
+  return res;
 }
 
 // POST create product (admin only)

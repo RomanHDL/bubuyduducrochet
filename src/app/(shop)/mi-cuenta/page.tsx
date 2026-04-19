@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
-import ProfileAvatar, { FRAMES, ProfileFrame } from '@/components/ProfileAvatar';
+import ProfileAvatar, { FRAMES, TIER_COLOR, ProfileFrame } from '@/components/ProfileAvatar';
 
 export default function MiCuentaPage() {
   const { data: session } = useSession();
@@ -56,7 +56,7 @@ export default function MiCuentaPage() {
   const user = session.user;
   const isAdmin = (user as any)?.role === 'admin';
   const frame: ProfileFrame = (profile?.profile?.frame as ProfileFrame) || 'none';
-  const badge = profile?.profile?.badge || (isAdmin ? '✨ Admin' : '');
+  const badge = profile?.profile?.badge || (isAdmin ? 'ADMIN' : '');
 
   const saveProfile = async () => {
     setSavingProfile(true);
@@ -69,8 +69,16 @@ export default function MiCuentaPage() {
       if (res.ok) {
         const updated = await res.json();
         setProfile(updated);
+        setDraftFrame(updated?.profile?.frame || 'none');
+        setDraftBadge(updated?.profile?.badge || '');
+        setDraftBio(updated?.profile?.bio || '');
         setEditProfile(false);
+      } else {
+        const err = await res.json().catch(() => ({ error: 'Error al guardar' }));
+        alert(err?.error || 'Error al guardar el perfil');
       }
+    } catch {
+      alert('Error de red al guardar');
     } finally {
       setSavingProfile(false);
     }
@@ -238,17 +246,18 @@ function ProfileCustomizeModal({
           </div>
 
           <div className="mb-5">
-            <p className="text-xs font-semibold text-cocoa-600 mb-2">Marco del avatar</p>
+            <p className="text-xs font-semibold text-cocoa-600 mb-2">Marco — estilo gamer / código</p>
             <div className="grid grid-cols-5 gap-3">
               {FRAMES.map(f => (
                 <button
                   key={f.key}
                   onClick={() => setDraftFrame(f.key)}
-                  className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${draftFrame === f.key ? 'border-blush-400 bg-blush-50' : 'border-cream-200 hover:border-blush-200'}`}
-                  title={f.label}
+                  className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${draftFrame === f.key ? 'border-blush-400 bg-blush-50 ring-2 ring-blush-200' : 'border-cream-200 hover:border-blush-200 bg-white'}`}
+                  title={`${f.label} · ${f.tier}`}
                 >
                   <ProfileAvatar src={user?.image} name={user?.name} frame={f.key} size={44} />
-                  <span className="text-[10px] font-semibold text-cocoa-600">{f.label}</span>
+                  <span className="text-[10px] font-mono font-bold text-cocoa-700 mt-1">{f.label}</span>
+                  <span className={`text-[8px] font-bold uppercase tracking-wider ${TIER_COLOR[f.tier]}`}>{f.tier}</span>
                 </button>
               ))}
             </div>

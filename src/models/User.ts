@@ -2,15 +2,17 @@ import mongoose, { Schema, models, model } from 'mongoose';
 
 export type ProfileFrame =
   | 'none'
-  | 'gold'
-  | 'rose'
-  | 'lavender'
-  | 'mint'
-  | 'glitter'
-  | 'rainbow'
-  | 'crown'
-  | 'hearts'
-  | 'stars';
+  | 'terminal'
+  | 'neon'
+  | 'matrix'
+  | 'cyberpunk'
+  | 'hacker'
+  | 'rgb'
+  | 'pixel'
+  | 'hologram'
+  | 'elite'
+  // Legacy (mantener para no romper perfiles existentes)
+  | 'gold' | 'rose' | 'lavender' | 'mint' | 'glitter' | 'rainbow' | 'crown' | 'hearts' | 'stars';
 
 export interface IUser {
   _id: string;
@@ -37,7 +39,11 @@ const UserSchema = new Schema<IUser>({
   provider: { type: String, enum: ['local', 'google'], default: 'local' },
   role: { type: String, enum: ['admin', 'customer'], default: 'customer' },
   profile: {
-    frame: { type: String, enum: ['none','gold','rose','lavender','mint','glitter','rainbow','crown','hearts','stars'], default: 'none' },
+    frame: {
+      type: String,
+      enum: ['none','terminal','neon','matrix','cyberpunk','hacker','rgb','pixel','hologram','elite','gold','rose','lavender','mint','glitter','rainbow','crown','hearts','stars'],
+      default: 'none',
+    },
     accentColor: { type: String, default: '' },
     badge: { type: String, default: '' },
     bio: { type: String, default: '' },
