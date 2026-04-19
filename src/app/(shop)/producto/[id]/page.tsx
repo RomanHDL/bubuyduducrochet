@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
+import ProductEditModal from '@/components/ProductEditModal';
+import ProductProcesoModal from '@/components/ProductProcesoModal';
 
 interface Product {
   _id: string; title: string; description: string; price: number; images: string[]; stock: number; availability?: 'disponible' | 'por_pedido'; category: string; featured: boolean;
@@ -38,6 +40,8 @@ export default function ProductDetailPage() {
   const [added, setAdded] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [deleting, setDeleting] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [procesoModal, setProcesoModal] = useState(false);
 
   const handleAdminDelete = async () => {
     if (!product) return;
@@ -103,20 +107,20 @@ export default function ProductDetailPage() {
 
           {isAdmin && (
             <div className="flex items-center gap-2 flex-wrap">
-              <Link
-                href={`/admin/productos?edit=${product._id}`}
+              <button
+                onClick={() => setEditModal(true)}
                 className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-lavender-100 text-lavender-600 border border-lavender-200 hover:bg-lavender-200 shadow-soft transition-colors"
                 title="Editar este producto"
               >
                 ✏️ Editar
-              </Link>
-              <Link
-                href={`/admin/productos?proceso=${product._id}`}
-                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 shadow-soft transition-colors"
+              </button>
+              <button
+                onClick={() => setProcesoModal(true)}
+                className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full border shadow-soft transition-colors ${(product as any).elaboration ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200'}`}
                 title="Ver/editar proceso de elaboración"
               >
                 📋 Proceso
-              </Link>
+              </button>
               <button
                 onClick={handleAdminDelete}
                 disabled={deleting}
@@ -261,6 +265,22 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Modales admin inline */}
+      {isAdmin && editModal && product && (
+        <ProductEditModal
+          product={product as any}
+          onClose={() => setEditModal(false)}
+          onSaved={(updated) => { setProduct(updated); setEditModal(false); }}
+        />
+      )}
+      {isAdmin && procesoModal && product && (
+        <ProductProcesoModal
+          product={product as any}
+          onClose={() => setProcesoModal(false)}
+          onSaved={(updated) => { setProduct(updated); }}
+        />
       )}
     </AnimatedBg>
   );
