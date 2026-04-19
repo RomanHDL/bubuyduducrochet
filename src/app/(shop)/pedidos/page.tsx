@@ -36,7 +36,7 @@ export default function PedidosPage() {
   const [generatingTicket, setGeneratingTicket] = useState<string | null>(null);
 
   const fetchOrders = async () => {
-    try { const r = await fetch('/api/orders'); const d = await r.json(); setOrders(Array.isArray(d) ? d : []); }
+    try { const r = await fetch('/api/orders?mine=1', { cache: 'no-store' }); const d = await r.json(); setOrders(Array.isArray(d) ? d : []); }
     catch {} finally { setLoading(false); }
   };
 

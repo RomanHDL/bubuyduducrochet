@@ -11,6 +11,7 @@ export interface ICartItem {
 export interface ICart {
   _id: string;
   userId: string;
+  userEmail?: string;
   items: ICartItem[];
   total: number;
   updatedAt: Date;
@@ -25,7 +26,8 @@ const CartItemSchema = new Schema<ICartItem>({
 }, { _id: false });
 
 const CartSchema = new Schema<ICart>({
-  userId: { type: String, required: true, unique: true },
+  userId: { type: String, required: true, index: true },
+  userEmail: { type: String, index: true, lowercase: true },
   items: [CartItemSchema],
   total: { type: Number, default: 0 },
 }, { timestamps: true });

@@ -61,16 +61,24 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [id]);
 
-  const addToCart = async () => {
+  // Añade al carrito y se queda en la ficha (estilo Amazon: puedes seguir comprando)
+  const addToCart = async (opts?: { goToCheckout?: boolean }) => {
     if (!session) { router.push('/login'); return; }
     if (!product) return;
     setAdding(true);
     try {
       await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: product._id, title: product.title, price: product.price, image: product.images?.[0] || '', quantity: qty }) });
       setAdded(true);
-      setTimeout(() => router.push('/carrito'), 800);
+      if (opts?.goToCheckout) {
+        router.push('/carrito?pagar=1');
+      } else {
+        // Mantener al usuario en la ficha para seguir comprando
+        setTimeout(() => setAdded(false), 1800);
+      }
     } catch {} finally { setAdding(false); }
   };
+
+  const buyNow = () => addToCart({ goToCheckout: true });
 
   if (loading) return <AnimatedBg theme="warm"><div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🧶</span></div></AnimatedBg>;
 
@@ -201,10 +209,17 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
 
-                  <button onClick={addToCart} disabled={adding}
-                    className={`w-full btn-cute text-white text-lg py-4 disabled:opacity-50 shadow-glow ${isPorPedido ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blush-400 hover:bg-blush-500'}`}>
-                    {added ? '¡Agregado al carrito! 💕' : adding ? '🧶 Agregando...' : isPorPedido ? 'Encargar por pedido 📝' : 'Agregar al carrito 🛒'}
-                  </button>
+                  {/* Dos botones estilo Amazon / Mercado Libre: agregar y seguir, o comprar ahora */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button onClick={() => addToCart()} disabled={adding}
+                      className={`flex-1 btn-cute text-white text-base py-3.5 disabled:opacity-50 shadow-soft ${isPorPedido ? 'bg-amber-400 hover:bg-amber-500' : 'bg-blush-400 hover:bg-blush-500'}`}>
+                      {added ? '¡Agregado! 💕' : adding ? '🧶 Agregando...' : isPorPedido ? 'Encargar por pedido 📝' : 'Agregar al carrito 🛒'}
+                    </button>
+                    <button onClick={buyNow} disabled={adding}
+                      className="flex-1 btn-cute bg-cocoa-700 text-white text-base py-3.5 hover:bg-cocoa-800 disabled:opacity-50 shadow-glow">
+                      💳 Comprar ahora
+                    </button>
+                  </div>
 
                   {isPorPedido && (
                     <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
@@ -212,9 +227,10 @@ export default function ProductDetailPage() {
                     </p>
                   )}
 
-                  <Link href="/carrito" className="block text-center text-sm text-cocoa-400 font-semibold hover:text-blush-400 transition-colors">
-                    Ir al carrito →
-                  </Link>
+                  <div className="flex items-center justify-between text-xs text-cocoa-400">
+                    <Link href="/catalogo" className="font-semibold hover:text-blush-400 transition-colors">← Seguir comprando</Link>
+                    <Link href="/carrito" className="font-semibold hover:text-blush-400 transition-colors">Ir al carrito →</Link>
+                  </div>
                 </div>
               );
             })()}

@@ -21,7 +21,7 @@ export default function MiCuentaPage() {
 
   useEffect(() => {
     if (!session) return;
-    fetch('/api/orders', { cache: 'no-store' }).then(r => r.json()).then(orders => setOrderCount(Array.isArray(orders) ? orders.length : 0)).catch(() => {});
+    fetch('/api/orders?mine=1', { cache: 'no-store' }).then(r => r.json()).then(orders => setOrderCount(Array.isArray(orders) ? orders.length : 0)).catch(() => {});
 
     // Conteo de favoritos desde la DB (validos: productos que aún existen)
     fetch('/api/favorites/count', { cache: 'no-store' })

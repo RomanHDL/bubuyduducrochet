@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AnimatedBg from '@/components/AnimatedBg';
 
 const WA = '528187087288';
@@ -17,8 +17,18 @@ interface CartItem {
 }
 
 export default function CartPage() {
+  return (
+    <Suspense fallback={<AnimatedBg theme="warm"><div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🛒</span></div></AnimatedBg>}>
+      <CartPageInner />
+    </Suspense>
+  );
+}
+
+function CartPageInner() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const goPayImmediately = searchParams?.get('pagar') === '1';
   const [items, setItems] = useState<CartItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,6 +44,13 @@ export default function CartPage() {
   };
 
   useEffect(() => { if (session) fetchCart(); else setLoading(false); }, [session]);
+
+  // Si el usuario entró con ?pagar=1 (desde "Comprar ahora"), saltar al paso de pago
+  useEffect(() => {
+    if (goPayImmediately && !loading && items.length > 0 && step === 'cart') {
+      setStep('payment');
+    }
+  }, [goPayImmediately, loading, items.length, step]);
 
   const updateQty = async (productId: string, quantity: number) => {
     const item = items.find(i => i.productId === productId); if (!item) return;

@@ -6,26 +6,34 @@ import Order from '@/models/Order';
 import Cart from '@/models/Cart';
 import { sendOrderNotificationEmail } from '@/lib/email';
 
-// GET orders (user sees own, admin sees all)
-export async function GET() {
+// GET orders
+// - Admin por defecto: todos los pedidos
+// - Usuario normal: sólo los suyos
+// - ?mine=1: fuerza filtro por usuario, útil para que un admin vea SU pagina
+//   de "Mis pedidos" sin mezclarse con los pedidos de todos
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
   await connectDB();
+  const { searchParams } = new URL(req.url);
+  const onlyMine = searchParams.get('mine') === '1' || searchParams.get('mine') === 'true';
   const isAdmin = (session.user as any).role === 'admin';
   const userId = (session.user as any).id;
   const userEmail = (session.user?.email || '').toLowerCase();
 
-  // Match por userId O por email. Cubre casos en los que el ID cambió entre
-  // sesiones (reautenticación, cambios en el provider) pero el email sigue siendo el mismo.
-  const filter: any = isAdmin
-    ? {}
-    : {
+  const forceUserFilter = onlyMine || !isAdmin;
+
+  const filter: any = forceUserFilter
+    ? {
+        // Match por userId O por email. Cubre casos en los que el ID cambió entre
+        // sesiones (reautenticación, cambios en el provider) pero el email sigue siendo el mismo.
         $or: [
-          { userId },
+          ...(userId ? [{ userId }] : []),
           ...(userEmail ? [{ userEmail: { $regex: `^${userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' } }] : []),
         ],
-      };
+      }
+    : {}; // admin sin ?mine → todos
 
   const orders = await Order.find(filter).sort({ createdAt: -1 });
   return NextResponse.json(orders);
