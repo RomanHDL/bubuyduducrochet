@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import UserInlineLabel from '@/components/UserInlineLabel';
+import { getCached, setCached, dedupedFetchJson } from '@/lib/fetchCache';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -28,14 +29,19 @@ const ORDER_STATUS: Record<string, string> = {
 export default function PagosAdmin() {
   const { data: session } = useSession();
   const isAdmin = (session?.user as any)?.role === 'admin';
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedOrders = getCached<any[]>('/api/orders');
+  const [orders, setOrders] = useState<any[]>(cachedOrders || []);
+  const [loading, setLoading] = useState(!cachedOrders);
   const [filter, setFilter] = useState('all');
 
   // Evita que el polling pise un cambio del admin mientras esta guardando.
   const busyRef = useRef(false);
 
-  const fetchAll = () => { fetch('/api/orders', { cache: 'no-store' }).then(r => r.json()).then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); };
+  const fetchAll = () => {
+    dedupedFetchJson<any[]>('/api/orders')
+      .then((d) => { setOrders(Array.isArray(d) ? d : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  };
   useEffect(() => {
     fetchAll();
     const interval = setInterval(() => {
@@ -46,8 +52,11 @@ export default function PagosAdmin() {
   }, []);
 
   const updatePayment = async (id: string, status: string) => {
-    // Optimista: refleja el cambio inmediatamente; no refetch de toda la lista.
-    setOrders((prev) => prev.map((o) => o._id === id ? { ...o, paymentStatus: status } : o));
+    setOrders((prev) => {
+      const next = prev.map((o) => o._id === id ? { ...o, paymentStatus: status } : o);
+      setCached('/api/orders', next);
+      return next;
+    });
     busyRef.current = true;
     try {
       await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentStatus: status }), cache: 'no-store' });

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
+import { getCached, setCached, dedupedFetchJson } from '@/lib/fetchCache';
 // Carga diferida: ticket.ts trae html2canvas/jspdf (~200KB). Sólo se carga al presionar generar ticket.
 const loadTicket = () => import('@/lib/ticket');
 
@@ -26,8 +27,9 @@ const PAYMENT_MAP: Record<string, { label: string; color: string; emoji: string 
 export default function PedidosPage() {
   const { data: session } = useSession();
   const isAdmin = (session?.user as any)?.role === 'admin';
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedMine = getCached<any[]>('/api/orders?mine=1');
+  const [orders, setOrders] = useState<any[]>(cachedMine || []);
+  const [loading, setLoading] = useState(!cachedMine);
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,8 +48,10 @@ export default function PedidosPage() {
   generatingRef.current = generatingTicket;
 
   const fetchOrders = async () => {
-    try { const r = await fetch('/api/orders?mine=1', { cache: 'no-store' }); const d = await r.json(); setOrders(Array.isArray(d) ? d : []); }
-    catch {} finally { setLoading(false); }
+    try {
+      const d = await dedupedFetchJson<any[]>('/api/orders?mine=1');
+      setOrders(Array.isArray(d) ? d : []);
+    } catch {} finally { setLoading(false); }
   };
 
   useEffect(() => {

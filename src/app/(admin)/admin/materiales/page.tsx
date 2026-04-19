@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getCached, setCached, dedupedFetchJson } from '@/lib/fetchCache';
 
 const CATEGORIES = [
   { value: 'hilo', label: 'Hilo / Estambre', emoji: '🧶' },
@@ -28,8 +29,9 @@ const EMPTY = { name: '', category: 'hilo', brand: '', color: '', quantity: 0, u
 export default function MaterialesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [materials, setMaterials] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedMats = getCached<any[]>('/api/materials');
+  const [materials, setMaterials] = useState<any[]>(cachedMats || []);
+  const [loading, setLoading] = useState(!cachedMats);
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY);
@@ -59,7 +61,10 @@ export default function MaterialesPage() {
   }, [session, status]);
 
   const fetchMaterials = async () => {
-    try { const r = await fetch('/api/materials', { cache: 'no-store' }); const d = await r.json(); setMaterials(Array.isArray(d) ? d : []); } catch {} finally { setLoading(false); }
+    try {
+      const d = await dedupedFetchJson<any[]>('/api/materials');
+      setMaterials(Array.isArray(d) ? d : []);
+    } catch {} finally { setLoading(false); }
   };
 
   const openNew = () => { setEditId(null); setForm({ ...EMPTY }); setModal(true); };

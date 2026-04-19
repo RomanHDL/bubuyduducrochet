@@ -56,7 +56,11 @@ export async function GET(req: NextRequest) {
   }
 
   const faqs = await FAQ.find(filter).sort({ category: 1, order: 1 });
-  return NextResponse.json(faqs);
+  const res = NextResponse.json(faqs);
+  // FAQs cambian muy raro. Cache corto en el navegador para que la pagina
+  // de preguntas se abra al instante en visitas repetidas.
+  res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');
+  return res;
 }
 
 // POST:

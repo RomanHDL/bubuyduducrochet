@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SystemsAdminDashboard from '@/components/SystemsAdminDashboard';
 import { isSystemsAdmin } from '@/lib/systemsAdmin';
+import { getCached, setCached, dedupedFetchJson } from '@/lib/fetchCache';
 
 const ST_EMOJI: Record<string, string> = { pending: '⏳', confirmed: '✅', shipped: '📦', delivered: '🎉', cancelled: '❌' };
 const ST_LABEL: Record<string, string> = { pending: 'Pendiente', confirmed: 'Confirmado', shipped: 'Enviado', delivered: 'Entregado', cancelled: 'Cancelado' };
@@ -14,8 +15,9 @@ const PAY_EMOJI: Record<string, string> = { pending: '💳', paid: '✅', refund
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedStats = getCached<any>('/api/admin/stats');
+  const [stats, setStats] = useState<any>(cachedStats || null);
+  const [loading, setLoading] = useState(!cachedStats);
   const [detailModal, setDetailModal] = useState<{ type: string; title: string } | null>(null);
   const [paused, setPaused] = useState(false);
   // Refs used to skip refetch when user is interacting (modal open, hovering cards, scrolling)
@@ -27,14 +29,18 @@ export default function AdminDashboard() {
   const fetchStats = () => {
     // Skip update while the admin is reading a detail modal or has paused live refresh
     if (pausedRef.current || modalOpenRef.current) return;
-    fetch('/api/admin/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false); }).catch(() => setLoading(false));
+    dedupedFetchJson<any>('/api/admin/stats')
+      .then((d) => { setStats(d); setCached('/api/admin/stats', d); setLoading(false); })
+      .catch(() => setLoading(false));
   };
 
   useEffect(() => {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
-    // First load ignores pause
-    fetch('/api/admin/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false); }).catch(() => setLoading(false));
+    // Primer load: ignora pause, y si ya hay cache no bloqueamos la UI.
+    dedupedFetchJson<any>('/api/admin/stats')
+      .then((d) => { setStats(d); setCached('/api/admin/stats', d); setLoading(false); })
+      .catch(() => setLoading(false));
     const interval = setInterval(fetchStats, 5000);
     return () => clearInterval(interval);
   }, [session, status, router]);

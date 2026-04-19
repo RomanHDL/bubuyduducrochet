@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import UserInlineLabel from '@/components/UserInlineLabel';
+import { getCached, setCached, dedupedFetchJson } from '@/lib/fetchCache';
 
 // Carga diferida: ticket.ts trae html2canvas/jspdf (~200KB). Se carga sólo al pedir generar un ticket.
 const loadTicket = () => import('@/lib/ticket').then(m => m.generateTicket);
@@ -26,8 +27,9 @@ function readStoredFilters() {
 export default function AdminOrdersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedOrders = getCached<any[]>('/api/orders');
+  const [orders, setOrders] = useState<any[]>(cachedOrders || []);
+  const [loading, setLoading] = useState(!cachedOrders);
   const initialFilters = typeof window !== 'undefined' ? readStoredFilters() : null;
   const [filter, setFilter] = useState<string>(initialFilters?.filter || 'all');
   const [payFilter, setPayFilter] = useState<string>(initialFilters?.payFilter || 'all');
@@ -62,12 +64,18 @@ export default function AdminOrdersPage() {
   }, [session, status]);
 
   const fetchOrders = async () => {
-    try { const r = await fetch('/api/orders', { cache: 'no-store' }); setOrders(await r.json()); } catch {} finally { setLoading(false); }
+    try {
+      const d = await dedupedFetchJson<any[]>('/api/orders');
+      setOrders(Array.isArray(d) ? d : []);
+    } catch {} finally { setLoading(false); }
   };
 
   const updateOrder = async (id: string, updates: any) => {
-    // Optimista: aplica los cambios en UI antes de llamar al servidor.
-    setOrders((prev) => prev.map((o) => o._id === id ? { ...o, ...updates } : o));
+    setOrders((prev) => {
+      const next = prev.map((o) => o._id === id ? { ...o, ...updates } : o);
+      setCached('/api/orders', next);
+      return next;
+    });
     busyRef.current = true;
     try {
       await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates), cache: 'no-store' });
@@ -79,7 +87,11 @@ export default function AdminOrdersPage() {
     busyRef.current = true;
     try {
       await fetch(`/api/orders/${id}`, { method: 'DELETE' });
-      setOrders((prev) => prev.filter((o) => o._id !== id));
+      setOrders((prev) => {
+        const next = prev.filter((o) => o._id !== id);
+        setCached('/api/orders', next);
+        return next;
+      });
     } finally { busyRef.current = false; }
   };
 

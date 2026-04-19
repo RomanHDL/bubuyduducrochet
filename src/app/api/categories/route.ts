@@ -18,7 +18,12 @@ export async function GET() {
     await Category.insertMany(DEFAULTS.map(c => ({ ...c, isActive: true })));
     cats = await Category.find({ isActive: true }).sort({ order: 1 });
   }
-  return NextResponse.json(cats);
+  const res = NextResponse.json(cats);
+  // Las categorias cambian muy poco. Con stale-while-revalidate el navegador
+  // sirve la version cacheada al instante y revalida en segundo plano →
+  // cambiar de seccion se siente instantaneo.
+  res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');
+  return res;
 }
 
 export async function POST(req: NextRequest) {

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
+import { getCached, setCached, invalidatePrefix, dedupedFetchJson } from '@/lib/fetchCache';
 
 // ═══ Cute sound system — 40 unique Web Audio sounds ═══
 type SoundFn = (ctx: AudioContext) => void;
@@ -160,8 +161,12 @@ function Content() {
   const { data: session } = useSession();
   const isAdmin = (session?.user as any)?.role === 'admin';
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Inicializa desde el cache en memoria — si el usuario ya visito esta
+  // pagina en esta sesion, los productos aparecen al INSTANTE.
+  const initialUrl = `/api/products${sp.get('category') ? `?category=${sp.get('category')}` : ''}`;
+  const cachedInit = getCached<Product[]>(initialUrl);
+  const [products, setProducts] = useState<Product[]>(cachedInit || []);
+  const [loading, setLoading] = useState(!cachedInit);
   const [search, setSearch] = useState('');
   const [cat, setCat] = useState(sp.get('category') || '');
   const [sort, setSort] = useState('recent');
@@ -196,14 +201,21 @@ function Content() {
     { value: 'avanzado', label: 'Avanzado', emoji: '🔴' },
   ];
 
-  // Load categories from DB
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-
-  useEffect(() => { fetch('/api/categories').then(r => r.json()).then(setDbCategories).catch(() => {}); }, []);
+  // Categorias y destacados: inicializan desde cache (aparecen al instante)
+  // y se revalidan en segundo plano.
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(() => getCached<Product[]>('/api/products?featured=true') || []);
+  // Set dbCategories desde cache si existe
+  useEffect(() => {
+    const cached = getCached<any[]>('/api/categories');
+    if (cached) setDbCategories(cached);
+    dedupedFetchJson<any[]>('/api/categories').then(setDbCategories).catch(() => {});
+  }, []);
 
   // Fetch featured products ONCE, never filtered
   useEffect(() => {
-    fetch('/api/products?featured=true').then(r => r.json()).then(d => setFeaturedProducts(Array.isArray(d) ? d : [])).catch(() => {});
+    dedupedFetchJson<Product[]>('/api/products?featured=true')
+      .then((d) => setFeaturedProducts(Array.isArray(d) ? d : []))
+      .catch(() => {});
   }, []);
 
   // Cargar favoritos desde la DB; fallback a localStorage para invitados no logueados.
@@ -249,16 +261,25 @@ function Content() {
 
   // `load()` no oculta el listado actual mientras re-fetchea (solo setLoading en
   // la primera carga). Asi cambiar de categoria o buscar se siente fluido.
+  // Ademas, antes de fetchear, si tenemos datos cacheados para esa URL, los
+  // mostramos al INSTANTE y luego el fetch los actualiza en segundo plano.
   const load = async () => {
     const mySeq = ++loadSeqRef.current;
     const p = new URLSearchParams();
     if (cat) p.set('category', cat);
     if (search) p.set('search', search);
+    const url = `/api/products?${p}`;
+
+    // Hit de cache: muestra ya, sin esperar al servidor.
+    const cached = getCached<Product[]>(url);
+    if (cached && cached.length) {
+      setProducts(cached);
+      setLoading(false);
+    }
+
     try {
-      const r = await fetch(`/api/products?${p}`, { cache: 'no-store' });
-      const d = await r.json();
-      // Si mientras esperabamos hubo otro cambio de filtro, descartamos esta respuesta.
-      if (mySeq !== loadSeqRef.current) return;
+      const d = await dedupedFetchJson<Product[]>(url);
+      if (mySeq !== loadSeqRef.current) return; // descarta respuesta stale
       setProducts(Array.isArray(d) ? d : []);
     } catch { /* mantiene lo que ya habia */ }
     finally { if (mySeq === loadSeqRef.current) setLoading(false); }
@@ -305,6 +326,7 @@ function Content() {
     const prev = products;
     setProducts((ps) => ps.filter((x) => x._id !== id));
     setFeaturedProducts((ps) => ps.filter((x) => x._id !== id));
+    invalidatePrefix('/api/products');
     try {
       const r = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (!r.ok) setProducts(prev);
@@ -360,6 +382,9 @@ function Content() {
         if (editId) return prev.map((x) => x._id === listItem._id ? { ...x, ...listItem } : x);
         return [listItem, ...prev];
       });
+      // Invalida todas las variaciones cacheadas de /api/products para que
+      // en otras pestañas/secciones se recargue con el nuevo estado.
+      invalidatePrefix('/api/products');
       if (saved.featured) {
         setFeaturedProducts((prev) => {
           if (editId) return prev.map((x) => x._id === listItem._id ? { ...x, ...listItem } : x);

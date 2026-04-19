@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getCached, setCached, invalidatePrefix, dedupedFetchJson } from '@/lib/fetchCache';
 
 const CATEGORIES = ['amigurumis', 'accesorios', 'decoracion', 'ropa-bebe', 'llaveros', 'otro'];
 
@@ -41,8 +42,10 @@ function AdminProductsPageInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Inicia desde cache en memoria si ya se cargo antes en esta sesion.
+  const cachedInit = getCached<any[]>('/api/products');
+  const [products, setProducts] = useState<any[]>(cachedInit || []);
+  const [loading, setLoading] = useState(!cachedInit);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ ...emptyProduct });
@@ -81,13 +84,13 @@ function AdminProductsPageInner() {
   // `silent = true` → no muestra el spinner de "loading" global (evita que la tabla se
   // desmonte y la pagina de un salto). Se usa despues de guardar/cambiar disponibilidad.
   const fetchProducts = async (silent = false) => {
-    if (!silent) setLoading(true);
+    // Si hay cache, ya lo pintamos en useState — no queremos volver a loading.
+    if (!silent && !getCached('/api/products')) setLoading(true);
     try {
-      const res = await fetch('/api/products', { cache: 'no-store' });
-      const data = await res.json();
+      const data = await dedupedFetchJson<any[]>('/api/products');
       setProducts(Array.isArray(data) ? data : []);
     } catch { /* silent */ }
-    finally { if (!silent) setLoading(false); }
+    finally { setLoading(false); }
   };
 
   const openCreate = () => {
@@ -141,9 +144,15 @@ function AdminProductsPageInner() {
       // Para que el listado quede liviano, guardamos solo la primera imagen.
       const listVersion = { ...saved, images: Array.isArray(saved.images) ? saved.images.slice(0, 1) : [] };
       setProducts((prev) => {
-        if (editing) return prev.map((x) => x._id === listVersion._id ? { ...x, ...listVersion } : x);
-        return [listVersion, ...prev];
+        const next = editing
+          ? prev.map((x) => x._id === listVersion._id ? { ...x, ...listVersion } : x)
+          : [listVersion, ...prev];
+        setCached('/api/products', next);
+        return next;
       });
+      // Las variantes filtradas/por-query quedan stale → limpias para que al
+      // abrir el catalogo publico vea el nuevo producto fresco.
+      invalidatePrefix('/api/products');
       setModalOpen(false);
     } catch (err: any) {
       setSaveError('Error de conexion. Revisa tu internet e intenta de nuevo.');
@@ -153,12 +162,15 @@ function AdminProductsPageInner() {
   const handleDelete = async (id: string) => {
     // Optimista: quita el producto ya; si el DELETE falla, lo reincorporamos.
     const prev = products;
-    setProducts((p) => p.filter((x) => x._id !== id));
+    const next = prev.filter((x) => x._id !== id);
+    setProducts(next);
+    setCached('/api/products', next);
+    invalidatePrefix('/api/products');
     setDeleteConfirm(null);
     try {
       const r = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      if (!r.ok) setProducts(prev);
-    } catch { setProducts(prev); }
+      if (!r.ok) { setProducts(prev); setCached('/api/products', prev); }
+    } catch { setProducts(prev); setCached('/api/products', prev); }
   };
 
   const addImageField = () => setForm({ ...form, images: [...form.images, ''] });
