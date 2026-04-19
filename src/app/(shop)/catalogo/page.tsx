@@ -570,8 +570,12 @@ function Content() {
         <p className="text-sm text-cocoa-400 text-center">{loading ? '🔍 Buscando...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''} encontrado${sorted.length !== 1 ? 's' : ''}`}</p>
       </div>
 
-      {/* Admin: Category management modal — FULL */}
-      {showCatModal && (
+      {/* Admin: Category management modal — solo admins (role === 'admin').
+          Defensa en profundidad: aunque el boton que abre el modal ya esta
+          gated por isAdmin, forzamos la condicion tambien aqui por si alguien
+          intenta abrirlo por otra via. Y la API (PUT/DELETE /api/categories)
+          tambien exige role=admin. */}
+      {showCatModal && isAdmin && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-20 overflow-y-auto">
           <div className="fixed inset-0 bg-cocoa-800/50 backdrop-blur-sm" onClick={() => setShowCatModal(false)} />
           <div className="relative w-full max-w-md bg-white rounded-bubble shadow-warm border border-cream-200 p-5 my-4">
