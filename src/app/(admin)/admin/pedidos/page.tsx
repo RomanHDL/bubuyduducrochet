@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -40,28 +40,47 @@ export default function AdminOrdersPage() {
     try { localStorage.setItem(FILTERS_KEY, JSON.stringify({ filter, payFilter, search })); } catch {}
   }, [filter, payFilter, search]);
 
+  // Evita que el polling de 15s pise los cambios del admin mientras esta:
+  //  - con una fila expandida (leyendo detalle)
+  //  - con un PUT/DELETE en vuelo
+  //  - generando un ticket
+  const busyRef = useRef(false);
+  const expandedRef = useRef<string | null>(null);
+  const ticketRef = useRef<string | null>(null);
+  expandedRef.current = expandedId;
+  ticketRef.current = generatingTicket;
+
   useEffect(() => {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchOrders();
-    // Real-time: refresh every 10 seconds
-    const interval = setInterval(fetchOrders, 15000);
+    const interval = setInterval(() => {
+      if (busyRef.current || expandedRef.current || ticketRef.current) return;
+      fetchOrders();
+    }, 15000);
     return () => clearInterval(interval);
   }, [session, status]);
 
   const fetchOrders = async () => {
-    try { const r = await fetch('/api/orders'); setOrders(await r.json()); } catch {} finally { setLoading(false); }
+    try { const r = await fetch('/api/orders', { cache: 'no-store' }); setOrders(await r.json()); } catch {} finally { setLoading(false); }
   };
 
   const updateOrder = async (id: string, updates: any) => {
-    await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
-    fetchOrders();
+    // Optimista: aplica los cambios en UI antes de llamar al servidor.
+    setOrders((prev) => prev.map((o) => o._id === id ? { ...o, ...updates } : o));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates), cache: 'no-store' });
+    } finally { busyRef.current = false; }
   };
 
   const deleteOrder = async (id: string, num: string) => {
     if (!confirm(`Eliminar permanentemente pedido #${num}?`)) return;
-    await fetch(`/api/orders/${id}`, { method: 'DELETE' });
-    fetchOrders();
+    busyRef.current = true;
+    try {
+      await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+      setOrders((prev) => prev.filter((o) => o._id !== id));
+    } finally { busyRef.current = false; }
   };
 
   const handleSendTicket = async (order: any) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -30,50 +30,67 @@ export default function AdminReviewsPage() {
     try { localStorage.setItem(FILTERS_KEY, JSON.stringify({ tab, filter })); } catch {}
   }, [tab, filter]);
 
+  // Evita que el polling pise una accion (aprobar/rechazar/borrar) en vuelo.
+  const busyRef = useRef(false);
+
   useEffect(() => {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchAll();
-    const interval = setInterval(fetchAll, 15000);
+    const interval = setInterval(() => {
+      if (busyRef.current) return;
+      fetchAll();
+    }, 15000);
     return () => clearInterval(interval);
   }, [session, status]);
 
   const fetchAll = async () => {
     try {
       const [t, p, prods] = await Promise.all([
-        fetch('/api/reviews').then(r => r.json()),
-        fetch('/api/product-reviews?all=true').then(r => r.json()),
-        fetch('/api/products').then(r => r.json()),
+        fetch('/api/reviews', { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/product-reviews?all=true', { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/products', { cache: 'no-store' }).then(r => r.json()),
       ]);
       setTestimonials(Array.isArray(t) ? t : []);
       setProductReviews(Array.isArray(p) ? p : []);
-      // Build product lookup by ID
       const map: Record<string, any> = {};
       (Array.isArray(prods) ? prods : []).forEach((prod: any) => { map[prod._id] = prod; });
       setProducts(map);
     } catch {} finally { setLoading(false); }
   };
 
-  // Testimonial actions
+  // Testimonial actions — optimistas: actualiza estado local y dispara el PUT/DELETE.
   const approveTestimonial = async (id: string) => {
-    await fetch(`/api/reviews/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isApproved: true }) });
-    fetchAll();
+    setTestimonials((prev) => prev.map((r) => r._id === id ? { ...r, isApproved: true } : r));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/reviews/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isApproved: true }), cache: 'no-store' });
+    } finally { busyRef.current = false; }
   };
   const rejectTestimonial = async (id: string) => {
-    await fetch(`/api/reviews/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isApproved: false }) });
-    fetchAll();
+    setTestimonials((prev) => prev.map((r) => r._id === id ? { ...r, isApproved: false } : r));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/reviews/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isApproved: false }), cache: 'no-store' });
+    } finally { busyRef.current = false; }
   };
   const deleteTestimonial = async (id: string) => {
     if (!confirm('Eliminar esta reseña permanentemente?')) return;
-    await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
-    fetchAll();
+    busyRef.current = true;
+    try {
+      await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
+      setTestimonials((prev) => prev.filter((r) => r._id !== id));
+    } finally { busyRef.current = false; }
   };
 
   // Product review actions
   const deleteProductReview = async (id: string) => {
     if (!confirm('Eliminar esta reseña de producto permanentemente?')) return;
-    await fetch(`/api/product-reviews/${id}`, { method: 'DELETE' });
-    fetchAll();
+    busyRef.current = true;
+    try {
+      await fetch(`/api/product-reviews/${id}`, { method: 'DELETE' });
+      setProductReviews((prev) => prev.filter((r) => r._id !== id));
+    } finally { busyRef.current = false; }
   };
 
   if (status === 'loading' || loading) return <div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">⭐</span></div>;

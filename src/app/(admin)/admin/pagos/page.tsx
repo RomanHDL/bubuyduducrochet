@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import UserInlineLabel from '@/components/UserInlineLabel';
@@ -32,16 +32,26 @@ export default function PagosAdmin() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  const fetchAll = () => { fetch('/api/orders').then(r => r.json()).then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); };
+  // Evita que el polling pise un cambio del admin mientras esta guardando.
+  const busyRef = useRef(false);
+
+  const fetchAll = () => { fetch('/api/orders', { cache: 'no-store' }).then(r => r.json()).then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); };
   useEffect(() => {
     fetchAll();
-    const interval = setInterval(fetchAll, 15000);
+    const interval = setInterval(() => {
+      if (busyRef.current) return;
+      fetchAll();
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
   const updatePayment = async (id: string, status: string) => {
-    await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentStatus: status }) });
-    const r = await fetch('/api/orders'); setOrders(await r.json());
+    // Optimista: refleja el cambio inmediatamente; no refetch de toda la lista.
+    setOrders((prev) => prev.map((o) => o._id === id ? { ...o, paymentStatus: status } : o));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentStatus: status }), cache: 'no-store' });
+    } finally { busyRef.current = false; }
   };
 
   if (!isAdmin) return <div className="text-center py-20"><p className="text-cocoa-400">No autorizado</p></div>;

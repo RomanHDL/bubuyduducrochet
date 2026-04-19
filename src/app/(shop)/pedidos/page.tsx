@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
@@ -35,6 +35,16 @@ export default function PedidosPage() {
   const [ticketPreview, setTicketPreview] = useState<{ img: string; orderId: string; orderNum: number } | null>(null);
   const [generatingTicket, setGeneratingTicket] = useState<string | null>(null);
 
+  // Refs para no refrescar cuando el usuario esta interactuando (expandiendo,
+  // viendo preview de ticket, generando ticket o guardando cambios).
+  const busyRef = useRef(false);
+  const expandedRef = useRef<string | null>(null);
+  const ticketRef = useRef<any>(null);
+  const generatingRef = useRef<string | null>(null);
+  expandedRef.current = expandedId;
+  ticketRef.current = ticketPreview;
+  generatingRef.current = generatingTicket;
+
   const fetchOrders = async () => {
     try { const r = await fetch('/api/orders?mine=1', { cache: 'no-store' }); const d = await r.json(); setOrders(Array.isArray(d) ? d : []); }
     catch {} finally { setLoading(false); }
@@ -43,13 +53,19 @@ export default function PedidosPage() {
   useEffect(() => {
     if (!session) { setLoading(false); return; }
     fetchOrders();
-    const interval = setInterval(fetchOrders, 15000);
+    const interval = setInterval(() => {
+      if (busyRef.current || expandedRef.current || ticketRef.current || generatingRef.current) return;
+      fetchOrders();
+    }, 15000);
     return () => clearInterval(interval);
   }, [session]);
 
   const updateOrder = async (id: string, updates: any) => {
-    await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
-    fetchOrders();
+    setOrders((prev) => prev.map((o) => o._id === id ? { ...o, ...updates } : o));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates), cache: 'no-store' });
+    } finally { busyRef.current = false; }
   };
 
   // Admin: generate ticket image, auto-download it, show preview, then open WhatsApp

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -38,16 +38,28 @@ export default function MaterialesPage() {
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState('all');
 
+  // Refs para evitar que el polling pise cambios del usuario:
+  //  - modalRef: true mientras el modal de edicion esta abierto
+  //  - busyRef:  true mientras hay un PUT/DELETE/quickUpdate en vuelo
+  const modalRef = useRef(false);
+  const busyRef = useRef(false);
+  modalRef.current = modal;
+
   useEffect(() => {
     if (status === 'loading') return;
     if (!session || (session.user as any)?.role !== 'admin') { router.push('/'); return; }
     fetchMaterials();
-    const interval = setInterval(fetchMaterials, 15000);
+    const interval = setInterval(() => {
+      // NO refrescar si el usuario esta editando: evita que la cantidad o
+      // cualquier cambio optimista se borre a la mitad de la interaccion.
+      if (modalRef.current || busyRef.current) return;
+      fetchMaterials();
+    }, 15000);
     return () => clearInterval(interval);
   }, [session, status]);
 
   const fetchMaterials = async () => {
-    try { const r = await fetch('/api/materials'); const d = await r.json(); setMaterials(Array.isArray(d) ? d : []); } catch {} finally { setLoading(false); }
+    try { const r = await fetch('/api/materials', { cache: 'no-store' }); const d = await r.json(); setMaterials(Array.isArray(d) ? d : []); } catch {} finally { setLoading(false); }
   };
 
   const openNew = () => { setEditId(null); setForm({ ...EMPTY }); setModal(true); };
@@ -56,20 +68,39 @@ export default function MaterialesPage() {
   const doSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    const url = editId ? `/api/materials/${editId}` : '/api/materials';
-    await fetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, quantity: Number(form.quantity), minStock: Number(form.minStock), price: Number(form.price) }) });
-    setSaving(false); setModal(false); fetchMaterials();
+    busyRef.current = true;
+    try {
+      const url = editId ? `/api/materials/${editId}` : '/api/materials';
+      const res = await fetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, quantity: Number(form.quantity), minStock: Number(form.minStock), price: Number(form.price) }), cache: 'no-store' });
+      if (res.ok) {
+        const saved = await res.json();
+        // Merge local en vez de refetch (evita revert si el refetch llega con cache viejo).
+        setMaterials((prev) => {
+          const exists = prev.some((m) => m._id === saved._id);
+          return exists ? prev.map((m) => m._id === saved._id ? saved : m) : [saved, ...prev];
+        });
+        setModal(false);
+      }
+    } catch {} finally { busyRef.current = false; setSaving(false); }
   };
 
   const doDelete = async (id: string, name: string) => {
     if (!confirm(`Eliminar "${name}"?`)) return;
-    await fetch(`/api/materials/${id}`, { method: 'DELETE' });
-    fetchMaterials();
+    busyRef.current = true;
+    try {
+      await fetch(`/api/materials/${id}`, { method: 'DELETE' });
+      setMaterials((prev) => prev.filter((m) => m._id !== id));
+    } finally { busyRef.current = false; }
   };
 
   const quickUpdate = async (id: string, qty: number) => {
-    await fetch(`/api/materials/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: Math.max(0, qty) }) });
-    fetchMaterials();
+    const safeQty = Math.max(0, qty);
+    // Optimista: actualiza UI antes de esperar al servidor.
+    setMaterials((prev) => prev.map((m) => m._id === id ? { ...m, quantity: safeQty } : m));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/materials/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: safeQty }), cache: 'no-store' });
+    } finally { busyRef.current = false; }
   };
 
   if (status === 'loading' || loading) return <div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🧶</span></div>;

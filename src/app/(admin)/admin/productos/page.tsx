@@ -279,7 +279,10 @@ function AdminProductsPageInner() {
                     <td className="px-4 py-3 text-cocoa-400">{p.category}</td>
                     <td className="px-4 py-3 text-right font-semibold text-cocoa-700">${p.price?.toFixed(2)}</td>
                     <td className="px-4 py-3 text-center">
-                      <AvailabilityToggle product={p} onChanged={(silent) => fetchProducts(silent ?? true)} />
+                      <AvailabilityToggle
+                        product={p}
+                        onPatch={(patch) => setProducts((prev) => prev.map((x) => x._id === p._id ? { ...x, ...patch } : x))}
+                      />
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${p.isActive ? 'bg-mint-100 text-green-700' : 'bg-cream-200 text-cocoa-400'}`}>
@@ -695,35 +698,38 @@ function AdminProductsPageInner() {
 }
 
 // Toggle inline de disponibilidad (Disponible / Por pedido).
-// - Cambio optimista: se refleja inmediatamente sin esperar al servidor.
-// - Si el PUT falla, revierte y muestra un mensaje discreto.
-// - No dispara un refetch con loading global (evita que la pagina parpadee/salte).
-function AvailabilityToggle({ product, onChanged }: { product: any; onChanged: (silent?: boolean) => void }) {
+// - Cambio optimista inmediato; si falla el PUT, revierte y avisa.
+// - NO refetchea la lista entera (antes eso causaba un "revert visual" de hasta
+//   varios segundos cuando el refetch tardaba en regresar). En su lugar, hace
+//   un patch local del producto en el estado del padre via onPatch().
+// - Se sincroniza con el padre SOLO cuando el valor real del producto cambia
+//   desde afuera (effect depende solo de `current`, no de `saving` — asi las
+//   transiciones de saving no pisan el valor optimista del usuario).
+function AvailabilityToggle({ product, onPatch }: { product: any; onPatch: (patch: { availability: 'disponible' | 'por_pedido'; stock: number }) => void }) {
   const current: 'disponible' | 'por_pedido' = product.availability || (product.stock > 0 ? 'disponible' : 'por_pedido');
   const [value, setValue] = useState<'disponible' | 'por_pedido'>(current);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // Si llega un producto actualizado desde el servidor, sincronizar el valor local
-  // (pero solo cuando no estamos a mitad de un guardado del usuario).
+  // Solo adopta el valor del padre si el valor REAL cambio (no en cada render,
+  // ni cuando `saving` cambia). Esto elimina el flicker donde el toggle volvia
+  // al valor anterior mientras el servidor respondia.
   useEffect(() => {
-    if (!saving) setValue(current);
-  }, [current, saving]);
+    setValue(current);
+  }, [current]);
 
   const update = async (next: 'disponible' | 'por_pedido') => {
     if (next === value || saving) return;
     const prev = value;
-    setValue(next); // optimista
+    setValue(next); // optimista — se ve inmediatamente
     setSaving(true);
     setError('');
+    const stock = next === 'disponible' ? Math.max(product.stock || 1, 1) : 0;
     try {
       const res = await fetch(`/api/products/${product._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          availability: next,
-          stock: next === 'disponible' ? Math.max(product.stock || 1, 1) : 0,
-        }),
+        body: JSON.stringify({ availability: next, stock }),
         cache: 'no-store',
       });
       if (!res.ok) {
@@ -732,8 +738,9 @@ function AvailabilityToggle({ product, onChanged }: { product: any; onChanged: (
         setTimeout(() => setError(''), 3000);
         return;
       }
-      // Refetch silencioso: la lista se actualiza sin parpadear ni desmontar la tabla.
-      onChanged(true);
+      // Patch local en el padre: evita un refetch que podria traer datos
+      // cacheados/viejos y "revertir" visualmente el cambio del usuario.
+      onPatch({ availability: next, stock });
     } catch {
       setValue(prev);
       setError('Sin conexion');
