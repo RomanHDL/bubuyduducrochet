@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -73,20 +73,40 @@ const SOUNDS: SoundFn[] = [
 
 let _audioCtx: AudioContext | null = null;
 let _soundEnabled = true;
+
+// Crea/recrea el AudioContext si esta cerrado. Los navegadores pueden cerrarlo
+// tras ciertas operaciones (p. ej. despues de abrir un modal de archivos al
+// crear un producto) — antes esto dejaba los sonidos "muertos" y habia que
+// togglear el boton de sonido para revivirlos. Ahora se autorepara solo.
+function ensureAudioCtx(): AudioContext | null {
+  try {
+    const AC: typeof AudioContext | undefined = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!AC) return null;
+    if (!_audioCtx || _audioCtx.state === 'closed') _audioCtx = new AC();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {});
+    return _audioCtx;
+  } catch {
+    _audioCtx = null;
+    return null;
+  }
+}
+
 function playSound(id: string) {
   if (!_soundEnabled) return;
+  const ctx = ensureAudioCtx();
+  if (!ctx || ctx.state !== 'running') return;
   try {
-    if (!_audioCtx) _audioCtx = new AudioContext();
-    if (_audioCtx.state === 'suspended') _audioCtx.resume();
-    // Sonido procedural unico y estable por producto (ver genSound).
-    // Si algun dia el generador falla, caemos al array curado SOUNDS.
+    genSound(id)(ctx);
+  } catch {
     try {
-      genSound(id)(_audioCtx);
-    } catch {
       const idx = Math.abs(hashId(id)) % SOUNDS.length;
-      SOUNDS[idx](_audioCtx);
+      SOUNDS[idx](ctx);
+    } catch {
+      // Si se murio el contexto, lo dejamos null para que el siguiente hover lo recree.
+      try { ctx.close(); } catch {}
+      _audioCtx = null;
     }
-  } catch {}
+  }
 }
 
 // Compacta una imagen en el cliente antes de subirla al servidor.
@@ -158,6 +178,9 @@ function Content() {
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [showCatModal, setShowCatModal] = useState(false);
   const [catForm, setCatForm] = useState({ slug: '', name: '', emoji: '🧸', color: 'bg-blush-50 border-blush-200' });
+  // Id de la categoria que se esta editando en la lista (null = no se esta editando).
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [editingCatForm, setEditingCatForm] = useState<{ name: string; slug: string; emoji: string }>({ name: '', slug: '', emoji: '🧸' });
   const [soundOn, setSoundOn] = useState(true);
   const [procesoModal, setProcesoModal] = useState(false);
   const [procesoProduct, setProcesoProduct] = useState<Product | null>(null);
@@ -219,22 +242,36 @@ function Content() {
     }
   };
 
+  // Guarda el id del ultimo request para descartar respuestas viejas.
+  // Sintoma previo: clickeas categoria A, luego B rapido; si A tarda mas en
+  // responder, sobreescribia a B y "no salian" los productos correctos.
+  const loadSeqRef = useRef(0);
+
   // `load()` no oculta el listado actual mientras re-fetchea (solo setLoading en
-  // la primera carga). Asi cambiar de categoria o buscar se siente fluido — los
-  // productos anteriores se quedan en pantalla hasta que llegan los nuevos.
+  // la primera carga). Asi cambiar de categoria o buscar se siente fluido.
   const load = async () => {
+    const mySeq = ++loadSeqRef.current;
     const p = new URLSearchParams();
     if (cat) p.set('category', cat);
     if (search) p.set('search', search);
     try {
       const r = await fetch(`/api/products?${p}`, { cache: 'no-store' });
       const d = await r.json();
+      // Si mientras esperabamos hubo otro cambio de filtro, descartamos esta respuesta.
+      if (mySeq !== loadSeqRef.current) return;
       setProducts(Array.isArray(d) ? d : []);
     } catch { /* mantiene lo que ya habia */ }
-    finally { setLoading(false); }
+    finally { if (mySeq === loadSeqRef.current) setLoading(false); }
   };
 
-  useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [cat, search]);
+  // Cambio de categoria: sin debounce (el usuario espera respuesta inmediata).
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [cat]);
+  // Escribir en el buscador si tiene debounce (evita un fetch por tecla).
+  useEffect(() => {
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [search]);
 
   // Admin actions
   const openNew = () => { if (!session) { router.push('/login'); return; } setEditId(null); setForm({ ...EMPTY }); setErr(''); setModal(true); };
@@ -445,51 +482,89 @@ function Content() {
             {search && <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-cocoa-300 hover:text-blush-400">✕</button>}
           </div>
 
-          {/* Sort & Filter button */}
+          {/* Sort & Filter button + panel
+              - En desktop: el panel es 'absolute' ancla al boton → FLOTA encima,
+                no empuja las cards hacia abajo (bug previo).
+              - En mobile: sheet desde abajo, con tope maximo de alto y scroll
+                interno para que minimo/maximo y los botones nunca se salgan de pantalla. */}
           <div className="relative flex-shrink-0">
             <button onClick={() => setShowFilters(!showFilters)} className="btn-cute bg-white text-cocoa-600 border-2 border-cream-200 text-sm px-5 py-2.5 hover:border-blush-200 flex items-center gap-2">
               🔽 Ordenar y filtrar
               {(sort !== 'recent' || priceMin || priceMax) && <span className="w-2 h-2 rounded-full bg-blush-400" />}
             </button>
+
+            {showFilters && (
+              <>
+                {/* Backdrop — cubre todo, cierra al clickear */}
+                <div className="fixed inset-0 z-40" onClick={() => setShowFilters(false)} />
+
+                {/* Panel: sheet en mobile, dropdown flotante en desktop */}
+                <div
+                  className={[
+                    // Mobile: sheet fijo abajo, con alto maximo y scroll interno
+                    'fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-warm border border-cream-200',
+                    'max-h-[85vh] flex flex-col',
+                    // Desktop: cae anclado al boton, no empuja productos
+                    'sm:absolute sm:inset-auto sm:top-full sm:right-0 sm:mt-2 sm:w-80 sm:rounded-cute sm:max-h-[75vh]',
+                  ].join(' ')}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Handle mobile */}
+                  <div className="w-10 h-1 bg-cream-300 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+
+                  {/* Header */}
+                  <div className="px-5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
+                    <h3 className="font-display font-bold text-sm text-cocoa-700">🔽 Ordenar y filtrar</h3>
+                    <button onClick={() => setShowFilters(false)} className="w-7 h-7 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center text-cocoa-400 text-xs" aria-label="Cerrar">✕</button>
+                  </div>
+
+                  {/* Contenido scrollable */}
+                  <div className="px-5 py-2 overflow-y-auto flex-1 space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-cocoa-600 mb-2 uppercase tracking-wider">Ordenar por</h4>
+                      <div className="space-y-1">
+                        {[
+                          { value: 'recent', label: 'Mas recientes', icon: '🕐' },
+                          { value: 'price-low', label: 'Menor precio', icon: '💰' },
+                          { value: 'price-high', label: 'Mayor precio', icon: '💎' },
+                          { value: 'name', label: 'Nombre A-Z', icon: '🔤' },
+                          { value: 'featured', label: 'Destacados primero', icon: '⭐' },
+                        ].map(o => (
+                          <button key={o.value} onClick={() => setSort(o.value)}
+                            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${sort === o.value ? 'bg-blush-50 text-blush-500 font-bold border border-blush-200' : 'text-cocoa-500 hover:bg-cream-50 border border-transparent'}`}>
+                            <span>{o.icon}</span>
+                            <span className="flex-1">{o.label}</span>
+                            {sort === o.value && <span>✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-bold text-cocoa-600 mb-2 uppercase tracking-wider">Rango de precio</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-cocoa-400 mb-1">Minimo</label>
+                          <input type="number" min="0" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="$0" className="w-full px-3 py-2.5 rounded-xl border border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-cocoa-400 mb-1">Maximo</label>
+                          <input type="number" min="0" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Sin limite" className="w-full px-3 py-2.5 rounded-xl border border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer fijo */}
+                  <div className="px-5 pt-3 pb-4 border-t border-cream-100 flex gap-2 flex-shrink-0 bg-white rounded-b-cute">
+                    <button onClick={() => { setPriceMin(''); setPriceMax(''); setSort('recent'); }} className="flex-1 py-2.5 rounded-xl border border-cream-200 text-sm font-semibold text-cocoa-500 hover:bg-cream-50">Limpiar</button>
+                    <button onClick={() => setShowFilters(false)} className="flex-1 py-2.5 rounded-xl bg-blush-400 text-white text-sm font-bold hover:bg-blush-500">Aplicar</button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-
-        {/* Filter panel — full width on mobile, absolute on desktop */}
-        {showFilters && (
-          <>
-            <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setShowFilters(false)} />
-            <div className="fixed bottom-0 left-0 right-0 z-50 sm:relative sm:z-auto bg-white rounded-t-3xl sm:rounded-cute shadow-warm border border-cream-200 p-5 sm:p-4 sm:max-w-xs sm:ml-auto">
-              <div className="w-10 h-1 bg-cream-300 rounded-full mx-auto mb-4 sm:hidden" />
-              <h4 className="text-xs font-bold text-cocoa-600 mb-3">Ordenar por</h4>
-              <div className="space-y-1 mb-4">
-                {[
-                  { value: 'recent', label: 'Mas recientes', icon: '🕐' },
-                  { value: 'price-low', label: 'Menor precio', icon: '💰' },
-                  { value: 'price-high', label: 'Mayor precio', icon: '💎' },
-                  { value: 'name', label: 'Nombre A-Z', icon: '🔤' },
-                  { value: 'featured', label: 'Destacados primero', icon: '⭐' },
-                ].map(o => (
-                  <button key={o.value} onClick={() => setSort(o.value)}
-                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${sort === o.value ? 'bg-blush-50 text-blush-500 font-bold border border-blush-200' : 'text-cocoa-500 hover:bg-cream-50'}`}>
-                    <span>{o.icon}</span> {o.label} {sort === o.value && <span className="ml-auto">✓</span>}
-                  </button>
-                ))}
-              </div>
-
-              <h4 className="text-xs font-bold text-cocoa-600 mb-2">Rango de precio</h4>
-              <div className="flex items-center gap-2 mb-4">
-                <input type="number" value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="$ Min" className="flex-1 px-3 py-2.5 rounded-xl border border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
-                <span className="text-cocoa-300 text-xs">—</span>
-                <input type="number" value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="$ Max" className="flex-1 px-3 py-2.5 rounded-xl border border-cream-200 bg-cream-50 text-sm text-cocoa-700 focus:outline-none focus:border-blush-300" />
-              </div>
-
-              <div className="flex gap-2">
-                <button onClick={() => { setPriceMin(''); setPriceMax(''); setSort('recent'); setShowFilters(false); }} className="flex-1 py-2.5 rounded-xl border border-cream-200 text-sm font-semibold text-cocoa-400">Limpiar</button>
-                <button onClick={() => setShowFilters(false)} className="flex-1 py-2.5 rounded-xl bg-blush-400 text-white text-sm font-bold">Aplicar</button>
-              </div>
-            </div>
-          </>
-        )}
 
         {/* Results count */}
         <p className="text-sm text-cocoa-400 text-center">{loading ? '🔍 Buscando...' : `${sorted.length} producto${sorted.length !== 1 ? 's' : ''} encontrado${sorted.length !== 1 ? 's' : ''}`}</p>
@@ -505,17 +580,106 @@ function Content() {
               <button onClick={() => setShowCatModal(false)} className="w-7 h-7 rounded-full bg-cream-100 flex items-center justify-center text-cocoa-400 text-xs hover:bg-cream-200">✕</button>
             </div>
 
-            {/* Existing categories — editable */}
-            <div className="space-y-2 mb-5 max-h-48 overflow-y-auto">
-              {dbCategories.map(c => (
-                <div key={c._id} className="flex items-center gap-2 p-2.5 bg-cream-50 rounded-xl border border-cream-200 group">
-                  <span className="text-xl">{c.emoji}</span>
-                  <span className="flex-1 text-sm font-semibold text-cocoa-700">{c.name}</span>
-                  <span className="text-[10px] text-cocoa-300 font-mono">{c.slug}</span>
-                  <button onClick={async () => { if (!confirm(`Eliminar "${c.name}"?`)) return; await fetch(`/api/categories/${c._id}`, { method: 'DELETE' }); const r = await fetch('/api/categories'); setDbCategories(await r.json()); }}
-                    className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[10px] text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 shadow-sm">✕</button>
-                </div>
-              ))}
+            {/* Lista de categorias existentes — editables in-place */}
+            <div className="space-y-2 mb-5 max-h-64 overflow-y-auto">
+              {dbCategories.map(c => {
+                const isEditing = editingCatId === c._id;
+                if (isEditing) {
+                  // Modo edicion: inputs inline con emoji, nombre y slug
+                  return (
+                    <div key={c._id} className="p-3 bg-blush-50 rounded-xl border-2 border-blush-300 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={editingCatForm.emoji}
+                          onChange={e => setEditingCatForm({ ...editingCatForm, emoji: e.target.value })}
+                          maxLength={4}
+                          className="w-12 text-center text-xl py-1.5 rounded-lg border border-cream-300 bg-white"
+                          title="Emoji"
+                        />
+                        <input
+                          value={editingCatForm.name}
+                          onChange={e => {
+                            const name = e.target.value;
+                            const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                            setEditingCatForm({ ...editingCatForm, name, slug });
+                          }}
+                          placeholder="Nombre"
+                          className="flex-1 px-3 py-1.5 rounded-lg border border-cream-300 text-sm font-semibold"
+                        />
+                      </div>
+                      <input
+                        value={editingCatForm.slug}
+                        onChange={e => setEditingCatForm({ ...editingCatForm, slug: e.target.value })}
+                        placeholder="slug"
+                        className="w-full px-3 py-1.5 rounded-lg border border-cream-200 bg-cream-50 text-xs text-cocoa-500 font-mono"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setEditingCatId(null); }}
+                          className="flex-1 py-1.5 rounded-lg border border-cream-300 text-xs font-semibold text-cocoa-400 hover:bg-cream-50"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const { name, slug, emoji } = editingCatForm;
+                            if (!name.trim() || !slug.trim()) return;
+                            // Optimista: refleja el cambio ya, revierte si falla.
+                            const prev = dbCategories;
+                            setDbCategories(prev.map((x: any) => x._id === c._id ? { ...x, name, slug, emoji } : x));
+                            setEditingCatId(null);
+                            try {
+                              const r = await fetch(`/api/categories/${c._id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name, slug, emoji }),
+                                cache: 'no-store',
+                              });
+                              if (!r.ok) setDbCategories(prev);
+                            } catch { setDbCategories(prev); }
+                          }}
+                          className="flex-1 py-1.5 rounded-lg bg-blush-400 text-white text-xs font-bold hover:bg-blush-500"
+                        >
+                          💾 Guardar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+                // Modo vista: click en ✏️ para editar
+                return (
+                  <div key={c._id} className="flex items-center gap-2 p-2.5 bg-cream-50 rounded-xl border border-cream-200 group">
+                    <span className="text-xl">{c.emoji}</span>
+                    <span className="flex-1 text-sm font-semibold text-cocoa-700 truncate">{c.name}</span>
+                    <span className="text-[10px] text-cocoa-300 font-mono truncate max-w-[80px]">{c.slug}</span>
+                    <button
+                      onClick={() => { setEditingCatId(c._id); setEditingCatForm({ name: c.name, slug: c.slug, emoji: c.emoji || '🧸' }); }}
+                      className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-xs text-lavender-500 hover:bg-lavender-50 border border-lavender-200 shadow-sm"
+                      title="Editar categoria"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Eliminar "${c.name}"?`)) return;
+                        const prev = dbCategories;
+                        setDbCategories(prev.filter((x: any) => x._id !== c._id));
+                        try {
+                          const r = await fetch(`/api/categories/${c._id}`, { method: 'DELETE' });
+                          if (!r.ok) setDbCategories(prev);
+                        } catch { setDbCategories(prev); }
+                      }}
+                      className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-xs text-red-400 hover:bg-red-50 border border-red-100 shadow-sm"
+                      title="Eliminar categoria"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                );
+              })}
+              {dbCategories.length === 0 && (
+                <p className="text-xs text-cocoa-400 text-center py-4">Aun no hay categorias. Crea la primera abajo.</p>
+              )}
             </div>
 
             <div className="border-t border-cream-200 pt-4">
