@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import SystemsAdminDashboard from '@/components/SystemsAdminDashboard';
+import { isSystemsAdmin } from '@/lib/systemsAdmin';
 
 const ST_EMOJI: Record<string, string> = { pending: '⏳', confirmed: '✅', shipped: '📦', delivered: '🎉', cancelled: '❌' };
 const ST_LABEL: Record<string, string> = { pending: 'Pendiente', confirmed: 'Confirmado', shipped: 'Enviado', delivered: 'Entregado', cancelled: 'Cancelado' };
@@ -41,6 +43,18 @@ export default function AdminDashboard() {
   if (!session || (session.user as any)?.role !== 'admin') return null;
 
   const s = stats || {};
+
+  // Vista "de sistemas" — terminal/Matrix theme. Solo para el admin técnico.
+  if (isSystemsAdmin(session.user?.email)) {
+    return (
+      <SystemsAdminDashboard
+        stats={s}
+        session={session}
+        paused={paused}
+        onTogglePause={() => setPaused(p => !p)}
+      />
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

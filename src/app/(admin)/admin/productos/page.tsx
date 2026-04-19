@@ -271,17 +271,29 @@ function AdminProductsPageInner() {
                         {p.isActive ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="inline-flex items-center gap-2 flex-wrap justify-center">
-                        <button onClick={() => openEdit(p)} className="text-xs font-semibold px-3 py-1.5 rounded-full bg-cream-100 text-cocoa-500 hover:bg-cream-200 transition-colors">✏️ Editar</button>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <button
+                          onClick={() => openEdit(p)}
+                          title="Editar producto"
+                          className="text-xs font-semibold px-2.5 py-1.5 rounded-full bg-cream-100 text-cocoa-500 hover:bg-cream-200 transition-colors"
+                        >
+                          ✏️ Editar
+                        </button>
                         <button
                           onClick={() => openProceso(p)}
                           title={p.elaboration ? 'Ya tiene proceso de elaboración (click para ver/editar)' : 'Este producto aún no tiene proceso (click para agregar)'}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors ${p.elaboration ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'}`}
+                          className={`text-xs font-bold px-2.5 py-1.5 rounded-full border transition-colors ${p.elaboration ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'}`}
                         >
-                          📋 Procesos
+                          📋 Proceso
                         </button>
-                        <button onClick={() => setDeleteConfirm(p._id)} className="text-xs font-semibold px-3 py-1.5 rounded-full bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors">🗑️ Eliminar</button>
+                        <button
+                          onClick={() => setDeleteConfirm(p._id)}
+                          title="Eliminar producto"
+                          className="text-xs font-semibold px-2.5 py-1.5 rounded-full bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors"
+                        >
+                          🗑️ Eliminar
+                        </button>
                       </div>
                     </td>
                   </tr>
