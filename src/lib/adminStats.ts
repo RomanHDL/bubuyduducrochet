@@ -14,15 +14,31 @@ import Material from '@/models/Material';
 export async function computeAdminStats() {
   await connectDB();
 
+  // Ventana de 90 dias para charts y stats — suficiente para todas las
+  // metricas del dashboard, y recorta drasticamente el payload cuando hay
+  // miles de ordenes historicas.
+  const d90 = new Date(Date.now() - 90 * 86400000);
+
   const [totalUsers, totalProducts, totalOrders, orders, products, reviewCount, prodReviewCount, materials, recentUsers] = await Promise.all([
     User.countDocuments({}),
     Product.countDocuments({}),
     Order.countDocuments({}),
-    Order.find({}).sort({ createdAt: -1 }).lean(),
-    Product.find({}).lean(),
+    // Projection liviana — solo los campos que usa computeAdminStats. Antes
+    // se traia el objeto entero con items completos, timestamps extras, etc.
+    // Ademas, solo los ultimos 90 dias: reduce filas y mantiene la charts 7d.
+    Order.find(
+      { createdAt: { $gte: d90 } },
+      { status: 1, paymentStatus: 1, total: 1, createdAt: 1, items: 1, orderNumber: 1, userName: 1, userEmail: 1 }
+    ).sort({ createdAt: -1 }).lean(),
+    // CRITICO: antes se traia Product.find({}).lean() → incluia TODAS las
+    // imagenes base64 de TODOS los productos. En una tienda con 50 productos
+    // y fotos de 500KB en base64 cada una, esto eran 20-30MB solo para computar
+    // stats. Ahora solo los 4 campos que stats necesita.
+    Product.find({}, { category: 1, stock: 1, featured: 1, title: 1 }).lean(),
     Review.countDocuments({ isApproved: true }),
     ProductReview.countDocuments({}),
-    Material.find({}).lean(),
+    // Material solo necesita estos campos para calcular valor total, low/out.
+    Material.find({}, { quantity: 1, minStock: 1, price: 1 }).lean(),
     User.find({}).sort({ createdAt: -1 }).limit(5).select('name email image createdAt').lean(),
   ]);
 
