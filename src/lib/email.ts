@@ -1,11 +1,28 @@
 import { Resend } from 'resend';
 
 // Destinatarios de las notificaciones de pedidos.
-// Editar aquí si se añaden/quitan admins.
-export const ADMIN_NOTIFY_EMAILS = [
+//
+// Se puede sobreescribir con la variable de entorno ADMIN_NOTIFY_EMAILS
+// (separada por comas), útil sin necesidad de redeploy:
+//   ADMIN_NOTIFY_EMAILS="romanherrera548@gmail.com,veritoguadalupita@gmail.com"
+//
+// ⚠️ NOTA SOBRE RESEND SANDBOX:
+// Sin dominio propio verificado en Resend (remitente `onboarding@resend.dev`),
+// Resend SOLO permite enviar al email con el que se creó la cuenta Resend.
+// Cuando verifiquen un dominio en resend.com/domains:
+//   1) Añadir la env var RESEND_FROM="Bubu & Dudu <pedidos@tudominio.com>"
+//   2) Añadir la env var ADMIN_NOTIFY_EMAILS con ambos correos separados por coma
+// y los dos admins recibirán el email.
+const DEFAULT_ADMIN_NOTIFY_EMAILS = [
   'romanherrera548@gmail.com',
-  'veritoguadalupita@gmail.com',
+  // 'veritoguadalupita@gmail.com', // activar cuando haya dominio verificado en Resend
 ];
+
+export const ADMIN_NOTIFY_EMAILS: string[] = (
+  process.env.ADMIN_NOTIFY_EMAILS
+    ? process.env.ADMIN_NOTIFY_EMAILS.split(',').map(s => s.trim()).filter(Boolean)
+    : DEFAULT_ADMIN_NOTIFY_EMAILS
+);
 
 // Remitente. Si aún no hay dominio verificado en Resend, dejar el sandbox 'onboarding@resend.dev'.
 // Cuando verifiquen un dominio en Resend (ej. bubuyduducrochet.com), cambiar por:
