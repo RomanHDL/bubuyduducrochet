@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const product = await Product.findById(params.id).lean();
   if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
   const res = NextResponse.json(product);
-  res.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+  res.headers.set('Cache-Control', 'no-store, must-revalidate');
   return res;
 }
 

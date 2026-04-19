@@ -37,9 +37,9 @@ export async function GET(req: NextRequest) {
   const products = await query.lean();
 
   const res = NextResponse.json(products);
-  // Cache ligero en el edge/browser: 15s fresh + 60s stale-while-revalidate.
-  // El CDN de Vercel sirve instantáneo cuando hay hit.
-  res.headers.set('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60');
+  // Sin cache: el catalogo se actualiza al instante cuando se crea/edita/elimina
+  // un producto o cambia la disponibilidad. Evita publicaciones "fantasma".
+  res.headers.set('Cache-Control', 'no-store, must-revalidate');
   return res;
 }
 

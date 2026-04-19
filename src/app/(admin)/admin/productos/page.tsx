@@ -47,6 +47,7 @@ function AdminProductsPageInner() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ ...emptyProduct });
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Elaboration Process state
@@ -77,18 +78,22 @@ function AdminProductsPageInner() {
     router.replace('/admin/productos');
   }, [products, searchParams]);
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  // `silent = true` → no muestra el spinner de "loading" global (evita que la tabla se
+  // desmonte y la pagina de un salto). Se usa despues de guardar/cambiar disponibilidad.
+  const fetchProducts = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
-      const res = await fetch('/api/products');
-      setProducts(await res.json());
+      const res = await fetch('/api/products', { cache: 'no-store' });
+      const data = await res.json();
+      setProducts(Array.isArray(data) ? data : []);
     } catch { /* silent */ }
-    finally { setLoading(false); }
+    finally { if (!silent) setLoading(false); }
   };
 
   const openCreate = () => {
     setEditing(null);
     setForm({ ...emptyProduct });
+    setSaveError('');
     setModalOpen(true);
   };
 
@@ -105,25 +110,35 @@ function AdminProductsPageInner() {
       isActive: p.isActive,
       featured: p.featured,
     });
+    setSaveError('');
     setModalOpen(true);
   };
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
     try {
       const url = editing ? `/api/products/${editing._id}` : '/api/products';
       const method = editing ? 'PUT' : 'POST';
-      await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const body = { ...form, images: (form.images || []).filter((u: string) => u && u.trim()) };
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' });
+      if (!res.ok) {
+        let msg = `Error al guardar (HTTP ${res.status})`;
+        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
+        setSaveError(msg);
+        return;
+      }
       setModalOpen(false);
-      fetchProducts();
-    } catch { /* silent */ }
-    finally { setSaving(false); }
+      fetchProducts(true);
+    } catch (err: any) {
+      setSaveError('Error de conexion. Revisa tu internet e intenta de nuevo.');
+    } finally { setSaving(false); }
   };
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/products/${id}`, { method: 'DELETE' });
     setDeleteConfirm(null);
-    fetchProducts();
+    fetchProducts(true);
   };
 
   const addImageField = () => setForm({ ...form, images: [...form.images, ''] });
@@ -174,7 +189,7 @@ function AdminProductsPageInner() {
         body: JSON.stringify({ elaboration }),
       });
       setProcesoSuccess(true);
-      fetchProducts();
+      fetchProducts(true);
       setTimeout(() => setProcesoSuccess(false), 3000);
     } catch { /* silent */ }
     finally { setSavingProceso(false); }
@@ -264,7 +279,7 @@ function AdminProductsPageInner() {
                     <td className="px-4 py-3 text-cocoa-400">{p.category}</td>
                     <td className="px-4 py-3 text-right font-semibold text-cocoa-700">${p.price?.toFixed(2)}</td>
                     <td className="px-4 py-3 text-center">
-                      <AvailabilityToggle product={p} onChanged={fetchProducts} />
+                      <AvailabilityToggle product={p} onChanged={(silent) => fetchProducts(silent ?? true)} />
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${p.isActive ? 'bg-mint-100 text-green-700' : 'bg-cream-200 text-cocoa-400'}`}>
@@ -311,6 +326,13 @@ function AdminProductsPageInner() {
             <h2 className="font-display font-bold text-xl text-cocoa-700 mb-4">
               {editing ? 'Editar Producto' : 'Nuevo Producto'} 🧸
             </h2>
+
+            {saveError && (
+              <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-cute text-red-600 text-sm font-semibold flex items-start gap-2">
+                <span>⚠️</span>
+                <span>{saveError}</span>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>
@@ -672,46 +694,74 @@ function AdminProductsPageInner() {
   );
 }
 
-// Toggle inline de disponibilidad (Disponible / Por pedido)
-function AvailabilityToggle({ product, onChanged }: { product: any; onChanged: () => void }) {
+// Toggle inline de disponibilidad (Disponible / Por pedido).
+// - Cambio optimista: se refleja inmediatamente sin esperar al servidor.
+// - Si el PUT falla, revierte y muestra un mensaje discreto.
+// - No dispara un refetch con loading global (evita que la pagina parpadee/salte).
+function AvailabilityToggle({ product, onChanged }: { product: any; onChanged: (silent?: boolean) => void }) {
   const current: 'disponible' | 'por_pedido' = product.availability || (product.stock > 0 ? 'disponible' : 'por_pedido');
   const [value, setValue] = useState<'disponible' | 'por_pedido'>(current);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>('');
+
+  // Si llega un producto actualizado desde el servidor, sincronizar el valor local
+  // (pero solo cuando no estamos a mitad de un guardado del usuario).
+  useEffect(() => {
+    if (!saving) setValue(current);
+  }, [current, saving]);
 
   const update = async (next: 'disponible' | 'por_pedido') => {
-    if (next === value) return;
-    setValue(next);
+    if (next === value || saving) return;
+    const prev = value;
+    setValue(next); // optimista
     setSaving(true);
+    setError('');
     try {
-      await fetch(`/api/products/${product._id}`, {
+      const res = await fetch(`/api/products/${product._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...product, availability: next, stock: next === 'disponible' ? Math.max(product.stock || 1, 1) : 0 }),
+        body: JSON.stringify({
+          availability: next,
+          stock: next === 'disponible' ? Math.max(product.stock || 1, 1) : 0,
+        }),
+        cache: 'no-store',
       });
-      onChanged();
+      if (!res.ok) {
+        setValue(prev);
+        setError('No se pudo guardar');
+        setTimeout(() => setError(''), 3000);
+        return;
+      }
+      // Refetch silencioso: la lista se actualiza sin parpadear ni desmontar la tabla.
+      onChanged(true);
     } catch {
-      setValue(current);
+      setValue(prev);
+      setError('Sin conexion');
+      setTimeout(() => setError(''), 3000);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="inline-flex rounded-full bg-cream-100 p-0.5" title="Cambiar disponibilidad">
-      <button
-        onClick={() => update('disponible')}
-        disabled={saving}
-        className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${value === 'disponible' ? 'bg-green-500 text-white shadow-sm' : 'text-cocoa-500 hover:bg-cream-200'}`}
-      >
-        ✅ Disponible
-      </button>
-      <button
-        onClick={() => update('por_pedido')}
-        disabled={saving}
-        className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${value === 'por_pedido' ? 'bg-amber-500 text-white shadow-sm' : 'text-cocoa-500 hover:bg-cream-200'}`}
-      >
-        📝 Por pedido
-      </button>
+    <div className="inline-flex flex-col items-center gap-1">
+      <div className="inline-flex rounded-full bg-cream-100 p-0.5" title="Cambiar disponibilidad">
+        <button
+          onClick={() => update('disponible')}
+          disabled={saving}
+          className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${value === 'disponible' ? 'bg-green-500 text-white shadow-sm' : 'text-cocoa-500 hover:bg-cream-200'}`}
+        >
+          ✅ Disponible
+        </button>
+        <button
+          onClick={() => update('por_pedido')}
+          disabled={saving}
+          className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${value === 'por_pedido' ? 'bg-amber-500 text-white shadow-sm' : 'text-cocoa-500 hover:bg-cream-200'}`}
+        >
+          📝 Por pedido
+        </button>
+      </div>
+      {error && <span className="text-[9px] text-red-500 font-semibold">⚠️ {error}</span>}
     </div>
   );
 }
