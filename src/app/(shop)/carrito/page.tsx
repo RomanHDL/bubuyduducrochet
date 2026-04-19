@@ -25,7 +25,7 @@ export default function CartPage() {
   const [step, setStep] = useState<'cart' | 'payment' | 'done'>('cart');
   const [ordering, setOrdering] = useState(false);
   const [orderNum, setOrderNum] = useState(0);
-  const [payMethod, setPayMethod] = useState<'transfer' | 'oxxo' | 'mercadopago'>('transfer');
+  const [payMethod, setPayMethod] = useState<'transfer' | 'oxxo'>('transfer');
   const [savedItems, setSavedItems] = useState<CartItem[]>([]);
 
   const fetchCart = async () => {
@@ -49,7 +49,7 @@ export default function CartPage() {
     setOrdering(true);
     setSavedItems([...items]);
     try {
-      const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: `Pago por ${payMethod === 'transfer' ? 'transferencia Banorte' : payMethod === 'oxxo' ? 'deposito OXXO' : 'Mercado Pago'}` }) });
+      const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: `Pago por ${payMethod === 'transfer' ? 'transferencia Banorte' : 'deposito OXXO'}` }) });
       if (res.ok) { const data = await res.json(); setOrderNum(data.orderNumber || 0); setStep('done'); }
     } catch {} finally { setOrdering(false); }
   };
@@ -145,37 +145,20 @@ export default function CartPage() {
             <div className="flex-1"><p className="font-bold text-sm text-cocoa-700">Deposito en OXXO</p><p className="text-xs text-cocoa-400">Paga en efectivo en cualquier OXXO</p></div>
             {payMethod === 'oxxo' && <span className="text-blush-400 font-bold">✓</span>}
           </button>
-
-          <button onClick={() => setPayMethod('mercadopago')} className={`w-full flex items-center gap-4 p-4 rounded-cute border-2 transition-all text-left ${payMethod === 'mercadopago' ? 'border-[#00B1EA] bg-[#00B1EA]/5' : 'border-cream-200 bg-white hover:border-[#00B1EA]/40'}`}>
-            <span className="text-2xl">💳</span>
-            <div className="flex-1"><p className="font-bold text-sm text-cocoa-700">Mercado Pago</p><p className="text-xs text-cocoa-400">Tarjeta, MSI, Mercado Credito</p></div>
-            {payMethod === 'mercadopago' && <span className="text-[#00B1EA] font-bold">✓</span>}
-            <span className="text-[8px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Pronto</span>
-          </button>
         </div>
 
         {/* Bank details for transfer/oxxo */}
-        {payMethod !== 'mercadopago' && (
-          <div className="bg-gradient-to-br from-cream-100/80 to-lavender-50/80 backdrop-blur-sm rounded-cute border border-cream-200 p-5 mb-6">
-            <h3 className="font-display font-bold text-cocoa-700 mb-3">{payMethod === 'transfer' ? '🏦 Datos para transferencia' : '🏪 Datos para deposito OXXO'}</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-cocoa-400">Titular:</span><span className="font-bold text-cocoa-700">{VENDEDORA}</span></div>
-              <div className="flex justify-between"><span className="text-cocoa-400">Banco:</span><span className="font-bold text-cocoa-700">{BANCO}</span></div>
-              {payMethod === 'transfer' && <div className="flex justify-between"><span className="text-cocoa-400">CLABE:</span><span className="font-bold text-cocoa-700 font-mono text-xs">{CLABE}</span></div>}
-              <div className="flex justify-between"><span className="text-cocoa-400">No. Tarjeta:</span><span className="font-bold text-cocoa-700 font-mono text-xs">{TARJETA}</span></div>
-            </div>
+        <div className="bg-gradient-to-br from-cream-100/80 to-lavender-50/80 backdrop-blur-sm rounded-cute border border-cream-200 p-5 mb-6">
+          <h3 className="font-display font-bold text-cocoa-700 mb-3">{payMethod === 'transfer' ? '🏦 Datos para transferencia' : '🏪 Datos para deposito OXXO'}</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-cocoa-400">Titular:</span><span className="font-bold text-cocoa-700">{VENDEDORA}</span></div>
+            <div className="flex justify-between"><span className="text-cocoa-400">Banco:</span><span className="font-bold text-cocoa-700">{BANCO}</span></div>
+            {payMethod === 'transfer' && <div className="flex justify-between"><span className="text-cocoa-400">CLABE:</span><span className="font-bold text-cocoa-700 font-mono text-xs">{CLABE}</span></div>}
+            <div className="flex justify-between"><span className="text-cocoa-400">No. Tarjeta:</span><span className="font-bold text-cocoa-700 font-mono text-xs">{TARJETA}</span></div>
           </div>
-        )}
+        </div>
 
-        {payMethod === 'mercadopago' && (
-          <div className="bg-[#00B1EA]/5 rounded-cute border border-[#00B1EA]/20 p-5 mb-6 text-center">
-            <span className="text-3xl block mb-2">💳</span>
-            <p className="text-sm text-cocoa-500 font-medium">Mercado Pago estara disponible muy pronto</p>
-            <p className="text-xs text-cocoa-400 mt-1">Por ahora puedes pagar por transferencia o OXXO</p>
-          </div>
-        )}
-
-        <button onClick={placeOrder} disabled={ordering || payMethod === 'mercadopago'}
+        <button onClick={placeOrder} disabled={ordering}
           className="w-full btn-cute bg-blush-400 text-white py-3.5 text-base hover:bg-blush-500 disabled:opacity-50 shadow-glow mb-2">
           {ordering ? '🧶 Procesando...' : 'Confirmar Pedido ✨'}
         </button>
@@ -241,7 +224,6 @@ export default function CartPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-cream-50 rounded-xl"><span>🏦</span> Transferencia {BANCO} / OXXO</div>
-                <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-[#00B1EA]/5 rounded-xl border border-[#00B1EA]/10"><span>💳</span> Mercado Pago <span className="text-[8px] font-bold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full">Pronto</span></div>
                 <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-cream-50 rounded-xl"><span>🧾</span> Ticket al confirmar pago</div>
                 <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-cream-50 rounded-xl"><span>📱</span> Envio se coordina por WhatsApp</div>
               </div>
