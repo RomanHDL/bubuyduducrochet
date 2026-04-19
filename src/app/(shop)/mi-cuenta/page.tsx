@@ -72,6 +72,10 @@ export default function MiCuentaPage() {
         setDraftFrame(updated?.profile?.frame || 'none');
         setDraftBadge(updated?.profile?.badge || '');
         setDraftBio(updated?.profile?.bio || '');
+        // Notificar a Navbar y demás componentes que escuchen el cambio
+        try {
+          window.dispatchEvent(new CustomEvent('profile:updated', { detail: { profile: updated?.profile } }));
+        } catch {}
         setEditProfile(false);
       } else {
         const err = await res.json().catch(() => ({ error: 'Error al guardar' }));
@@ -110,6 +114,11 @@ export default function MiCuentaPage() {
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-lavender-100 border border-lavender-200 rounded-full text-xs font-bold text-lavender-500">
               ✨ Administrador
             </span>
+            {profile?.isSystemsAdmin && (
+              <span className="inline-flex items-center font-mono font-bold rounded-md px-3 py-1 bg-black text-green-400 text-xs border border-black/30 shadow-sm" title="Administrador de sistemas">
+                {'>_'} DE SISTEMAS
+              </span>
+            )}
             <button
               onClick={() => setEditProfile(v => !v)}
               className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-cream-300 rounded-full text-xs font-bold text-cocoa-600 hover:bg-cream-50 transition-colors"

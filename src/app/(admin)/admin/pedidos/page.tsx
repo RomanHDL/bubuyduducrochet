@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import UserInlineLabel from '@/components/UserInlineLabel';
 
 // Carga diferida: ticket.ts trae html2canvas/jspdf (~200KB). Se carga sólo al pedir generar un ticket.
 const loadTicket = () => import('@/lib/ticket').then(m => m.generateTicket);
@@ -146,7 +147,10 @@ export default function AdminOrdersPage() {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_COLORS[order.status]}`}>{STATUS_LABELS[order.status]}</span>
                       <span className={`text-[10px] font-bold ${PAY_COLORS[order.paymentStatus]}`}>{PAY_LABELS[order.paymentStatus]}</span>
                     </div>
-                    <p className="font-semibold text-cocoa-700 mt-1">{order.userName}</p>
+                    <p className="font-semibold text-cocoa-700 mt-1">
+                      {order.userName}
+                      <UserInlineLabel email={order.userEmail} />
+                    </p>
                     <p className="text-xs text-cocoa-400">{order.userEmail} · {new Date(order.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                   <div className="text-right flex-shrink-0">

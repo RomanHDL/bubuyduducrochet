@@ -4,6 +4,12 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import mongoose from 'mongoose';
+import {
+  isSystemsAdmin,
+  SYSTEMS_ADMIN_LABEL,
+  SYSTEMS_ADMIN_DEFAULT_FRAME,
+  SYSTEMS_ADMIN_DEFAULT_BIO,
+} from '@/lib/systemsAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,20 +40,38 @@ async function findCurrentUser(session: any) {
   return null;
 }
 
-// GET perfil del usuario logueado
+// GET perfil del usuario logueado — aplica defaults "DE SISTEMAS" al admin técnico si aún no personalizó nada
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
   await connectDB();
   const user = await findCurrentUser(session);
   if (!user) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
+
+  const baseProfile = user.profile?.toObject ? user.profile.toObject() : (user.profile || {});
+  const profile = {
+    frame: baseProfile.frame || 'none',
+    badge: baseProfile.badge || '',
+    bio: baseProfile.bio || '',
+    accentColor: baseProfile.accentColor || '',
+  };
+
+  // Si es el admin de sistemas y nunca personalizó nada, preparamos defaults visibles
+  // (no los guardamos en DB — así si el usuario los cambia, su elección queda)
+  if (isSystemsAdmin(user.email) && !profile.badge && !profile.bio && profile.frame === 'none') {
+    profile.frame = SYSTEMS_ADMIN_DEFAULT_FRAME;
+    profile.badge = SYSTEMS_ADMIN_LABEL;
+    profile.bio = SYSTEMS_ADMIN_DEFAULT_BIO;
+  }
+
   return NextResponse.json({
     _id: String(user._id),
     name: user.name,
     email: user.email,
     image: user.image,
     role: user.role,
-    profile: user.profile || { frame: 'none', badge: '', bio: '', accentColor: '' },
+    isSystemsAdmin: isSystemsAdmin(user.email),
+    profile,
   });
 }
 

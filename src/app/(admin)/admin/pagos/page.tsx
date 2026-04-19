@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import UserInlineLabel from '@/components/UserInlineLabel';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -113,7 +114,7 @@ export default function PagosAdmin() {
                 <tr key={order._id} className="hover:bg-cream-50/50 transition-colors">
                   <td className="px-4 py-3 font-mono font-bold text-cocoa-500">#{order.orderNumber || '—'}</td>
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-cocoa-700">{order.userName}</p>
+                    <p className="font-semibold text-cocoa-700">{order.userName}<UserInlineLabel email={order.userEmail} size="xs" /></p>
                     <p className="text-xs text-cocoa-400">{order.userEmail}</p>
                   </td>
                   <td className="px-4 py-3 text-cocoa-500">{order.items?.length || 0} prod.</td>

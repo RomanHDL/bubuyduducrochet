@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import UserInlineLabel from '@/components/UserInlineLabel';
 
 export default function AdminUsersPage() {
   const { data: session, status } = useSession();
@@ -51,7 +52,7 @@ export default function AdminUsersPage() {
                       <div className="w-8 h-8 rounded-full bg-blush-100 flex items-center justify-center text-sm font-bold text-blush-500 overflow-hidden flex-shrink-0">
                         {u.image ? <img src={u.image} alt="" className="w-full h-full object-cover" /> : u.name?.charAt(0).toUpperCase() || '?'}
                       </div>
-                      <span className="font-semibold text-cocoa-700">{u.name}</span>
+                      <span className="font-semibold text-cocoa-700">{u.name}<UserInlineLabel email={u.email} size="xs" /></span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-cocoa-400">{u.email}</td>

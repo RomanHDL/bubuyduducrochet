@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import UserInlineLabel from '@/components/UserInlineLabel';
 
 type Tab = 'testimonials' | 'products';
 
@@ -143,7 +144,7 @@ export default function AdminReviewsPage() {
                     <div className="w-11 h-11 rounded-full bg-lavender-100 flex items-center justify-center text-xl flex-shrink-0">{r.emoji || '🧸'}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="font-bold text-sm text-cocoa-700">{r.userName}</span>
+                        <span className="font-bold text-sm text-cocoa-700">{r.userName}<UserInlineLabel email={r.userEmail} size="xs" /></span>
                         <span className="text-xs text-cocoa-300">{r.userEmail}</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${r.isApproved ? 'bg-green-50 text-green-600 border-green-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>{r.isApproved ? '✅ Visible' : '⏳ Pendiente'}</span>
                       </div>
