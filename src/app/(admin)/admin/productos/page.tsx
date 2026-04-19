@@ -97,18 +97,25 @@ function AdminProductsPageInner() {
     setModalOpen(true);
   };
 
-  const openEdit = (p: any) => {
-    setEditing(p);
+  const openEdit = async (p: any) => {
+    // El listado trae solo la PRIMERA imagen (optimizacion de payload).
+    // Para editar necesitamos TODAS las imagenes → traemos el producto completo.
+    let full = p;
+    try {
+      const r = await fetch(`/api/products/${p._id}`, { cache: 'no-store' });
+      if (r.ok) full = await r.json();
+    } catch { /* usa lo que ya tenemos */ }
+    setEditing(full);
     setForm({
-      title: p.title,
-      description: p.description,
-      price: p.price,
-      images: p.images?.length ? p.images : [''],
-      stock: p.stock ?? 1,
-      availability: p.availability || (p.stock > 0 ? 'disponible' : 'por_pedido'),
-      category: p.category,
-      isActive: p.isActive,
-      featured: p.featured,
+      title: full.title,
+      description: full.description,
+      price: full.price,
+      images: full.images?.length ? full.images : [''],
+      stock: full.stock ?? 1,
+      availability: full.availability || (full.stock > 0 ? 'disponible' : 'por_pedido'),
+      category: full.category,
+      isActive: full.isActive,
+      featured: full.featured,
     });
     setSaveError('');
     setModalOpen(true);
@@ -128,17 +135,30 @@ function AdminProductsPageInner() {
         setSaveError(msg);
         return;
       }
+      const saved = await res.json();
+      // Actualizacion optimista: insertamos/actualizamos el producto en el
+      // estado local sin esperar un refetch. El admin ve el cambio INSTANTANEO.
+      // Para que el listado quede liviano, guardamos solo la primera imagen.
+      const listVersion = { ...saved, images: Array.isArray(saved.images) ? saved.images.slice(0, 1) : [] };
+      setProducts((prev) => {
+        if (editing) return prev.map((x) => x._id === listVersion._id ? { ...x, ...listVersion } : x);
+        return [listVersion, ...prev];
+      });
       setModalOpen(false);
-      fetchProducts(true);
     } catch (err: any) {
       setSaveError('Error de conexion. Revisa tu internet e intenta de nuevo.');
     } finally { setSaving(false); }
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    // Optimista: quita el producto ya; si el DELETE falla, lo reincorporamos.
+    const prev = products;
+    setProducts((p) => p.filter((x) => x._id !== id));
     setDeleteConfirm(null);
-    fetchProducts(true);
+    try {
+      const r = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      if (!r.ok) setProducts(prev);
+    } catch { setProducts(prev); }
   };
 
   const addImageField = () => setForm({ ...form, images: [...form.images, ''] });
@@ -183,14 +203,18 @@ function AdminProductsPageInner() {
     setSavingProceso(true);
     setProcesoSuccess(false);
     try {
-      await fetch(`/api/products/${procesoProduct._id}`, {
+      const r = await fetch(`/api/products/${procesoProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ elaboration }),
+        cache: 'no-store',
       });
-      setProcesoSuccess(true);
-      fetchProducts(true);
-      setTimeout(() => setProcesoSuccess(false), 3000);
+      if (r.ok) {
+        // Marca el producto como "con elaboration" en el listado, sin refetch.
+        setProducts((prev) => prev.map((x) => x._id === procesoProduct._id ? { ...x, elaboration } : x));
+        setProcesoSuccess(true);
+        setTimeout(() => setProcesoSuccess(false), 3000);
+      }
     } catch { /* silent */ }
     finally { setSavingProceso(false); }
   };

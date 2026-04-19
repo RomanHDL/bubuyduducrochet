@@ -219,21 +219,60 @@ function Content() {
     }
   };
 
+  // `load()` no oculta el listado actual mientras re-fetchea (solo setLoading en
+  // la primera carga). Asi cambiar de categoria o buscar se siente fluido — los
+  // productos anteriores se quedan en pantalla hasta que llegan los nuevos.
   const load = async () => {
-    setLoading(true);
     const p = new URLSearchParams();
     if (cat) p.set('category', cat);
     if (search) p.set('search', search);
-    try { const r = await fetch(`/api/products?${p}`); const d = await r.json(); setProducts(Array.isArray(d) ? d : []); }
-    catch { setProducts([]); } finally { setLoading(false); }
+    try {
+      const r = await fetch(`/api/products?${p}`, { cache: 'no-store' });
+      const d = await r.json();
+      setProducts(Array.isArray(d) ? d : []);
+    } catch { /* mantiene lo que ya habia */ }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [cat, search]);
+  useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [cat, search]);
 
   // Admin actions
   const openNew = () => { if (!session) { router.push('/login'); return; } setEditId(null); setForm({ ...EMPTY }); setErr(''); setModal(true); };
-  const openEdit = (p: Product, e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setEditId(p._id); setForm({ title: p.title, description: p.description, price: p.price, images: p.images.length ? p.images : [''], stock: p.stock, availability: (p as any).availability || (p.stock > 0 ? 'disponible' : 'por_pedido'), category: p.category, featured: p.featured }); setErr(''); setModal(true); };
-  const doDelete = async (id: string, t: string, e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); if (!confirm(`Eliminar "${t}"?`)) return; await fetch(`/api/products/${id}`, { method: 'DELETE' }); load(); };
+  const openEdit = async (p: Product, e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    // El listado ya solo trae images[0]. Para editar traemos el producto
+    // completo (con todas sus imagenes).
+    let full: any = p;
+    try {
+      const r = await fetch(`/api/products/${p._id}`, { cache: 'no-store' });
+      if (r.ok) full = await r.json();
+    } catch { /* cae al objeto del listado */ }
+    setEditId(full._id);
+    setForm({
+      title: full.title,
+      description: full.description,
+      price: full.price,
+      images: full.images?.length ? full.images : [''],
+      stock: full.stock,
+      availability: (full as any).availability || (full.stock > 0 ? 'disponible' : 'por_pedido'),
+      category: full.category,
+      featured: full.featured,
+    });
+    setErr('');
+    setModal(true);
+  };
+  const doDelete = async (id: string, t: string, e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!confirm(`Eliminar "${t}"?`)) return;
+    // Optimista: desaparece ya; si el DELETE falla, lo restauramos.
+    const prev = products;
+    setProducts((ps) => ps.filter((x) => x._id !== id));
+    setFeaturedProducts((ps) => ps.filter((x) => x._id !== id));
+    try {
+      const r = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      if (!r.ok) setProducts(prev);
+    } catch { setProducts(prev); }
+  };
 
   const openProceso = (p: Product, e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
@@ -255,10 +294,13 @@ function Content() {
     if (!procesoProduct) return;
     setSavingProceso(true);
     try {
-      await fetch(`/api/products/${procesoProduct._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ elaboration }) });
-      setProcesoSuccess(true);
-      setTimeout(() => setProcesoSuccess(false), 3000);
-      load();
+      const r = await fetch(`/api/products/${procesoProduct._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ elaboration }), cache: 'no-store' });
+      if (r.ok) {
+        // Optimista: actualiza el producto en el listado local, sin refetch.
+        setProducts((prev) => prev.map((x) => x._id === procesoProduct._id ? { ...x, elaboration } : x));
+        setProcesoSuccess(true);
+        setTimeout(() => setProcesoSuccess(false), 3000);
+      }
     } catch {}
     finally { setSavingProceso(false); }
   };
@@ -270,9 +312,27 @@ function Content() {
     const body = { ...form, images: form.images.filter(u => u.trim()), price: Number(form.price), stock: Number(form.stock), availability: form.availability || 'disponible' };
     try {
       const url = editId ? `/api/products/${editId}` : '/api/products';
-      const res = await fetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (!res.ok) { const e = await res.json(); setErr(e.error || 'Error'); setSaving(false); return; }
-      setModal(false); load();
+      const res = await fetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); setErr(e.error || 'Error'); setSaving(false); return; }
+      const saved = await res.json();
+      // Version ligera para el listado (solo primera imagen), igual que el GET.
+      const listItem: Product = { ...saved, images: Array.isArray(saved.images) ? saved.images.slice(0, 1) : [] };
+      // Inserta/actualiza en el listado local SIN refetch → el producto aparece
+      // inmediatamente en el catalogo.
+      setProducts((prev) => {
+        if (editId) return prev.map((x) => x._id === listItem._id ? { ...x, ...listItem } : x);
+        return [listItem, ...prev];
+      });
+      if (saved.featured) {
+        setFeaturedProducts((prev) => {
+          if (editId) return prev.map((x) => x._id === listItem._id ? { ...x, ...listItem } : x);
+          return [listItem, ...prev];
+        });
+      } else if (editId) {
+        // Si se desmarco como destacado, quitalo del carrusel.
+        setFeaturedProducts((prev) => prev.filter((x) => x._id !== listItem._id));
+      }
+      setModal(false);
     } catch { setErr('Error de conexion'); }
     setSaving(false);
   };
