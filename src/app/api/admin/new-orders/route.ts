@@ -17,11 +17,12 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const since = Number(searchParams.get('since') || 0);
+  const limit = Math.max(1, Math.min(20, Number(searchParams.get('limit') || 10)));
 
   const query: any = since > 0 ? { orderNumber: { $gt: since } } : {};
   const orders = await Order.find(query)
     .sort({ orderNumber: -1 })
-    .limit(10)
+    .limit(limit)
     .select('orderNumber userName userEmail total status paymentStatus createdAt')
     .lean();
 

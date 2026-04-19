@@ -17,6 +17,8 @@ type OrderItem = {
 
 const STORAGE_KEY = 'admin:lastSeenOrderNumber';
 const POLL_MS = 3000;
+const AUTO_DISMISS_MS = 5000;
+const RECOVER_LIMIT = 3;
 
 // Generador de "ding" sintético (no requiere archivo de audio)
 function playDing() {
@@ -102,8 +104,8 @@ export default function NewOrderNotifier() {
         // Solo silenciamos si es la primerísima vez ABSOLUTA (sin baseline previa)
         if (isFirst && silentBaselineOnFirstTick) return;
 
-        // Mostrar toast + notificación browser + sonido
-        setQueue(prev => [...prev, ...orders].slice(-5));
+        // Mostrar toast + notificación browser + sonido (auto-dismiss 5s)
+        enqueueWithAutoDismiss(orders);
         playDing();
         orders.forEach(o => {
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -141,6 +143,21 @@ export default function NewOrderNotifier() {
 
   const dismiss = (id: string) => setQueue(prev => prev.filter(o => o._id !== id));
 
+  // Encola pedidos y programa el auto-dismiss de cada uno a los AUTO_DISMISS_MS
+  const enqueueWithAutoDismiss = (orders: OrderItem[]) => {
+    if (!orders.length) return;
+    setQueue(prev => {
+      const map = new Map(prev.map(o => [o._id, o]));
+      orders.forEach(o => map.set(o._id, o));
+      return Array.from(map.values()).slice(-5);
+    });
+    orders.forEach(o => {
+      setTimeout(() => {
+        setQueue(prev => prev.filter(x => x._id !== o._id));
+      }, AUTO_DISMISS_MS);
+    });
+  };
+
   const testNotification = () => {
     const fake: OrderItem = {
       _id: 'test-' + Date.now(),
@@ -152,7 +169,7 @@ export default function NewOrderNotifier() {
       paymentStatus: 'pending',
       createdAt: new Date().toISOString(),
     };
-    setQueue(prev => [...prev, fake].slice(-5));
+    enqueueWithAutoDismiss([fake]);
     playDing();
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       try {
@@ -164,13 +181,18 @@ export default function NewOrderNotifier() {
     }
   };
 
-  // Re-mostrar pedidos recientes: borra la baseline local y marca el próximo
-  // tick como "ya no es primera vez" → trae los últimos 10 pedidos y los
-  // muestra como notificación, aunque el admin ya los haya visto antes.
-  const resetBaseline = () => {
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-    lastSeenRef.current = 0;
-    firstLoadRef.current = false; // no silenciar el próximo tick
+  // Re-mostrar los últimos N pedidos al instante. Útil cuando el admin
+  // sospecha que perdió alguno. NO borra la baseline — solo trae los últimos
+  // y los muestra con auto-dismiss, sin afectar la lógica del polling normal.
+  const resetBaseline = async () => {
+    try {
+      const r = await fetch(`/api/admin/new-orders?since=0&limit=${RECOVER_LIMIT}`, { cache: 'no-store' });
+      if (!r.ok) return;
+      const orders: OrderItem[] = await r.json();
+      if (!Array.isArray(orders) || orders.length === 0) return;
+      enqueueWithAutoDismiss(orders.slice(0, RECOVER_LIMIT));
+      playDing();
+    } catch { /* silent */ }
   };
 
   if (!isAdmin) return null;
