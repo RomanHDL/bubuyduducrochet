@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
@@ -88,6 +89,9 @@ export async function POST(req: NextRequest) {
     if (!doc.description) return NextResponse.json({ error: 'La descripcion es obligatoria' }, { status: 400 });
 
     const product = await Product.create(doc);
+    // Invalida el HTML SSR del catalogo → el nuevo producto aparece al instante
+    // para visitantes nuevos (sin tener que esperar los 5s de ISR).
+    try { revalidatePath('/catalogo'); } catch {}
     return NextResponse.json(product, { status: 201 });
   } catch (err: any) {
     console.error('[POST /api/products] error:', err);

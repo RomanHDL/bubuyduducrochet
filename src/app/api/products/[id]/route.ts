@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
@@ -26,6 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const body = await req.json();
     const product = await Product.findByIdAndUpdate(params.id, body, { new: true, runValidators: true });
     if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+    try { revalidatePath('/catalogo'); revalidatePath(`/producto/${params.id}`); } catch {}
     return NextResponse.json(product);
   } catch (err: any) {
     console.error('[PUT /api/products/:id] error:', err);
@@ -45,5 +47,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   await connectDB();
   await Product.findByIdAndDelete(params.id);
+  try { revalidatePath('/catalogo'); revalidatePath(`/producto/${params.id}`); } catch {}
   return NextResponse.json({ success: true });
 }
