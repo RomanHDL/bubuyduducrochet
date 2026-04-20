@@ -462,7 +462,13 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
               </button>
             ))}
             {isAdmin && (
-              <button onClick={() => setShowCatModal(true)} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-lavender-400 hover:bg-lavender-50">➕ Nueva categoria</button>
+              <button
+                onClick={() => setShowCatModal(true)}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-lavender-400 hover:bg-lavender-50"
+                title="Crear, editar o eliminar categorias"
+              >
+                ⚙️ Gestionar categorias
+              </button>
             )}
           </div>
         </div>
@@ -518,6 +524,17 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
               {c.emoji} {c.name}
             </button>
           ))}
+          {/* Boton visible solo para admins en mobile → abre el modal de
+              gestionar/editar categorias (el mismo que esta en la sidebar). */}
+          {isAdmin && (
+            <button
+              onClick={() => setShowCatModal(true)}
+              className="px-3 py-2 rounded-full text-xs font-bold transition-all bg-lavender-100 text-lavender-600 border border-lavender-200 hover:bg-lavender-200"
+              title="Gestionar categorias (crear, editar, eliminar)"
+            >
+              ⚙️ Gestionar
+            </button>
+          )}
         </div>
 
         {/* Search + Sort row */}
