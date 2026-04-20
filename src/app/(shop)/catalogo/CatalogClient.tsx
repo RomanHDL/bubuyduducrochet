@@ -159,6 +159,19 @@ const CATS = [
   { value: 'ropa-bebe', label: 'Ropa Bebe', emoji: '👶' },
 ];
 
+// Pool de emojis para escoger al crear/editar una categoria. Compartido por
+// los dos formularios (crear nueva y editar existente) para que la admin
+// tenga la misma experiencia en ambos flujos.
+const CATEGORY_EMOJI_POOL = [
+  '🧸','🎀','🌸','👶','🧶','💕','🦋','✨','💝','🎁','👜','🧵','🪡','🧤','🧣','🎒','👗','👒','🧢','🪆','🎎',
+  '🐱','🐰','🦊','🐻','🐼','🦁','🐸','🐙','🐝','🐋','🦄',
+  '🌻','🌹','🌺','🌷','🍃','🌿','☁️','⭐','🌈',
+  '💜','💙','💚','💛','🧡','❤️','🤎','🖤','🤍',
+  '🔮','🎨','🎭','🎪','🎠','🏠','🏡','📱','💻','🎵','🎮','⚽','🏀','🎾','🎯','🧩','♟️','🎲','🃏',
+  '🪄','🔑','💍','👑','🎩','🕶️','🧳','🛍️','📦','📷','🔔','💡','📚','✏️','🖍️',
+  '🎈','🎊','🎉','🧁','🍰','🍭','🍬','🍩','🧇',
+];
+
 const SORTS = [
   { value: 'recent', label: 'Recientes' }, { value: 'price-low', label: 'Menor precio' },
   { value: 'price-high', label: 'Mayor precio' }, { value: 'name', label: 'A-Z' },
@@ -653,7 +666,7 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
               {dbCategories.map(c => {
                 const isEditing = editingCatId === c._id;
                 if (isEditing) {
-                  // Modo edicion: inputs inline con emoji, nombre y slug
+                  // Modo edicion: inputs inline con emoji (input + picker), nombre y slug
                   return (
                     <div key={c._id} className="p-3 bg-blush-50 rounded-xl border-2 border-blush-300 space-y-2">
                       <div className="flex items-center gap-2">
@@ -662,7 +675,7 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
                           onChange={e => setEditingCatForm({ ...editingCatForm, emoji: e.target.value })}
                           maxLength={4}
                           className="w-12 text-center text-xl py-1.5 rounded-lg border border-cream-300 bg-white"
-                          title="Emoji"
+                          title="Emoji (puedes escribir o escoger abajo)"
                         />
                         <input
                           value={editingCatForm.name}
@@ -674,6 +687,22 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
                           placeholder="Nombre"
                           className="flex-1 px-3 py-1.5 rounded-lg border border-cream-300 text-sm font-semibold"
                         />
+                      </div>
+                      {/* Emoji picker — grid para escoger visualmente, igual que
+                          en el form de crear. Resalta el emoji actual. */}
+                      <div>
+                        <p className="text-[10px] font-semibold text-cocoa-500 mb-1">Escoge un emoji:</p>
+                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 bg-white rounded-lg border border-cream-200">
+                          {CATEGORY_EMOJI_POOL.map(e => (
+                            <button
+                              key={e}
+                              onClick={() => setEditingCatForm({ ...editingCatForm, emoji: e })}
+                              className={`text-lg p-0.5 rounded-md hover:bg-blush-50 transition-colors ${editingCatForm.emoji === e ? 'bg-blush-100 ring-2 ring-blush-300' : ''}`}
+                            >
+                              {e}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       <input
                         value={editingCatForm.slug}
@@ -760,7 +789,7 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
                 <div>
                   <p className="text-xs font-semibold text-cocoa-600 mb-1.5">Emoji: <span className="text-xl ml-1">{catForm.emoji}</span></p>
                   <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-cream-50 rounded-xl border border-cream-200">
-                    {['🧸','🎀','🌸','👶','🧶','💕','🦋','✨','💝','🎁','👜','🧵','🪡','🧤','🧣','🎒','👗','👒','🧢','🪆','🎎','🐱','🐰','🦊','🐻','🐼','🦁','🐸','🐙','🐝','🐋','🦄','🌻','🌹','🌺','🌷','🍃','🌿','☁️','⭐','🌈','💜','💙','💚','💛','🧡','❤️','🤎','🖤','🤍','🔮','🎨','🎭','🎪','🎠','🏠','🏡','📱','💻','🎵','🎮','⚽','🏀','🎾','🎯','🧩','♟️','🎲','🃏','🪄','🔑','💍','👑','🎩','🕶️','🧳','🛍️','📦','📷','🔔','💡','📚','✏️','🖍️','🎈','🎊','🎉','🧁','🍰','🍭','🍬','🍩','🧇'].map(e => (
+                    {CATEGORY_EMOJI_POOL.map(e => (
                       <button key={e} onClick={() => setCatForm({...catForm, emoji: e})} className={`text-xl p-1 rounded-lg hover:bg-blush-50 transition-colors ${catForm.emoji === e ? 'bg-blush-100 ring-2 ring-blush-300' : ''}`}>{e}</button>
                     ))}
                   </div>
