@@ -6,6 +6,8 @@ import Order from '@/models/Order';
 import Cart from '@/models/Cart';
 import { sendOrderNotificationEmail } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 // GET orders
 // - Admin por defecto: todos los pedidos
 // - Usuario normal: sólo los suyos
@@ -15,28 +17,39 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-  await connectDB();
-  const { searchParams } = new URL(req.url);
-  const onlyMine = searchParams.get('mine') === '1' || searchParams.get('mine') === 'true';
-  const isAdmin = (session.user as any).role === 'admin';
-  const userId = (session.user as any).id;
-  const userEmail = (session.user?.email || '').toLowerCase();
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const onlyMine = searchParams.get('mine') === '1' || searchParams.get('mine') === 'true';
+    const isAdmin = (session.user as any).role === 'admin';
+    const userId = (session.user as any).id;
+    const userEmail = (session.user?.email || '').toLowerCase();
 
-  const forceUserFilter = onlyMine || !isAdmin;
+    const forceUserFilter = onlyMine || !isAdmin;
 
-  const filter: any = forceUserFilter
-    ? {
-        // Match por userId O por email. Cubre casos en los que el ID cambió entre
-        // sesiones (reautenticación, cambios en el provider) pero el email sigue siendo el mismo.
-        $or: [
-          ...(userId ? [{ userId }] : []),
-          ...(userEmail ? [{ userEmail: { $regex: `^${userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' } }] : []),
-        ],
+    let filter: any = {}; // admin sin ?mine → todos
+    if (forceUserFilter) {
+      // Match por userId O por email. Cubre casos en los que el ID cambió entre
+      // sesiones (reautenticación, cambios en el provider) pero el email sigue siendo el mismo.
+      const ors: any[] = [];
+      if (userId) ors.push({ userId });
+      if (userEmail) {
+        const safe = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        ors.push({ userEmail: { $regex: `^${safe}$`, $options: 'i' } });
       }
-    : {}; // admin sin ?mine → todos
+      // Sin identificadores no podemos filtrar — devolver vacio en vez de
+      // mandar `$or: []` (Mongo lanza "must be a non-empty array").
+      if (ors.length === 0) return NextResponse.json([]);
+      filter = { $or: ors };
+    }
 
-  const orders = await Order.find(filter).sort({ createdAt: -1 });
-  return NextResponse.json(orders);
+    const orders = await Order.find(filter).sort({ createdAt: -1 }).lean();
+    console.log(`[orders GET] user=${(session.user as any).email} mine=${onlyMine} isAdmin=${isAdmin} → ${orders.length} pedidos`);
+    return NextResponse.json(orders);
+  } catch (err: any) {
+    console.error('[orders GET] error:', err?.message || err);
+    return NextResponse.json({ error: 'Error al cargar pedidos', details: err?.message || String(err) }, { status: 500 });
+  }
 }
 
 // POST create order from cart

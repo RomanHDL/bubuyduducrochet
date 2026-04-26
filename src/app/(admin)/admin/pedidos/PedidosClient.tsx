@@ -28,10 +28,14 @@ export default function AdminOrdersPage({ initialOrders }: { initialOrders?: any
   const { data: session, status } = useSession();
   const router = useRouter();
   const cachedOrders = getCached<any[]>('/api/orders');
-  const seed = (initialOrders && initialOrders.length ? initialOrders : cachedOrders) || [];
-  if (initialOrders && initialOrders.length && !cachedOrders) setCached('/api/orders', initialOrders);
+  // Si el cache trae un objeto de error de un fetch previo (no un array),
+  // no lo usamos como seed — eso causaba crashes al hacer .filter().
+  const safeCached = Array.isArray(cachedOrders) ? cachedOrders : undefined;
+  const seed = (initialOrders && initialOrders.length ? initialOrders : safeCached) || [];
+  if (initialOrders && initialOrders.length && !safeCached) setCached('/api/orders', initialOrders);
   const [orders, setOrders] = useState<any[]>(seed);
   const [loading, setLoading] = useState(seed.length === 0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const initialFilters = typeof window !== 'undefined' ? readStoredFilters() : null;
   const [filter, setFilter] = useState<string>(initialFilters?.filter || 'all');
   const [payFilter, setPayFilter] = useState<string>(initialFilters?.payFilter || 'all');
@@ -68,8 +72,19 @@ export default function AdminOrdersPage({ initialOrders }: { initialOrders?: any
   const fetchOrders = async () => {
     try {
       const d = await dedupedFetchJson<any[]>('/api/orders');
-      setOrders(Array.isArray(d) ? d : []);
-    } catch {} finally { setLoading(false); }
+      if (Array.isArray(d)) {
+        setOrders(d);
+        setCached('/api/orders', d);
+        setFetchError(null);
+      } else {
+        const msg = (d as any)?.error || 'Respuesta inesperada del servidor';
+        console.error('[admin/pedidos] fetch fallido:', d);
+        setFetchError(msg);
+      }
+    } catch (e: any) {
+      console.error('[admin/pedidos] fetch exception:', e);
+      setFetchError(e?.message || 'No se pudo conectar con el servidor');
+    } finally { setLoading(false); }
   };
 
   const updateOrder = async (id: string, updates: any) => {
@@ -139,6 +154,17 @@ export default function AdminOrdersPage({ initialOrders }: { initialOrders?: any
         </div>
         <Link href="/admin" className="text-sm text-cocoa-400 hover:text-blush-400">← Panel admin</Link>
       </div>
+
+      {fetchError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-cute flex items-start gap-3">
+          <span className="text-xl">⚠️</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-red-700">No pudimos cargar los pedidos</p>
+            <p className="text-xs text-red-500 mt-0.5">{fetchError}</p>
+          </div>
+          <button onClick={() => { setLoading(true); fetchOrders(); }} className="btn-cute bg-red-500 text-white text-xs px-3 py-1.5 hover:bg-red-600">Reintentar</button>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">

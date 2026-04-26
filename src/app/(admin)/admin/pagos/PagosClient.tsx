@@ -30,8 +30,9 @@ export default function PagosAdmin({ initialOrders }: { initialOrders?: any[] } 
   const { data: session } = useSession();
   const isAdmin = (session?.user as any)?.role === 'admin';
   const cachedOrders = getCached<any[]>('/api/orders');
-  const seed = (initialOrders && initialOrders.length ? initialOrders : cachedOrders) || [];
-  if (initialOrders && initialOrders.length && !cachedOrders) setCached('/api/orders', initialOrders);
+  const safeCached = Array.isArray(cachedOrders) ? cachedOrders : undefined;
+  const seed = (initialOrders && initialOrders.length ? initialOrders : safeCached) || [];
+  if (initialOrders && initialOrders.length && !safeCached) setCached('/api/orders', initialOrders);
   const [orders, setOrders] = useState<any[]>(seed);
   const [loading, setLoading] = useState(seed.length === 0);
   const [filter, setFilter] = useState('all');

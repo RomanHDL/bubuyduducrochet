@@ -37,11 +37,19 @@ export function invalidatePrefix(prefix: string): void {
 
 // fetch JSON con dedupe de requests concurrentes. Si ya hay uno en vuelo a la
 // misma URL, devuelve la misma promesa en vez de disparar un nuevo network.
+//
+// Importante: NO cachea respuestas con status != 2xx — antes, una respuesta
+// 401/500 con `{error:...}` se quedaba en cache y rompia el siguiente render
+// (componentes esperaban arrays y recibian un objeto de error).
 export function dedupedFetchJson<T = any>(url: string, init?: RequestInit): Promise<T> {
   if (inflight.has(url)) return inflight.get(url)! as Promise<T>;
   const p = fetch(url, { cache: 'no-store', ...init })
-    .then((r) => r.json())
-    .then((data) => { setCached<T>(url, data); inflight.delete(url); return data as T; })
+    .then(async (r) => {
+      const data = await r.json();
+      if (r.ok) setCached<T>(url, data);
+      inflight.delete(url);
+      return data as T;
+    })
     .catch((err) => { inflight.delete(url); throw err; });
   inflight.set(url, p);
   return p as Promise<T>;

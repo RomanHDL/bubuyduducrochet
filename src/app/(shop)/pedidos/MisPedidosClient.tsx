@@ -28,10 +28,14 @@ export default function PedidosPage({ initialOrders }: { initialOrders?: any[] }
   const { data: session } = useSession();
   const isAdmin = (session?.user as any)?.role === 'admin';
   const cachedMine = getCached<any[]>('/api/orders?mine=1');
-  const seed = (initialOrders && initialOrders.length ? initialOrders : cachedMine) || [];
-  if (initialOrders && initialOrders.length && !cachedMine) setCached('/api/orders?mine=1', initialOrders);
+  // Si el cache trae un objeto de error (no un array), no lo usamos como
+  // seed — eso causaba que la pagina mostrara basura o crasheara.
+  const safeCachedMine = Array.isArray(cachedMine) ? cachedMine : undefined;
+  const seed = (initialOrders && initialOrders.length ? initialOrders : safeCachedMine) || [];
+  if (initialOrders && initialOrders.length && !safeCachedMine) setCached('/api/orders?mine=1', initialOrders);
   const [orders, setOrders] = useState<any[]>(seed);
   const [loading, setLoading] = useState(seed.length === 0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,8 +56,20 @@ export default function PedidosPage({ initialOrders }: { initialOrders?: any[] }
   const fetchOrders = async () => {
     try {
       const d = await dedupedFetchJson<any[]>('/api/orders?mine=1');
-      setOrders(Array.isArray(d) ? d : []);
-    } catch {} finally { setLoading(false); }
+      if (Array.isArray(d)) {
+        setOrders(d);
+        setFetchError(null);
+      } else {
+        // API devolvio un objeto de error en vez de un array. No pisar lo
+        // que ya teniamos (SSR/cache) — solo mostrar el aviso.
+        const msg = (d as any)?.error || 'Respuesta inesperada del servidor';
+        console.error('[pedidos] fetch fallido:', d);
+        setFetchError(msg);
+      }
+    } catch (e: any) {
+      console.error('[pedidos] fetch exception:', e);
+      setFetchError(e?.message || 'No se pudo conectar con el servidor');
+    } finally { setLoading(false); }
   };
 
   useEffect(() => {
@@ -275,12 +291,23 @@ export default function PedidosPage({ initialOrders }: { initialOrders?: any[] }
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="font-display font-bold text-3xl text-cocoa-700 mb-6">Mis Pedidos 📦</h1>
 
+      {fetchError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-cute flex items-start gap-3">
+          <span className="text-xl">⚠️</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-red-700">No pudimos cargar tus pedidos</p>
+            <p className="text-xs text-red-500 mt-0.5">{fetchError}</p>
+          </div>
+          <button onClick={() => { setLoading(true); fetchOrders(); }} className="btn-cute bg-red-500 text-white text-xs px-3 py-1.5 hover:bg-red-600">Reintentar</button>
+        </div>
+      )}
+
       {orders.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-cute shadow-soft border border-cream-200">
           <span className="text-5xl block mb-4">🧸</span>
-          <h3 className="font-display font-bold text-xl text-cocoa-600 mb-2">Aun no tienes pedidos</h3>
-          <p className="text-cocoa-400 mb-6">Explora nuestro catalogo!</p>
-          <Link href="/catalogo" className="btn-cute bg-blush-400 text-white px-6 py-2.5 hover:bg-blush-500 inline-block">Ver Catalogo 🧶</Link>
+          <h3 className="font-display font-bold text-xl text-cocoa-600 mb-2">{fetchError ? 'No pudimos cargar tus pedidos' : 'Aun no tienes pedidos'}</h3>
+          <p className="text-cocoa-400 mb-6">{fetchError ? 'Intenta recargar la pagina o presiona reintentar.' : 'Explora nuestro catalogo!'}</p>
+          {!fetchError && <Link href="/catalogo" className="btn-cute bg-blush-400 text-white px-6 py-2.5 hover:bg-blush-500 inline-block">Ver Catalogo 🧶</Link>}
         </div>
       ) : (
         <div className="space-y-4">

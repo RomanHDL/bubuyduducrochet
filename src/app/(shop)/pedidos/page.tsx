@@ -12,11 +12,23 @@ export const dynamic = 'force-dynamic';
 async function getInitialOrders() {
   try {
     const session = await getServerSession(authOptions);
-    const userEmail = (session?.user as any)?.email;
-    if (!userEmail) return [];
+    if (!session) return [];
+    const userId = (session.user as any)?.id;
+    const userEmail = (session.user?.email || '').toLowerCase();
+    if (!userId && !userEmail) return [];
+
     await connectDB();
-    // Misma logica que GET /api/orders?mine=1: solo las ordenes del email logueado.
-    const orders = await Order.find({ userEmail }).sort({ createdAt: -1 }).limit(100).lean();
+    // Misma logica que GET /api/orders?mine=1: match por userId O email
+    // case-insensitive. Antes era exact-match por email, lo cual fallaba si
+    // los pedidos antiguos quedaron guardados con casing distinto.
+    const ors: any[] = [];
+    if (userId) ors.push({ userId });
+    if (userEmail) {
+      const safe = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      ors.push({ userEmail: { $regex: `^${safe}$`, $options: 'i' } });
+    }
+    const orders = await Order.find({ $or: ors }).sort({ createdAt: -1 }).limit(100).lean();
+    console.log(`[shop/pedidos SSR] user=${userEmail} → ${orders.length} pedidos`);
     return JSON.parse(JSON.stringify(orders));
   } catch (err) {
     console.error('[shop/pedidos SSR]', err);
