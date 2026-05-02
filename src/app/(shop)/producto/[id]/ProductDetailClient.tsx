@@ -210,14 +210,15 @@ export default function ProductDetailPage({ initialProduct }: { initialProduct?:
                     </div>
                   </div>
 
-                  {/* Dos botones estilo Amazon / Mercado Libre: agregar y seguir, o comprar ahora */}
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Acción primaria (agregar) destacada; "Comprar ahora" como secundaria
+                      con outline para que en móvil no se confundan al ser ambas filled. */}
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-3">
                     <button onClick={() => addToCart()} disabled={adding}
-                      className={`flex-1 btn-cute text-white text-base py-3.5 disabled:opacity-50 shadow-soft ${isPorPedido ? 'bg-amber-400 hover:bg-amber-500' : 'bg-blush-400 hover:bg-blush-500'}`}>
+                      className={`flex-1 btn-cute text-white text-lg sm:text-base py-4 sm:py-3.5 disabled:opacity-50 shadow-glow ${isPorPedido ? 'bg-amber-400 hover:bg-amber-500' : 'bg-blush-400 hover:bg-blush-500'}`}>
                       {added ? '¡Agregado! 💕' : adding ? '🧶 Agregando...' : isPorPedido ? 'Encargar por pedido 📝' : 'Agregar al carrito 🛒'}
                     </button>
                     <button onClick={buyNow} disabled={adding}
-                      className="flex-1 btn-cute bg-cocoa-700 text-white text-base py-3.5 hover:bg-cocoa-800 disabled:opacity-50 shadow-glow">
+                      className="flex-1 btn-cute bg-white text-cocoa-700 border-2 border-cocoa-700 text-base py-3 sm:py-3.5 hover:bg-cocoa-50 disabled:opacity-50">
                       💳 Comprar ahora
                     </button>
                   </div>

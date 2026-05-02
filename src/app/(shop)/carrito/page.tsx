@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -37,6 +37,8 @@ function CartPageInner() {
   const [orderNum, setOrderNum] = useState(0);
   const [payMethod, setPayMethod] = useState<'transfer' | 'oxxo'>('transfer');
   const [savedItems, setSavedItems] = useState<CartItem[]>([]);
+  const [orderError, setOrderError] = useState('');
+  const pagarHandledRef = useRef(false);
 
   const fetchCart = async () => {
     try { const r = await fetch('/api/cart'); const d = await r.json(); setItems(d.items || []); setTotal(d.total || 0); }
@@ -45,12 +47,16 @@ function CartPageInner() {
 
   useEffect(() => { if (session) fetchCart(); else setLoading(false); }, [session]);
 
-  // Si el usuario entró con ?pagar=1 (desde "Comprar ahora"), saltar al paso de pago
+  // Si el usuario entró con ?pagar=1 (desde "Comprar ahora"), saltar al paso de pago — una sola vez.
+  // Limpiamos el query param para que "Volver al carrito" no rebote de regreso al pago.
   useEffect(() => {
+    if (pagarHandledRef.current) return;
     if (goPayImmediately && !loading && items.length > 0 && step === 'cart') {
+      pagarHandledRef.current = true;
       setStep('payment');
+      router.replace('/carrito', { scroll: false });
     }
-  }, [goPayImmediately, loading, items.length, step]);
+  }, [goPayImmediately, loading, items.length, step, router]);
 
   const updateQty = async (productId: string, quantity: number) => {
     const item = items.find(i => i.productId === productId); if (!item) return;
@@ -64,11 +70,21 @@ function CartPageInner() {
 
   const placeOrder = async () => {
     setOrdering(true);
+    setOrderError('');
     setSavedItems([...items]);
     try {
       const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: `Pago por ${payMethod === 'transfer' ? 'transferencia Banorte' : 'deposito OXXO'}` }) });
-      if (res.ok) { const data = await res.json(); setOrderNum(data.orderNumber || 0); setStep('done'); }
-    } catch {} finally { setOrdering(false); }
+      if (res.ok) {
+        const data = await res.json();
+        setOrderNum(data.orderNumber || 0);
+        setStep('done');
+      } else {
+        const err = await res.json().catch(() => ({} as any));
+        setOrderError(err?.error || 'No se pudo crear el pedido. Intenta de nuevo.');
+      }
+    } catch {
+      setOrderError('Error de conexion. Verifica tu internet e intenta de nuevo.');
+    } finally { setOrdering(false); }
   };
 
   if (!session) return (
@@ -174,6 +190,12 @@ function CartPageInner() {
             <div className="flex justify-between"><span className="text-cocoa-400">No. Tarjeta:</span><span className="font-bold text-cocoa-700 font-mono text-xs">{TARJETA}</span></div>
           </div>
         </div>
+
+        {orderError && (
+          <div role="alert" className="bg-red-50 border border-red-200 rounded-cute p-3 mb-3 text-sm text-red-600 flex items-start gap-2">
+            <span>⚠️</span><span>{orderError}</span>
+          </div>
+        )}
 
         <button onClick={placeOrder} disabled={ordering}
           className="w-full btn-cute bg-blush-400 text-white py-3.5 text-base hover:bg-blush-500 disabled:opacity-50 shadow-glow mb-2">

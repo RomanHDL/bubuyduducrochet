@@ -59,9 +59,19 @@ export async function POST(req: NextRequest) {
 
   await connectDB();
   const userId = (session.user as any).id;
+  const userEmail = (session.user?.email || '').toLowerCase();
   const body = await req.json();
 
-  const cart = await Cart.findOne({ userId });
+  // Buscar el carrito por userId O userEmail — mismo criterio que /api/cart, para que
+  // si el userId cambió entre sesiones (re-auth, cambio de provider) el checkout
+  // encuentre el carrito que el usuario realmente vio.
+  const ors: any[] = [];
+  if (userId) ors.push({ userId });
+  if (userEmail) ors.push({ userEmail });
+  const cart = ors.length > 0
+    ? await Cart.findOne({ $or: ors }).sort({ updatedAt: -1 })
+    : null;
+
   if (!cart || cart.items.length === 0) {
     return NextResponse.json({ error: 'El carrito esta vacio' }, { status: 400 });
   }
