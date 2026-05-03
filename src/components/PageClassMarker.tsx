@@ -31,7 +31,9 @@ const ROUTE_CLASS_MAP: Array<[RegExp | string, string]> = [
 export default function PageClassMarker() {
   const pathname = usePathname();
 
-  // Page class — useLayoutEffect aplica antes del paint (sin flash)
+  // Page class — useLayoutEffect aplica antes del paint (sin flash).
+  // Tambien: en rutas /admin se remueven todas las clases theme-* para que
+  // el panel admin siempre use el diseño base original.
   useIsoLayoutEffect(() => {
     if (typeof document === 'undefined') return;
     const html = document.documentElement;
@@ -50,11 +52,19 @@ export default function PageClassMarker() {
       }
     }
     html.classList.add(matched);
+
+    if (matched === 'page-admin') {
+      Array.from(html.classList)
+        .filter((c) => c.startsWith('theme-'))
+        .forEach((c) => html.classList.remove(c));
+    }
   }, [pathname]);
 
-  // Sync theme con el servidor en cada navegación (corrige cache stale)
+  // Sync theme con el servidor en cada navegación (corrige cache stale).
+  // En /admin no aplicamos tema — el panel siempre usa diseño base.
   useEffect(() => {
     if (typeof document === 'undefined') return;
+    if (pathname?.startsWith('/admin')) return;
     let cancelled = false;
     fetch('/api/site-theme', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
