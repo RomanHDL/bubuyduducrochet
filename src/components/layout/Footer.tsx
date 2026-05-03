@@ -40,8 +40,21 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="border-t border-cocoa-600 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-cream-400">© {new Date().getFullYear()} Mundo A Crochet. Hecho con 💕 en Monterrey</p>
+        {/* Legal links — fila propia para cumplir con LFPDPPP visible */}
+        <div className="border-t border-cocoa-600 mt-8 pt-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs">
+            <Link href="/aviso-privacidad" className="text-cream-300 hover:text-blush-300 transition-colors">Aviso de Privacidad</Link>
+            <span className="text-cocoa-500">·</span>
+            <Link href="/terminos" className="text-cream-300 hover:text-blush-300 transition-colors">Términos y Condiciones</Link>
+            <span className="text-cocoa-500">·</span>
+            <Link href="/envios" className="text-cream-300 hover:text-blush-300 transition-colors">Política de Envíos</Link>
+            <span className="text-cocoa-500">·</span>
+            <Link href="/devoluciones" className="text-cream-300 hover:text-blush-300 transition-colors">Devoluciones</Link>
+          </div>
+        </div>
+
+        <div className="border-t border-cocoa-600/50 mt-4 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-cream-400">© {new Date().getFullYear()} Mundo A Crochet. Hecho con 💕 en Monterrey, Nuevo León</p>
           <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-green-300 hover:text-green-200 transition-colors">💬 WhatsApp</a>
         </div>
       </div>
