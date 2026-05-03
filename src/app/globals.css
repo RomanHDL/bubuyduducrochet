@@ -512,15 +512,31 @@ html.theme-dia-papa footer { background-color: #1A3D5C !important; color: #D5E4F
 html.theme-dia-papa footer::before { background: linear-gradient(90deg, #2A5485, #3B6EA5, #7CC4F5); }
 
 /* ════════════ Independencia ════════════
-   Patrón: estrellas de 5 puntas en tricolor */
+   Bandera de México como fondo (3 franjas verticales) + emblema central CSS */
 html.theme-independencia body {
-  background: linear-gradient(135deg, #C8E8D0 0%, #FFFFFF 50%, #F8C8CC 100%);
+  background:
+    linear-gradient(90deg,
+      #006847 0%, #006847 33.333%,
+      #FFFFFF 33.333%, #FFFFFF 66.666%,
+      #CE1126 66.666%, #CE1126 100%);
+  background-attachment: fixed;
+  background-size: 100vw 100vh;
 }
 html.theme-independencia body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><path d='M70 50 L78 72 L100 72 L82 86 L88 108 L70 94 L52 108 L58 86 L40 72 L62 72 Z' fill='%231F7A3A' fill-opacity='0.35'/><path d='M240 230 L248 252 L270 252 L252 266 L258 288 L240 274 L222 288 L228 266 L210 252 L232 252 Z' fill='%23CE1126' fill-opacity='0.32'/><path d='M180 110 L186 126 L202 126 L188 136 L194 152 L180 142 L166 152 L172 136 L158 126 L174 126 Z' fill='%23CE1126' fill-opacity='0.28'/></g></svg>");
+  background-color: rgba(255, 255, 255, 0.38);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'><g fill='none' stroke='%23155F2C' stroke-opacity='0.55'><circle cx='140' cy='140' r='110' stroke-width='3' stroke-dasharray='6,4'/><circle cx='140' cy='140' r='90' stroke-width='1.5'/></g><g fill='%23155F2C' fill-opacity='0.55'><path d='M140 80 L148 110 L180 110 L154 128 L162 158 L140 140 L118 158 L126 128 L100 110 L132 110 Z'/></g><g fill='%23CE1126' fill-opacity='0.50'><circle cx='140' cy='195' r='7'/><circle cx='112' cy='185' r='5'/><circle cx='168' cy='185' r='5'/><circle cx='95' cy='168' r='4'/><circle cx='185' cy='168' r='4'/></g></svg>");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 280px 280px;
+  background-attachment: fixed;
+  animation: theme-fade-bg 1.4s ease-out both, indep-breathe 9s ease-in-out infinite;
+}
+@keyframes indep-breathe {
+  0%, 100% { background-color: rgba(255, 255, 255, 0.42); }
+  50%      { background-color: rgba(255, 255, 255, 0.30); }
 }
 html.theme-independencia body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g><circle cx='100' cy='100' r='3' fill='%231F7A3A' fill-opacity='0.30'/><circle cx='400' cy='150' r='3' fill='%23CE1126' fill-opacity='0.30'/><circle cx='250' cy='400' r='3' fill='%231F7A3A' fill-opacity='0.30'/><circle cx='80' cy='400' r='3' fill='%23CE1126' fill-opacity='0.30'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g><path d='M100 80 L106 96 L122 96 L110 106 L114 122 L100 113 L86 122 L90 106 L78 96 L94 96 Z' fill='%23FFFFFF' fill-opacity='0.55'/><path d='M380 200 L386 216 L402 216 L390 226 L394 242 L380 233 L366 242 L370 226 L358 216 L374 216 Z' fill='%23FFFFFF' fill-opacity='0.45'/><path d='M250 380 L256 396 L272 396 L260 406 L264 422 L250 413 L236 422 L240 406 L228 396 L244 396 Z' fill='%23FFFFFF' fill-opacity='0.50'/></g></svg>");
 }
 html.theme-independencia nav { background-color: #C8E8D0 !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%) 1; }
 html.theme-independencia .card-cute { border-color: #1F7A3A; box-shadow: inset 0 3px 0 0 #1F7A3A, 0 4px 20px rgba(31, 122, 58, 0.18); }
@@ -682,4 +698,109 @@ html.theme-reyes .card-cute::after {
 }
 html.theme-reyes footer { background-color: #4A3320 !important; color: #FFD970; }
 html.theme-reyes footer::before { background: linear-gradient(90deg, #B8860B, #D4AF37, #FFD970, #D4AF37, #B8860B); height: 4px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   VARIACIONES POR PÁGINA — cada ruta tiene su propia animación de fondo
+   Se combinan con el tema activo. Si no hay tema, no aplica nada.
+   ════════════════════════════════════════════════════════════════════ */
+
+@keyframes page-bg-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+@keyframes page-bg-rotate {
+  0%   { transform: rotate(0deg) scale(1.4); }
+  100% { transform: rotate(360deg) scale(1.4); }
+}
+@keyframes page-bg-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+@keyframes page-bg-hue {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50%      { filter: hue-rotate(28deg) saturate(1.15); }
+}
+@keyframes page-bg-sway {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(20px); }
+}
+
+/* Home — drift constante (animación por defecto, sin override) */
+
+/* Catálogo — pulso rítmico (sin desplazamiento, solo opacidad) */
+html[class*="theme-"]:not(.theme-none).page-catalogo body::after {
+  animation: theme-float-rev 240s linear infinite, page-bg-pulse 5s ease-in-out infinite;
+}
+
+/* FAQ — rotación lenta (gira 360 grados sobre el centro) */
+html[class*="theme-"]:not(.theme-none).page-faq body::after {
+  animation: page-bg-rotate 240s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+/* Nosotros — respiración (zoom in/out suave) */
+html[class*="theme-"]:not(.theme-none).page-nosotros body::after {
+  animation: theme-float-rev 200s linear infinite, page-bg-breathe 8s ease-in-out infinite;
+}
+
+/* Carrito — cambio cromático sutil (hue-rotate cíclico) */
+html[class*="theme-"]:not(.theme-none).page-carrito body::after {
+  animation: theme-float-rev 200s linear infinite, page-bg-hue 14s ease-in-out infinite;
+}
+
+/* Producto — sway lateral suave */
+html[class*="theme-"]:not(.theme-none).page-producto body::after {
+  animation: theme-float-rev 200s linear infinite, page-bg-sway 12s ease-in-out infinite;
+}
+
+/* Favoritos — pulso más rápido (energía positiva) */
+html[class*="theme-"]:not(.theme-none).page-favoritos body::after {
+  animation: theme-float-rev 240s linear infinite, page-bg-pulse 3s ease-in-out infinite;
+}
+
+/* ─── Override por tema en hero del home ─── */
+/* Cuando hay un tema activo, las secciones con bg-gradient pastel del home
+   se sustituyen por degradados temáticos sutiles. Solo afecta al home. */
+html.theme-san-valentin.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #FFE0E6, #FFC2CC, #FFD8DD) !important;
+}
+html.theme-flor-amarilla.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #FFF6B8, #FFE066, #FFEFA0) !important;
+}
+html.theme-dia-nino.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #FFE5F0, #C8E7FF, #D4F5E0) !important;
+}
+html.theme-dia-mama.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #FFE0EC, #FFC8DC, #FFEEF5) !important;
+}
+html.theme-dia-papa.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #D5E4F2, #B3CCE5, #E0EBF5) !important;
+}
+html.theme-independencia.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, rgba(0,104,71,0.18), rgba(255,255,255,0.50), rgba(206,17,38,0.18)) !important;
+}
+html.theme-halloween.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #FFB870, #FF7518, #4A1F5C) !important;
+}
+html.theme-dia-muertos.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #FFCC80, #E76F00, #7B3F9F) !important;
+}
+html.theme-navidad.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #C8E8D0, #FFFFFF, #F8C8CC) !important;
+}
+html.theme-reyes.page-home main section.bg-gradient-to-br.from-blush-50 {
+  background-image: linear-gradient(to bottom right, #FFEFC0, #FFD970, #FFF8DC) !important;
+}
+
+/* Título principal del hero del home: color de acento temático */
+html.theme-san-valentin.page-home h1 .text-blush-400 { color: #FF4D6D !important; }
+html.theme-flor-amarilla.page-home h1 .text-blush-400 { color: #C99800 !important; }
+html.theme-dia-nino.page-home h1 .text-blush-400 { color: #5BC0EB !important; }
+html.theme-dia-mama.page-home h1 .text-blush-400 { color: #FF6B81 !important; }
+html.theme-dia-papa.page-home h1 .text-blush-400 { color: #2A5485 !important; }
+html.theme-independencia.page-home h1 .text-blush-400 { color: #006847 !important; }
+html.theme-halloween.page-home h1 .text-blush-400 { color: #FF7518 !important; }
+html.theme-dia-muertos.page-home h1 .text-blush-400 { color: #7B3F9F !important; }
+html.theme-navidad.page-home h1 .text-blush-400 { color: #C8102E !important; }
+html.theme-reyes.page-home h1 .text-blush-400 { color: #B8860B !important; }
 /* ═══ Fin temas festivos ═══ */
