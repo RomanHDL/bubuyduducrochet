@@ -651,29 +651,33 @@ html.theme-reyes .festive-banner__date { color: #B8860B; }
    ════════════════════════════════════════════════════════════════════ */
 
 @keyframes page-bg-pulse   { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
-@keyframes page-bg-rotate  { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes page-bg-rotate  { 0% { transform: scale(1.5) rotate(0deg); } 100% { transform: scale(1.5) rotate(360deg); } }
 @keyframes page-bg-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
-@keyframes page-bg-hue     { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(20deg) saturate(1.1); } }
+@keyframes page-bg-bob     { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
 @keyframes page-bg-sway    { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(15px); } }
+
+/* IMPORTANTE: ninguna animacion por pagina cambia el HUE/color del tema.
+   Solo varian opacidad, escala o posicion — el COLOR del tema se preserva
+   identico en todas las rutas para evitar la sensacion de "tema distinto". */
 
 /* Catálogo — pulso ritmico de las action lines */
 html[class*="theme-"]:not(.theme-none).page-catalogo body::after {
   animation: lines-shift 30s linear infinite, page-bg-pulse 4s ease-in-out infinite;
 }
-/* FAQ — rotación lenta */
+/* FAQ — rotación lenta (escala 1.5x para evitar esquinas vacias al rotar) */
 html[class*="theme-"]:not(.theme-none).page-faq body::after {
   animation: page-bg-rotate 240s linear infinite;
   transform-origin: 50% 50%;
 }
-/* Nosotros — breathing */
+/* Nosotros — breathing scale */
 html[class*="theme-"]:not(.theme-none).page-nosotros body::after {
   animation: lines-shift 25s linear infinite, page-bg-breathe 7s ease-in-out infinite;
 }
-/* Carrito — hue cycle */
+/* Carrito — bob vertical (NO hue, mantiene los colores del tema intactos) */
 html[class*="theme-"]:not(.theme-none).page-carrito body::after {
-  animation: lines-shift 25s linear infinite, page-bg-hue 12s ease-in-out infinite;
+  animation: lines-shift 25s linear infinite, page-bg-bob 8s ease-in-out infinite;
 }
-/* Producto — sway */
+/* Producto — sway lateral */
 html[class*="theme-"]:not(.theme-none).page-producto body::after {
   animation: lines-shift 25s linear infinite, page-bg-sway 10s ease-in-out infinite;
 }
@@ -683,28 +687,57 @@ html[class*="theme-"]:not(.theme-none).page-favoritos body::after {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   OVERRIDES DEL HOME — el hero usa gradientes inline, los reemplazamos
-   por flat color del tema para mantener el look comic plano
+   OVERRIDES DEL HOME — TODAS las secciones (hero, categorias, beneficios,
+   proceso, FAQ, CTA) responden al tema. Sin importar de que from-X
+   gradient vienen, todas se vuelven flat color tematico.
    ════════════════════════════════════════════════════════════════════ */
 
-html.theme-san-valentin.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFE5EA !important; background-image: none !important; }
-html.theme-flor-amarilla.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFF6B8 !important; background-image: none !important; }
-html.theme-dia-nino.page-home main section.bg-gradient-to-br.from-blush-50 { background: #E0F2FE !important; background-image: none !important; }
-html.theme-dia-mama.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFE0EC !important; background-image: none !important; }
-html.theme-dia-papa.page-home main section.bg-gradient-to-br.from-blush-50 { background: #D5E4F2 !important; background-image: none !important; }
-html.theme-independencia.page-home main section.bg-gradient-to-br.from-blush-50 { background: rgba(255,255,255,0.30) !important; background-image: none !important; }
-html.theme-halloween.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFC080 !important; background-image: none !important; }
-html.theme-dia-muertos.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFD9A8 !important; background-image: none !important; }
-html.theme-navidad.page-home main section.bg-gradient-to-br.from-blush-50 { background: #C8E8D0 !important; background-image: none !important; }
-html.theme-reyes.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFEFC0 !important; background-image: none !important; }
-
-/* Override secundario: las otras secciones del home con bg-gradient-to-r */
-html[class*="theme-"]:not(.theme-none).page-home main section.bg-gradient-to-r {
-  background: transparent !important;
+/* 1) Sections con cualquier gradient -> transparente para que el body
+      tematizado se vea uniforme en TODAS las secciones */
+html[class*="theme-"]:not(.theme-none).page-home main section[class*="bg-gradient"] {
   background-image: none !important;
+  background-color: transparent !important;
 }
 
-/* Acento del titulo del hero */
+/* 2) Cards internas blancas-translucidas (.bg-white/50, /60, /70, /80, /90)
+      -> solido blanco + borde grueso + hard offset shadow estilo comic */
+html[class*="theme-"]:not(.theme-none).page-home main [class~="bg-white\/50"],
+html[class*="theme-"]:not(.theme-none).page-home main [class~="bg-white\/60"],
+html[class*="theme-"]:not(.theme-none).page-home main [class~="bg-white\/70"],
+html[class*="theme-"]:not(.theme-none).page-home main [class~="bg-white\/80"],
+html[class*="theme-"]:not(.theme-none).page-home main [class~="bg-white\/90"] {
+  background-color: #FFFFFF !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-width: 2px !important;
+  border-color: var(--card-shadow, #1A1A1A) !important;
+  box-shadow: 4px 4px 0 0 var(--card-shadow, #1A1A1A) !important;
+}
+
+/* 3) Divs internos con gradiente (no sections, no absolute decorativos)
+      -> blanco solido con comic style. Excluye .absolute para no romper
+      capas decorativas que se ocultan en regla siguiente */
+html[class*="theme-"]:not(.theme-none).page-home main div[class*="bg-gradient"]:not(.absolute):not(section) {
+  background-image: none !important;
+  background-color: #FFFFFF !important;
+  border-width: 2px !important;
+  border-color: var(--card-shadow, #1A1A1A) !important;
+  box-shadow: 4px 4px 0 0 var(--card-shadow, #1A1A1A) !important;
+}
+
+/* 4) Capas decorativas absolutas con gradiente (CTA blur, etc.) -> ocultar */
+html[class*="theme-"]:not(.theme-none).page-home main div.absolute[class*="bg-gradient"] {
+  display: none !important;
+}
+
+/* 5) Process step icon (circulo con gradient): rellenar con color tematico */
+html[class*="theme-"]:not(.theme-none).page-home main .from-blush-100.to-lavender-100 {
+  background-image: none !important;
+  background-color: var(--card-shadow, #1A1A1A) !important;
+  color: #FFFFFF !important;
+}
+
+/* 6) Acento del titulo del hero (text-blush-400 -> color tematico) */
 html.theme-san-valentin.page-home h1 .text-blush-400 { color: #FF1744 !important; }
 html.theme-flor-amarilla.page-home h1 .text-blush-400 { color: #C99800 !important; }
 html.theme-dia-nino.page-home h1 .text-blush-400 { color: #5BC0EB !important; }
@@ -715,4 +748,9 @@ html.theme-halloween.page-home h1 .text-blush-400 { color: #FF7518 !important; }
 html.theme-dia-muertos.page-home h1 .text-blush-400 { color: #7B3F9F !important; }
 html.theme-navidad.page-home h1 .text-blush-400 { color: #C8102E !important; }
 html.theme-reyes.page-home h1 .text-blush-400 { color: #B8860B !important; }
+
+/* 7) SVG separador wave entre hero y siguiente seccion -> color tematico */
+html[class*="theme-"]:not(.theme-none).page-home main section svg path[fill="#FFFDF7"] {
+  fill: transparent !important;
+}
 /* ═══ Fin temas festivos ═══ */
