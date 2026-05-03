@@ -8,6 +8,7 @@ export interface IProductReview {
   rating: number;
   text?: string;
   images: string[];
+  isApproved: boolean;
   createdAt: Date;
 }
 
@@ -18,6 +19,9 @@ const ProductReviewSchema = new Schema<IProductReview>({
   rating: { type: Number, required: true, min: 1, max: 5 },
   text: { type: String, required: false, default: '' },
   images: [{ type: String }],
+  // false por defecto: las reseñas requieren aprobacion del admin antes de
+  // ser visibles publicamente (igual que los testimonios generales).
+  isApproved: { type: Boolean, default: false, index: true },
 }, { timestamps: true });
 
 export default models.ProductReview || model<IProductReview>('ProductReview', ProductReviewSchema);

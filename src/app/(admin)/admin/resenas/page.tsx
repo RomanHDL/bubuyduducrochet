@@ -15,6 +15,21 @@ async function getInitialData() {
       return { initialTestimonials: [], initialProductReviews: [], initialProductsMap: {} };
     }
     await connectDB();
+
+    // Backfill one-time: reseñas creadas antes de añadir el campo isApproved
+    // no lo tienen. Las marcamos como aprobadas para que no desaparezcan
+    // del publico al desplegar este fix. Es idempotente: tras la primera
+    // corrida count=0 y updateMany no hace nada. Las reseñas NUEVAS siguen
+    // creandose con isApproved=false y requieren aprobacion del admin.
+    try {
+      await ProductReview.updateMany(
+        { isApproved: { $exists: false } },
+        { $set: { isApproved: true } },
+      );
+    } catch (err) {
+      console.error('[admin/resenas backfill]', err);
+    }
+
     const [t, p, prods] = await Promise.all([
       Review.find({}).sort({ createdAt: -1 }).lean(),
       ProductReview.find({}).sort({ createdAt: -1 }).lean(),

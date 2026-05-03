@@ -90,6 +90,20 @@ export default function AdminReviewsPage({ initialTestimonials, initialProductRe
   };
 
   // Product review actions
+  const approveProductReview = async (id: string) => {
+    setProductReviews((prev) => prev.map((r) => r._id === id ? { ...r, isApproved: true } : r));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/product-reviews/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isApproved: true }), cache: 'no-store' });
+    } finally { busyRef.current = false; }
+  };
+  const rejectProductReview = async (id: string) => {
+    setProductReviews((prev) => prev.map((r) => r._id === id ? { ...r, isApproved: false } : r));
+    busyRef.current = true;
+    try {
+      await fetch(`/api/product-reviews/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isApproved: false }), cache: 'no-store' });
+    } finally { busyRef.current = false; }
+  };
   const deleteProductReview = async (id: string) => {
     if (!confirm('Eliminar esta reseña de producto permanentemente?')) return;
     busyRef.current = true;
@@ -105,7 +119,10 @@ export default function AdminReviewsPage({ initialTestimonials, initialProductRe
   const approvedT = testimonials.filter(r => r.isApproved);
   const filteredT = filter === 'all' ? testimonials : filter === 'pending' ? pendingT : approvedT;
   const avgT = approvedT.length > 0 ? (approvedT.reduce((s: number, r: any) => s + (r.rating || 5), 0) / approvedT.length).toFixed(1) : '—';
-  const avgP = productReviews.length > 0 ? (productReviews.reduce((s: number, r: any) => s + (r.rating || 5), 0) / productReviews.length).toFixed(1) : '—';
+  const pendingP = productReviews.filter(r => !r.isApproved);
+  const approvedP = productReviews.filter(r => r.isApproved);
+  const filteredP = filter === 'all' ? productReviews : filter === 'pending' ? pendingP : approvedP;
+  const avgP = approvedP.length > 0 ? (approvedP.reduce((s: number, r: any) => s + (r.rating || 5), 0) / approvedP.length).toFixed(1) : '—';
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -120,8 +137,8 @@ export default function AdminReviewsPage({ initialTestimonials, initialProductRe
       {/* Global stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-3 text-center"><p className="text-xl font-bold text-cocoa-700">{testimonials.length + productReviews.length}</p><p className="text-[10px] text-cocoa-400">Total global</p></div>
-        <div className="bg-green-50 rounded-cute shadow-soft border border-green-200 p-3 text-center"><p className="text-xl font-bold text-green-700">{approvedT.length}</p><p className="text-[10px] text-green-600">✅ Testimonios</p></div>
-        <div className="bg-amber-50 rounded-cute shadow-soft border border-amber-200 p-3 text-center"><p className="text-xl font-bold text-amber-700">{pendingT.length}</p><p className="text-[10px] text-amber-600">⏳ Pendientes</p></div>
+        <div className="bg-green-50 rounded-cute shadow-soft border border-green-200 p-3 text-center"><p className="text-xl font-bold text-green-700">{approvedT.length + approvedP.length}</p><p className="text-[10px] text-green-600">✅ Aprobadas</p></div>
+        <div className="bg-amber-50 rounded-cute shadow-soft border border-amber-200 p-3 text-center"><p className="text-xl font-bold text-amber-700">{pendingT.length + pendingP.length}</p><p className="text-[10px] text-amber-600">⏳ Pendientes</p></div>
         <div className="bg-lavender-50 rounded-cute shadow-soft border border-lavender-200 p-3 text-center"><p className="text-xl font-bold text-lavender-500">{productReviews.length}</p><p className="text-[10px] text-lavender-400">📦 Productos</p></div>
         <div className="bg-blush-50 rounded-cute shadow-soft border border-blush-200 p-3 text-center"><p className="text-xl font-bold text-blush-500">{avgT}⭐</p><p className="text-[10px] text-blush-400">Promedio</p></div>
       </div>
@@ -195,14 +212,33 @@ export default function AdminReviewsPage({ initialTestimonials, initialProductRe
       {/* ═══ PRODUCT REVIEWS TAB ═══ */}
       {tab === 'products' && (
         <>
-          {productReviews.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-cute shadow-soft border border-cream-200"><span className="text-4xl block mb-3">📦</span><p className="text-cocoa-400">Sin reseñas de productos aun</p></div>
+          {/* Pending alert para producto */}
+          {pendingP.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-cute p-4 mb-6 flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div><p className="font-bold text-amber-700 text-sm">{pendingP.length} reseña{pendingP.length !== 1 ? 's' : ''} de producto esperando aprobacion</p></div>
+            </div>
+          )}
+
+          {/* Filtros */}
+          <div className="flex gap-2 mb-4">
+            {[
+              { id: 'all' as const, label: `Todas (${productReviews.length})` },
+              { id: 'pending' as const, label: `⏳ Pendientes (${pendingP.length})` },
+              { id: 'approved' as const, label: `✅ Aprobadas (${approvedP.length})` },
+            ].map(f => (
+              <button key={f.id} onClick={() => setFilter(f.id)} className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${filter === f.id ? 'bg-lavender-400 text-white' : 'bg-white text-cocoa-500 border border-cream-200'}`}>{f.label}</button>
+            ))}
+          </div>
+
+          {filteredP.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-cute shadow-soft border border-cream-200"><span className="text-4xl block mb-3">📦</span><p className="text-cocoa-400">Sin reseñas de productos con este filtro</p></div>
           ) : (
             <div className="space-y-3">
-              {productReviews.map(r => {
+              {filteredP.map(r => {
                 const prod = products[r.productId];
                 return (
-                <div key={r._id} className="bg-white rounded-cute shadow-soft border border-cream-200 p-5">
+                <div key={r._id} className={`bg-white rounded-cute shadow-soft border p-5 ${r.isApproved ? 'border-cream-200' : 'border-amber-200 bg-amber-50/20'}`}>
                   {/* Product info bar */}
                   <Link href={`/producto/${r.productId}`} className="flex items-center gap-3 mb-4 p-3 bg-gradient-to-r from-lavender-50 to-blush-50 rounded-xl border border-lavender-200 hover:shadow-soft transition-all group">
                     {prod?.images?.[0] ? (
@@ -222,6 +258,7 @@ export default function AdminReviewsPage({ initialTestimonials, initialProductRe
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="font-bold text-sm text-cocoa-700">{r.userName}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${r.isApproved ? 'bg-green-50 text-green-600 border-green-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>{r.isApproved ? '✅ Visible' : '⏳ Pendiente'}</span>
                       </div>
                       <div className="flex gap-0.5 mb-2">{[1,2,3,4,5].map(s => <span key={s} className={`text-sm ${s <= r.rating ? '' : 'opacity-20'}`}>⭐</span>)}</div>
                       {r.text && r.text.trim().length > 0 ? (
@@ -234,7 +271,11 @@ export default function AdminReviewsPage({ initialTestimonials, initialProductRe
                       )}
                       <p className="text-[10px] text-cocoa-300 mt-2">{new Date(r.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                     </div>
-                    <button onClick={() => deleteProductReview(r._id)} className="btn-cute bg-red-50 text-red-500 text-[11px] px-3 py-1.5 border border-red-200 flex-shrink-0">🗑️ Eliminar</button>
+                    <div className="flex flex-col gap-1.5 flex-shrink-0">
+                      {!r.isApproved && <button onClick={() => approveProductReview(r._id)} className="btn-cute bg-green-100 text-green-700 text-[11px] px-3 py-1.5 border border-green-200">✅ Aprobar</button>}
+                      {r.isApproved && <button onClick={() => rejectProductReview(r._id)} className="btn-cute bg-amber-50 text-amber-600 text-[11px] px-3 py-1.5 border border-amber-200">⏳ Ocultar</button>}
+                      <button onClick={() => deleteProductReview(r._id)} className="btn-cute bg-red-50 text-red-500 text-[11px] px-3 py-1.5 border border-red-200">🗑️ Eliminar</button>
+                    </div>
                   </div>
                 </div>
                 );
