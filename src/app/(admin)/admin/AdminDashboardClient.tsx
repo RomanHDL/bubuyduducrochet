@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import SystemsAdminDashboard from '@/components/SystemsAdminDashboard';
 import { isSystemsAdmin } from '@/lib/systemsAdmin';
@@ -15,6 +15,11 @@ const PAY_EMOJI: Record<string, string> = { pending: '💳', paid: '✅', refund
 export default function AdminDashboard({ initialStats }: { initialStats?: any } = {}) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // El dashboard Matrix sigue disponible vía /admin?vista=sistemas — opt-in.
+  // Por defecto el admin de sistemas ve el dashboard regular para que respete
+  // el diseño base y los temas festivos del sitio.
+  const wantsSystemsView = searchParams?.get('vista') === 'sistemas';
   // SSR prop → cache local → nada. La UI pinta al instante con initialStats.
   const cachedStats = getCached<any>('/api/admin/stats');
   const seed = initialStats || cachedStats || null;
@@ -53,8 +58,11 @@ export default function AdminDashboard({ initialStats }: { initialStats?: any } 
 
   const s = stats || {};
 
-  // Vista "de sistemas" — terminal/Matrix theme. Solo para el admin técnico.
-  if (isSystemsAdmin(session.user?.email)) {
+  // Vista "de sistemas" — terminal/Matrix theme. Solo se activa con
+  // ?vista=sistemas en la URL para el admin tecnico (opt-in). Por defecto
+  // ve el dashboard regular para mantener el diseño base y los temas
+  // festivos consistentes con el resto del sitio.
+  if (isSystemsAdmin(session.user?.email) && wantsSystemsView) {
     return (
       <SystemsAdminDashboard
         stats={s}

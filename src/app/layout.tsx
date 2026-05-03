@@ -116,11 +116,7 @@ export const viewport: Viewport = {
 // hidrate, para que los overrides CSS por página estén activos antes del
 // primer paint. Esto elimina el flash de "diseño base sin tema" al navegar
 // al home desde otra página.
-//
-// IMPORTANTE: en rutas /admin se REMUEVE cualquier clase theme-* para que
-// el panel admin siempre use el diseño base original (no se aplican los
-// temas festivos que el admin activa para el sitio publico).
-const pageClassBootstrap = `(function(){try{var h=document.documentElement;var p=location.pathname;var c;if(p==='/')c='page-home';else if(p==='/catalogo')c='page-catalogo';else if(p==='/preguntas')c='page-faq';else if(p==='/contacto')c='page-nosotros';else if(p==='/carrito')c='page-carrito';else if(p==='/favoritos')c='page-favoritos';else if(p==='/mi-cuenta')c='page-cuenta';else if(p==='/pedidos')c='page-pedidos';else if(p==='/login'||p==='/registro')c='page-login';else if(p.indexOf('/producto/')===0)c='page-producto';else if(p.indexOf('/admin')===0)c='page-admin';else c='page-other';h.classList.add(c);if(c==='page-admin'){Array.prototype.slice.call(h.classList).forEach(function(x){if(x.indexOf('theme-')===0)h.classList.remove(x);});}}catch(e){}})();`;
+const pageClassBootstrap = `(function(){try{var p=location.pathname;var c;if(p==='/')c='page-home';else if(p==='/catalogo')c='page-catalogo';else if(p==='/preguntas')c='page-faq';else if(p==='/contacto')c='page-nosotros';else if(p==='/carrito')c='page-carrito';else if(p==='/favoritos')c='page-favoritos';else if(p==='/mi-cuenta')c='page-cuenta';else if(p==='/pedidos')c='page-pedidos';else if(p==='/login'||p==='/registro')c='page-login';else if(p.indexOf('/producto/')===0)c='page-producto';else if(p.indexOf('/admin')===0)c='page-admin';else c='page-other';document.documentElement.classList.add(c);}catch(e){}})();`;
 
 export default async function RootLayout({
   children,
