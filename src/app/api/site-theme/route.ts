@@ -14,7 +14,7 @@ async function getOrCreate() {
   return doc;
 }
 
-// GET — público: devuelve el tema efectivo (resolviendo "auto" según la fecha actual).
+// GET — público: devuelve el tema efectivo + barra de promo.
 export async function GET() {
   try {
     await connectDB();
@@ -22,15 +22,29 @@ export async function GET() {
     const stored = doc.themeId as ThemeId;
     const mode = doc.themeMode as 'manual' | 'auto';
     const effective: ThemeId = mode === 'auto' ? suggestThemeByDate() : stored;
+    const promoBar = doc.promoBar
+      ? {
+          active: !!doc.promoBar.active,
+          text: doc.promoBar.text || '',
+          link: doc.promoBar.link || '',
+          linkLabel: doc.promoBar.linkLabel || '',
+        }
+      : { active: false, text: '', link: '', linkLabel: '' };
     return NextResponse.json({
       themeId: stored,
       themeMode: mode,
       effectiveThemeId: effective,
+      promoBar,
     });
   } catch (err) {
     // Si hay error de DB no rompemos el sitio — devolvemos "none"
     console.error('[site-theme GET] error:', err);
-    return NextResponse.json({ themeId: 'none', themeMode: 'manual', effectiveThemeId: 'none' });
+    return NextResponse.json({
+      themeId: 'none',
+      themeMode: 'manual',
+      effectiveThemeId: 'none',
+      promoBar: { active: false, text: '', link: '', linkLabel: '' },
+    });
   }
 }
 
@@ -43,21 +57,34 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const themeId = body?.themeId;
-  const themeMode = body?.themeMode === 'auto' ? 'auto' : 'manual';
-
-  if (themeMode === 'manual' && !isValidTheme(themeId)) {
-    return NextResponse.json({ error: 'Tema inválido' }, { status: 400 });
-  }
-
   await connectDB();
   const doc = await getOrCreate();
-  if (themeMode === 'auto') {
-    doc.themeMode = 'auto';
-  } else {
-    doc.themeMode = 'manual';
-    doc.themeId = themeId as ThemeId;
+
+  // Permite update parcial: solo se modifican los campos enviados.
+  // Casos: cambiar tema, cambiar modo, editar promoBar — independientes.
+  const isThemeUpdate = typeof body?.themeId === 'string' || body?.themeMode === 'auto';
+  if (isThemeUpdate) {
+    const themeMode = body?.themeMode === 'auto' ? 'auto' : 'manual';
+    if (themeMode === 'manual' && !isValidTheme(body.themeId)) {
+      return NextResponse.json({ error: 'Tema inválido' }, { status: 400 });
+    }
+    if (themeMode === 'auto') {
+      doc.themeMode = 'auto';
+    } else {
+      doc.themeMode = 'manual';
+      doc.themeId = body.themeId as ThemeId;
+    }
   }
+
+  if (body?.promoBar && typeof body.promoBar === 'object') {
+    doc.promoBar = {
+      active: !!body.promoBar.active,
+      text: String(body.promoBar.text || '').slice(0, 200),
+      link: String(body.promoBar.link || '').slice(0, 500),
+      linkLabel: String(body.promoBar.linkLabel || '').slice(0, 60),
+    } as any;
+  }
+
   doc.updatedBy = session.user?.email || '';
   await doc.save();
   revalidateTag('site-theme');
@@ -67,5 +94,13 @@ export async function PUT(req: NextRequest) {
     themeId: doc.themeId,
     themeMode: doc.themeMode,
     effectiveThemeId: effective,
+    promoBar: doc.promoBar
+      ? {
+          active: !!doc.promoBar.active,
+          text: doc.promoBar.text || '',
+          link: doc.promoBar.link || '',
+          linkLabel: doc.promoBar.linkLabel || '',
+        }
+      : { active: false, text: '', link: '', linkLabel: '' },
   });
 }

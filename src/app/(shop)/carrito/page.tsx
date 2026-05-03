@@ -32,13 +32,48 @@ function CartPageInner() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<'cart' | 'payment' | 'done'>('cart');
+  const [step, setStep] = useState<'cart' | 'shipping' | 'payment' | 'done'>('cart');
   const [ordering, setOrdering] = useState(false);
   const [orderNum, setOrderNum] = useState(0);
   const [payMethod, setPayMethod] = useState<'transfer' | 'oxxo'>('transfer');
   const [savedItems, setSavedItems] = useState<CartItem[]>([]);
   const [orderError, setOrderError] = useState('');
   const pagarHandledRef = useRef(false);
+
+  // Datos de envío estructurados — required en /api/orders POST
+  const [shipping, setShipping] = useState({
+    recipientName: '',
+    phone: '',
+    street: '',
+    exterior: '',
+    interior: '',
+    neighborhood: '',
+    postalCode: '',
+    city: '',
+    state: '',
+    references: '',
+  });
+  const [shipErrors, setShipErrors] = useState<Record<string, string>>({});
+
+  // Recordar la dirección del cliente para próximas compras (localStorage)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const v = localStorage.getItem('mac:lastShipping:v1');
+      if (v) {
+        const parsed = JSON.parse(v);
+        setShipping((s) => ({ ...s, ...parsed }));
+      }
+    } catch {}
+  }, []);
+
+  // Auto-rellenar nombre del destinatario con el nombre del usuario logueado
+  useEffect(() => {
+    if (session?.user?.name && !shipping.recipientName) {
+      setShipping((s) => ({ ...s, recipientName: session.user!.name as string }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.name]);
 
   const fetchCart = async () => {
     try { const r = await fetch('/api/cart'); const d = await r.json(); setItems(d.items || []); setTotal(d.total || 0); }
@@ -47,16 +82,39 @@ function CartPageInner() {
 
   useEffect(() => { if (session) fetchCart(); else setLoading(false); }, [session]);
 
-  // Si el usuario entró con ?pagar=1 (desde "Comprar ahora"), saltar al paso de pago — una sola vez.
-  // Limpiamos el query param para que "Volver al carrito" no rebote de regreso al pago.
+  // Si el usuario entró con ?pagar=1 (desde "Comprar ahora"), saltar al paso de envío — una sola vez.
+  // Limpiamos el query param para que "Volver al carrito" no rebote de regreso al checkout.
   useEffect(() => {
     if (pagarHandledRef.current) return;
     if (goPayImmediately && !loading && items.length > 0 && step === 'cart') {
       pagarHandledRef.current = true;
-      setStep('payment');
+      setStep('shipping');
       router.replace('/carrito', { scroll: false });
     }
   }, [goPayImmediately, loading, items.length, step, router]);
+
+  const validateShipping = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!shipping.recipientName.trim()) errors.recipientName = 'Requerido';
+    if (!shipping.phone.trim() || !/^\d{10}$/.test(shipping.phone.replace(/\D/g, ''))) errors.phone = 'Teléfono a 10 dígitos';
+    if (!shipping.street.trim()) errors.street = 'Requerido';
+    if (!shipping.exterior.trim()) errors.exterior = 'Requerido';
+    if (!shipping.neighborhood.trim()) errors.neighborhood = 'Requerido';
+    if (!/^\d{5}$/.test(shipping.postalCode.trim())) errors.postalCode = 'CP a 5 dígitos';
+    if (!shipping.city.trim()) errors.city = 'Requerido';
+    if (!shipping.state.trim()) errors.state = 'Requerido';
+    setShipErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const goToPayment = () => {
+    if (!validateShipping()) return;
+    // Guardar para próxima compra
+    try {
+      localStorage.setItem('mac:lastShipping:v1', JSON.stringify(shipping));
+    } catch {}
+    setStep('payment');
+  };
 
   const updateQty = async (productId: string, quantity: number) => {
     const item = items.find(i => i.productId === productId); if (!item) return;
@@ -73,14 +131,25 @@ function CartPageInner() {
     setOrderError('');
     setSavedItems([...items]);
     try {
-      const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: `Pago por ${payMethod === 'transfer' ? 'transferencia Banorte' : 'deposito OXXO'}` }) });
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shipping,
+          notes: `Pago por ${payMethod === 'transfer' ? 'transferencia Banorte' : 'deposito OXXO'}`,
+        }),
+      });
       if (res.ok) {
         const data = await res.json();
         setOrderNum(data.orderNumber || 0);
         setStep('done');
       } else {
         const err = await res.json().catch(() => ({} as any));
-        setOrderError(err?.error || 'No se pudo crear el pedido. Intenta de nuevo.');
+        if (err?.missing && Array.isArray(err.missing)) {
+          setOrderError('Faltan datos de envío. Vuelve al paso anterior y completa todos los campos.');
+        } else {
+          setOrderError(err?.error || 'No se pudo crear el pedido. Intenta de nuevo.');
+        }
       }
     } catch {
       setOrderError('Error de conexion. Verifica tu internet e intenta de nuevo.');
@@ -136,14 +205,150 @@ function CartPageInner() {
     );
   }
 
-  // ═══ PAYMENT ═══
-  if (step === 'payment') {
+  // ═══ SHIPPING — datos de envío estructurados ═══
+  if (step === 'shipping') {
+    const inputCls = (k: string) =>
+      `input-cute ${shipErrors[k] ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : ''}`;
     return (
       <AnimatedBg theme="warm"><div className="max-w-lg mx-auto px-4 py-8">
         <button onClick={() => setStep('cart')} className="text-sm text-cocoa-400 hover:text-blush-400 mb-6 flex items-center gap-1">← Volver al carrito</button>
 
+        <h1 className="font-display font-bold text-2xl text-cocoa-700 mb-2">Dirección de envío 📦</h1>
+        <p className="text-cocoa-400 text-sm mb-6">¿A dónde enviamos tu pedido?</p>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-cute shadow-soft border border-cream-200 p-5 space-y-4">
+          {/* Destinatario */}
+          <div>
+            <label className="block text-xs font-bold text-cocoa-700 mb-1">Nombre del destinatario *</label>
+            <input
+              type="text" value={shipping.recipientName}
+              onChange={(e) => setShipping((s) => ({ ...s, recipientName: e.target.value }))}
+              className={inputCls('recipientName')} placeholder="Quién recibe el paquete" maxLength={120}
+            />
+            {shipErrors.recipientName && <p className="text-[11px] text-red-500 mt-1">{shipErrors.recipientName}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-cocoa-700 mb-1">Teléfono de contacto *</label>
+            <input
+              type="tel" value={shipping.phone}
+              onChange={(e) => setShipping((s) => ({ ...s, phone: e.target.value }))}
+              className={inputCls('phone')} placeholder="10 dígitos" maxLength={20}
+            />
+            {shipErrors.phone && <p className="text-[11px] text-red-500 mt-1">{shipErrors.phone}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-cocoa-700 mb-1">Calle *</label>
+            <input
+              type="text" value={shipping.street}
+              onChange={(e) => setShipping((s) => ({ ...s, street: e.target.value }))}
+              className={inputCls('street')} placeholder="Ej. Av. Constitución" maxLength={200}
+            />
+            {shipErrors.street && <p className="text-[11px] text-red-500 mt-1">{shipErrors.street}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-cocoa-700 mb-1">Núm. exterior *</label>
+              <input
+                type="text" value={shipping.exterior}
+                onChange={(e) => setShipping((s) => ({ ...s, exterior: e.target.value }))}
+                className={inputCls('exterior')} placeholder="Ej. 123" maxLength={20}
+              />
+              {shipErrors.exterior && <p className="text-[11px] text-red-500 mt-1">{shipErrors.exterior}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-cocoa-700 mb-1">Núm. interior</label>
+              <input
+                type="text" value={shipping.interior}
+                onChange={(e) => setShipping((s) => ({ ...s, interior: e.target.value }))}
+                className="input-cute" placeholder="Ej. A o 2 (opcional)" maxLength={20}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-cocoa-700 mb-1">Colonia *</label>
+            <input
+              type="text" value={shipping.neighborhood}
+              onChange={(e) => setShipping((s) => ({ ...s, neighborhood: e.target.value }))}
+              className={inputCls('neighborhood')} placeholder="Ej. Del Valle" maxLength={120}
+            />
+            {shipErrors.neighborhood && <p className="text-[11px] text-red-500 mt-1">{shipErrors.neighborhood}</p>}
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-cocoa-700 mb-1">CP *</label>
+              <input
+                type="text" inputMode="numeric" value={shipping.postalCode}
+                onChange={(e) => setShipping((s) => ({ ...s, postalCode: e.target.value.replace(/\D/g, '').slice(0, 5) }))}
+                className={inputCls('postalCode')} placeholder="64000" maxLength={5}
+              />
+              {shipErrors.postalCode && <p className="text-[11px] text-red-500 mt-1">{shipErrors.postalCode}</p>}
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-bold text-cocoa-700 mb-1">Ciudad *</label>
+              <input
+                type="text" value={shipping.city}
+                onChange={(e) => setShipping((s) => ({ ...s, city: e.target.value }))}
+                className={inputCls('city')} placeholder="Ej. Monterrey" maxLength={80}
+              />
+              {shipErrors.city && <p className="text-[11px] text-red-500 mt-1">{shipErrors.city}</p>}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-cocoa-700 mb-1">Estado *</label>
+            <input
+              type="text" value={shipping.state}
+              onChange={(e) => setShipping((s) => ({ ...s, state: e.target.value }))}
+              className={inputCls('state')} placeholder="Ej. Nuevo León" maxLength={80}
+            />
+            {shipErrors.state && <p className="text-[11px] text-red-500 mt-1">{shipErrors.state}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-cocoa-700 mb-1">Referencias <span className="text-cocoa-400 font-normal">(opcional)</span></label>
+            <textarea
+              value={shipping.references}
+              onChange={(e) => setShipping((s) => ({ ...s, references: e.target.value }))}
+              className="input-cute" placeholder="Ej. Casa color rosa, entre calle X y calle Y" maxLength={300} rows={2}
+            />
+          </div>
+        </div>
+
+        <button onClick={goToPayment} className="w-full btn-cute bg-blush-400 text-white py-3.5 text-base hover:bg-blush-500 shadow-glow mt-5">
+          Continuar al pago →
+        </button>
+        <p className="text-center text-xs text-cocoa-300 mt-2">Tus datos son privados y solo se usan para el envío.</p>
+      </div></AnimatedBg>
+    );
+  }
+
+  // ═══ PAYMENT ═══
+  if (step === 'payment') {
+    return (
+      <AnimatedBg theme="warm"><div className="max-w-lg mx-auto px-4 py-8">
+        <button onClick={() => setStep('shipping')} className="text-sm text-cocoa-400 hover:text-blush-400 mb-6 flex items-center gap-1">← Volver a la dirección</button>
+
         <h1 className="font-display font-bold text-2xl text-cocoa-700 mb-2">Metodo de Pago 💳</h1>
         <p className="text-cocoa-400 text-sm mb-6">Elige como quieres pagar</p>
+
+        {/* Resumen de envío */}
+        <div className="bg-mint-50/60 border border-mint-200 rounded-cute p-4 mb-6 text-xs">
+          <div className="flex items-start gap-2">
+            <span className="text-base">📦</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-cocoa-700 mb-0.5">Enviamos a:</p>
+              <p className="text-cocoa-600">{shipping.recipientName} · {shipping.phone}</p>
+              <p className="text-cocoa-600">{shipping.street} {shipping.exterior}{shipping.interior ? ` int. ${shipping.interior}` : ''}, Col. {shipping.neighborhood}</p>
+              <p className="text-cocoa-600">CP {shipping.postalCode} · {shipping.city}, {shipping.state}</p>
+              <button onClick={() => setStep('shipping')} className="text-blush-500 font-semibold hover:underline mt-1">Editar</button>
+            </div>
+          </div>
+        </div>
 
         {/* Order summary */}
         <div className="bg-white/80 backdrop-blur-sm rounded-cute shadow-soft border border-cream-200 p-5 mb-6">
@@ -259,7 +464,7 @@ function CartPageInner() {
                 </div>
               </div>
 
-              <button onClick={() => setStep('payment')} className="w-full btn-cute bg-blush-400 text-white py-3.5 text-base hover:bg-blush-500 shadow-glow mb-3">Ir a Pagar 💕</button>
+              <button onClick={() => setStep('shipping')} className="w-full btn-cute bg-blush-400 text-white py-3.5 text-base hover:bg-blush-500 shadow-glow mb-3">Ir a Pagar 💕</button>
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-cocoa-400 p-2 bg-cream-50 rounded-xl"><span>🏦</span> Transferencia {BANCO} / OXXO</div>

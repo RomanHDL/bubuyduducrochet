@@ -76,6 +76,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'El carrito esta vacio' }, { status: 400 });
   }
 
+  // Validar dirección de envío estructurada — campos obligatorios.
+  // Si falta cualquiera, rechazar antes de crear el pedido.
+  const s = body.shipping || {};
+  const required: Array<keyof typeof s> = [
+    'recipientName', 'phone', 'street', 'exterior',
+    'neighborhood', 'postalCode', 'city', 'state',
+  ];
+  const missing = required.filter((k) => !String(s[k] || '').trim());
+  if (missing.length > 0) {
+    return NextResponse.json({
+      error: 'Faltan campos de la dirección de envío',
+      missing,
+    }, { status: 400 });
+  }
+
+  // CP debe ser 5 dígitos (formato MX)
+  if (!/^\d{5}$/.test(String(s.postalCode).trim())) {
+    return NextResponse.json({ error: 'Código postal inválido (debe ser 5 dígitos)' }, { status: 400 });
+  }
+
+  const shipping = {
+    recipientName: String(s.recipientName).trim().slice(0, 120),
+    phone: String(s.phone).trim().slice(0, 20),
+    street: String(s.street).trim().slice(0, 200),
+    exterior: String(s.exterior).trim().slice(0, 20),
+    interior: String(s.interior || '').trim().slice(0, 20),
+    neighborhood: String(s.neighborhood).trim().slice(0, 120),
+    postalCode: String(s.postalCode).trim().slice(0, 10),
+    city: String(s.city).trim().slice(0, 80),
+    state: String(s.state).trim().slice(0, 80),
+    references: String(s.references || '').trim().slice(0, 300),
+  };
+
+  // Construir el shippingAddress legacy a partir del estructurado (back-compat
+  // para emails y vistas viejas que esperan un string)
+  const legacyAddress = [
+    `${shipping.recipientName} · ${shipping.phone}`,
+    `${shipping.street} ${shipping.exterior}${shipping.interior ? ` int. ${shipping.interior}` : ''}`,
+    `Col. ${shipping.neighborhood}, CP ${shipping.postalCode}`,
+    `${shipping.city}, ${shipping.state}`,
+    shipping.references ? `Referencias: ${shipping.references}` : '',
+  ].filter(Boolean).join('\n');
+
   // Auto-increment order number
   const lastOrder = await Order.findOne({}).sort({ orderNumber: -1 }).lean() as any;
   const nextNumber = (lastOrder?.orderNumber || 0) + 1;
@@ -87,7 +130,8 @@ export async function POST(req: NextRequest) {
     userEmail: (session.user?.email || '').toLowerCase(),
     items: cart.items,
     total: cart.total,
-    shippingAddress: body.shippingAddress || '',
+    shipping,
+    shippingAddress: legacyAddress,
     notes: body.notes || '',
     status: 'pending',
     paymentStatus: 'pending',

@@ -9,6 +9,7 @@ import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import ProductReview from '@/models/ProductReview';
 import ProductDetailClient from './ProductDetailClient';
+import RelatedProducts from '@/components/RelatedProducts';
 import {
   productJsonLd,
   breadcrumbJsonLd,
@@ -122,6 +123,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
       <script {...jsonLdScriptProps(productLd)} />
       <script {...jsonLdScriptProps(breadcrumbLd)} />
       <ProductDetailClient initialProduct={initialProduct} />
+      <RelatedProducts currentId={initialProduct._id} category={initialProduct.category} />
     </>
   );
 }

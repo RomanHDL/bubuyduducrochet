@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import NewsletterSignup from '@/components/NewsletterSignup';
 
 const WA = '528187087288';
 const EMAIL = 'veroguadalupita@gmail.com';
@@ -10,7 +11,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">
             <span className="font-display font-bold text-xl text-white">Mundo A Crochet</span>
-            <p className="text-sm text-cream-300 leading-relaxed mt-2">Creaciones artesanales tejidas a mano con amor desde Monterrey, Nuevo Leon.</p>
+            <p className="text-sm text-cream-300 leading-relaxed mt-2 mb-4">Creaciones artesanales tejidas a mano con amor desde Monterrey, Nuevo Leon.</p>
+            <NewsletterSignup />
           </div>
           <div>
             <h4 className="font-display font-bold text-white mb-3">Tienda</h4>

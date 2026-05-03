@@ -5,6 +5,7 @@ import Providers from "@/components/Providers";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import NewOrderNotifier from "@/components/NewOrderNotifier";
+import PromoBar from "@/components/PromoBar";
 import { connectDB } from "@/lib/mongodb";
 import SiteSettings from "@/models/SiteSettings";
 import { suggestThemeByDate, type ThemeId } from "@/lib/themes";
@@ -142,6 +143,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col">
         <Providers>
+          <PromoBar />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
