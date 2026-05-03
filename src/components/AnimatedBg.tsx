@@ -139,15 +139,15 @@ export default function AnimatedBg({ theme = 'pink', children }: { theme?: keyof
   const t = THEMES[theme] || THEMES.pink;
 
   return (
-    <div className={`relative min-h-screen overflow-hidden bg-gradient-to-br ${t.gradient}`}>
+    <div className={`themed-page-bg relative min-h-screen overflow-hidden bg-gradient-to-br ${t.gradient}`}>
       {/* Animated blob shapes */}
       {t.blobs.map((blob, i) => (
-        <div key={i} className={`absolute ${blob.color} ${blob.pos} ${blob.size} rounded-full blur-[80px] anim-blob pointer-events-none`} style={{ animationDelay: blob.delay }} />
+        <div key={i} className={`themed-page-bg__blob absolute ${blob.color} ${blob.pos} ${blob.size} rounded-full blur-[80px] anim-blob pointer-events-none`} style={{ animationDelay: blob.delay }} />
       ))}
 
       {/* Floating emojis — lots of them */}
       {t.emojis.map((e, i) => (
-        <div key={i} className={`absolute ${e.pos} ${e.size || 'text-4xl'} opacity-[0.12] ${e.anim} pointer-events-none select-none`} style={{ animationDelay: e.delay }}>
+        <div key={i} className={`themed-page-bg__emoji absolute ${e.pos} ${e.size || 'text-4xl'} opacity-[0.12] ${e.anim} pointer-events-none select-none`} style={{ animationDelay: e.delay }}>
           {e.char}
         </div>
       ))}

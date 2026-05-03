@@ -164,88 +164,49 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   TEMAS FESTIVOS — versión profesional (append-only)
-   Patrones 100% CSS/SVG geométrico abstracto. Sin emojis.
-   Las clases .theme-* se aplican a <html> y transforman:
-     - body (gradiente + dos capas decorativas animadas)
-     - navbar (color y borde inferior)
-     - cards (.card-cute) con borde, sombra y línea superior temáticas
-     - botones (.btn-primary, .btn-secondary)
-     - inputs (.input-cute)
-     - selección de texto y scrollbar
-     - banner festivo (.festive-banner) entre logo y nav
+   TEMAS FESTIVOS — ESTILO CÓMIC (Comic-Book) — append-only
+   - Patron de fondo: halftone (Ben-Day dots) + diagonal action lines
+   - Cards: borde grueso + hard offset shadow (estilo viñeta de comic)
+   - Burst geometrico SVG en esquina superior derecha de cada card
+     (NO tapa el contenido — solo asoma desde la esquina)
+   - Banner festivo en forma de bocadillo (speech bubble) con cola
+   - Logo, navbar, footer tematizados
+   - Override de AnimatedBg para que el tema se vea en TODAS las paginas
+     (catalogo, faq, nosotros, favoritos, carrito, etc.)
+
    Sin tema activo (.theme-none o ausencia de clase) = render base intacto.
    ════════════════════════════════════════════════════════════════════ */
 
-/* === ANIMACIONES INTERNAS DE CARDS POR TEMA === */
-@keyframes card-shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-}
-@keyframes card-rotate {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-@keyframes card-pulse {
-  0%, 100% { opacity: 0.35; transform: scale(1); }
-  50%      { opacity: 0.65; transform: scale(1.08); }
-}
-@keyframes card-fall {
-  0%   { transform: translateY(-20px); opacity: 0; }
-  20%  { opacity: 0.6; }
-  100% { transform: translateY(120%); opacity: 0; }
-}
-@keyframes card-drift {
-  0%   { transform: translate(0, 0); }
-  50%  { transform: translate(8px, 12px); }
-  100% { transform: translate(0, 0); }
-}
-@keyframes card-tricolor {
-  0%, 100% { box-shadow: inset 0 3px 0 0 #1F7A3A, 0 4px 20px rgba(31, 122, 58, 0.18); }
-  33%      { box-shadow: inset 0 3px 0 0 #FFFFFF, 0 4px 20px rgba(255, 255, 255, 0.30); }
-  66%      { box-shadow: inset 0 3px 0 0 #CE1126, 0 4px 20px rgba(206, 17, 38, 0.18); }
-}
-@keyframes card-flicker {
-  0%, 100% { box-shadow: inset 0 3px 0 0 #4A1F5C, 0 4px 20px rgba(255, 117, 24, 0.20), 0 0 18px rgba(255, 117, 24, 0.10); }
-  50%      { box-shadow: inset 0 3px 0 0 #4A1F5C, 0 4px 24px rgba(255, 117, 24, 0.40), 0 0 28px rgba(255, 117, 24, 0.30); }
-}
-@keyframes card-snow-fall {
-  0%   { background-position: 0 -80px, 30px -80px, 60px -80px; }
-  100% { background-position: 0 80px, 30px 80px, 60px 80px; }
-}
-@keyframes card-shimmer-bg {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
+/* === KEYFRAMES COMUNES === */
+@keyframes halftone-shift  { 0% { background-position: 0 0; } 100% { background-position: 14px 14px; } }
+@keyframes lines-shift     { 0% { background-position: 0 0; } 100% { background-position: 80px 0; } }
+@keyframes lines-shift-rev { 0% { background-position: 0 0; } 100% { background-position: -80px 0; } }
+@keyframes burst-pulse     { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.10) rotate(8deg); } }
+@keyframes burst-spin      { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes theme-fade-bg   { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes festive-banner-appear { 0% { opacity: 0; transform: translateY(-4px); } 100% { opacity: 1; transform: translateY(0); } }
 
 /* === BASE COMÚN A TODOS LOS TEMAS === */
 
-@keyframes theme-float {
-  0%   { background-position: 0 0; }
-  100% { background-position: 320px 320px; }
+/* Override AnimatedBg: cuando hay tema activo, su gradiente se vuelve
+   transparente para que el body tematizado se vea en todas las paginas */
+html[class*="theme-"]:not(.theme-none) .themed-page-bg {
+  background-image: none !important;
 }
-@keyframes theme-float-rev {
-  0%   { background-position: 0 0; }
-  100% { background-position: -480px -480px; }
+html[class*="theme-"]:not(.theme-none) .themed-page-bg__blob {
+  opacity: 0.35;
 }
-@keyframes theme-pulse-bg {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
-}
-@keyframes theme-fade-bg {
-  0%   { opacity: 0; }
-  100% { opacity: 1; }
-}
-@keyframes festive-banner-appear {
-  0%   { opacity: 0; transform: translateY(-4px); }
-  100% { opacity: 1; transform: translateY(0); }
+html[class*="theme-"]:not(.theme-none) .themed-page-bg__emoji {
+  opacity: 0.06 !important;
 }
 
 html[class*="theme-"]:not(.theme-none) body {
   position: relative;
   isolation: isolate;
-  transition: background-color 0.6s ease;
+  transition: background-color 0.5s ease;
 }
+
+/* Capa 1: halftone (Ben-Day dots) — patrón comic clásico */
 html[class*="theme-"]:not(.theme-none) body::before {
   content: '';
   position: fixed;
@@ -253,9 +214,11 @@ html[class*="theme-"]:not(.theme-none) body::before {
   z-index: -1;
   pointer-events: none;
   background-repeat: repeat;
-  background-size: 320px 320px;
-  animation: theme-float 90s linear infinite, theme-fade-bg 1.2s ease-out both;
+  background-size: 14px 14px;
+  animation: halftone-shift 25s linear infinite, theme-fade-bg 0.8s ease-out both;
 }
+
+/* Capa 2: diagonal action lines */
 html[class*="theme-"]:not(.theme-none) body::after {
   content: '';
   position: fixed;
@@ -263,256 +226,247 @@ html[class*="theme-"]:not(.theme-none) body::after {
   z-index: -1;
   pointer-events: none;
   background-repeat: repeat;
-  background-size: 480px 480px;
-  animation: theme-float-rev 160s linear infinite, theme-pulse-bg 9s ease-in-out infinite;
-}
-html[class*="theme-"]:not(.theme-none) .card-cute {
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  background-size: 80px 80px;
+  animation: lines-shift 20s linear infinite;
 }
 
-/* ─── Banner festivo (estilo base, colores se sobrescriben por tema) ─── */
+/* === CARDS COMIC-PANEL === */
+/* Borde grueso + hard offset shadow estilo viñeta de comic.
+   El contenido queda intacto y legible. */
+html[class*="theme-"]:not(.theme-none) .card-cute {
+  position: relative;
+  border-width: 2px !important;
+  box-shadow: 5px 5px 0 0 var(--card-shadow, #1A1A1A) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+html[class*="theme-"]:not(.theme-none) .card-cute:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0 0 var(--card-shadow, #1A1A1A) !important;
+}
+
+/* Burst geometrico en la esquina superior derecha de cada card.
+   Pequeño, asoma desde fuera, NO tapa contenido. */
+html[class*="theme-"]:not(.theme-none) .card-cute::after {
+  content: '';
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 48px;
+  height: 48px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+  z-index: 3;
+  filter: drop-shadow(2px 2px 0 rgba(26, 26, 26, 0.55));
+  transform: scale(0.85);
+  transition: transform 0.3s ease;
+}
+html[class*="theme-"]:not(.theme-none) .card-cute:hover::after {
+  animation: burst-pulse 1.6s ease-in-out infinite;
+}
+
+/* === BOTONES COMIC === */
+html[class*="theme-"]:not(.theme-none) .btn-primary,
+html[class*="theme-"]:not(.theme-none) .btn-secondary {
+  border: 2px solid #1A1A1A !important;
+  box-shadow: 3px 3px 0 0 #1A1A1A !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease !important;
+}
+html[class*="theme-"]:not(.theme-none) .btn-primary:hover,
+html[class*="theme-"]:not(.theme-none) .btn-secondary:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 5px 5px 0 0 #1A1A1A !important;
+}
+html[class*="theme-"]:not(.theme-none) .btn-primary:active,
+html[class*="theme-"]:not(.theme-none) .btn-secondary:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 0 0 0 0 #1A1A1A !important;
+}
+
+/* === INPUTS COMIC === */
+html[class*="theme-"]:not(.theme-none) .input-cute {
+  border-width: 2px !important;
+  border-color: #1A1A1A !important;
+  box-shadow: 3px 3px 0 0 rgba(26,26,26,0.85) !important;
+}
+
+/* === BANNER FESTIVO COMIC (speech bubble) === */
 .festive-banner {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.005em;
-  background: rgba(255, 255, 255, 0.55);
-  color: #4A3320;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+  background: #FFFFFF;
+  color: #1A1A1A;
+  border: 2px solid #1A1A1A;
+  box-shadow: 4px 4px 0 0 #1A1A1A;
   white-space: nowrap;
   overflow: hidden;
+  border-radius: 999px !important;
   animation: festive-banner-appear 0.5s ease-out both;
 }
 .festive-banner__date {
-  font-size: 10.5px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   flex-shrink: 0;
 }
 .festive-banner__divider {
   display: inline-block;
-  width: 1px;
-  height: 14px;
-  background: currentColor;
-  opacity: 0.30;
+  width: 2px;
+  height: 16px;
+  background: #1A1A1A;
   flex-shrink: 0;
 }
 .festive-banner__message {
   font-style: italic;
-  font-weight: 500;
-  opacity: 0.92;
+  font-weight: 600;
   text-overflow: ellipsis;
   overflow: hidden;
 }
 
-/* ─── Logo de la nav: fondo temático para que no se vea blanco ─── */
+/* === LOGO === */
 html[class*="theme-"]:not(.theme-none) .navbar-logo-img {
   padding: 4px;
-  transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.2s ease;
+  border: 2px solid #1A1A1A;
+  box-shadow: 3px 3px 0 0 #1A1A1A;
+  transition: transform 0.2s ease;
+}
+html[class*="theme-"]:not(.theme-none) .navbar-logo-img:hover {
+  transform: translate(-1px, -1px);
 }
 
-/* ─── Cards: capa decorativa interna animada (::after dentro de la card) ─── */
-html[class*="theme-"]:not(.theme-none) .card-cute {
-  position: relative;
-}
-html[class*="theme-"]:not(.theme-none) .card-cute::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.4;
-  transition: opacity 0.4s ease;
-  border-radius: inherit;
-}
-html[class*="theme-"]:not(.theme-none) .card-cute:hover::after {
-  opacity: 0.75;
-}
-html[class*="theme-"]:not(.theme-none) .card-cute > * {
-  position: relative;
-  z-index: 2;
-}
-
-/* ─── Footer: tinte temático ─── */
+/* === FOOTER === */
 html[class*="theme-"]:not(.theme-none) footer {
   position: relative;
-  transition: background-color 0.5s ease, border-color 0.5s ease;
-}
-html[class*="theme-"]:not(.theme-none) footer::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: var(--theme-footer-stripe, transparent);
+  border-top: 4px solid #1A1A1A;
+  transition: background-color 0.5s ease;
 }
 
-/* ════════════ San Valentín ════════════
-   Patrón: diamantes (cuadrados rotados) + chispas */
-html.theme-san-valentin body {
-  background: linear-gradient(135deg, #FFE0E6 0%, #FFC2CC 50%, #FFD8DD 100%);
-}
+/* ════════════════ Configuración por tema ════════════════ */
+
+/* ─── San Valentín ─── */
+html.theme-san-valentin { --card-shadow: #B0001D; }
+html.theme-san-valentin body { background-color: #FFE5EA; }
 html.theme-san-valentin body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%23FF4D6D' fill-opacity='0.22'><rect x='-7' y='-7' width='14' height='14' transform='translate(70 70) rotate(45)'/><rect x='-5' y='-5' width='10' height='10' transform='translate(220 200) rotate(45)'/></g><g fill='%23FF8FA3' fill-opacity='0.20'><rect x='-6' y='-6' width='12' height='12' transform='translate(245 90) rotate(45)'/><rect x='-4' y='-4' width='8' height='8' transform='translate(110 250) rotate(45)'/></g></svg>");
+  background-image: radial-gradient(circle, #FF1744 1.6px, transparent 2.2px);
 }
 html.theme-san-valentin body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FF4D6D' fill-opacity='0.18'><circle cx='100' cy='120' r='2.5'/><circle cx='380' cy='160' r='2'/><circle cx='240' cy='340' r='3'/><circle cx='60' cy='400' r='2'/><circle cx='420' cy='400' r='2.5'/><circle cx='200' cy='80' r='2'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(255, 23, 68, 0.10) 60px 62px);
 }
-html.theme-san-valentin nav { background-color: #FFD0D9 !important; border-bottom: 2px solid rgba(255, 77, 109, 0.30); }
-html.theme-san-valentin .card-cute { border-color: #FFB3BD; box-shadow: inset 0 3px 0 0 #FF4D6D, 0 4px 20px rgba(255, 77, 109, 0.12); }
-html.theme-san-valentin .card-cute:hover { border-color: #FF8FA3; box-shadow: inset 0 3px 0 0 #FF4D6D, 0 10px 30px rgba(255, 77, 109, 0.22); }
-html.theme-san-valentin .btn-primary { background-color: #FF4D6D; box-shadow: 0 4px 16px rgba(255, 77, 109, 0.30); }
-html.theme-san-valentin .btn-primary:hover { background-color: #E63950; }
-html.theme-san-valentin .btn-secondary { background-color: #FFE0E6; color: #B23A52; }
-html.theme-san-valentin .input-cute:focus { border-color: #FF8FA3; box-shadow: 0 0 0 3px rgba(255, 143, 163, 0.25); }
-html.theme-san-valentin ::selection { background-color: #FF4D6D; color: white; }
-html.theme-san-valentin ::-webkit-scrollbar-thumb { background: #FF8FA3; }
-html.theme-san-valentin ::-webkit-scrollbar-thumb:hover { background: #FF4D6D; }
-html.theme-san-valentin .festive-banner { background: rgba(255, 240, 243, 0.85); color: #B23A52; border-color: rgba(255, 77, 109, 0.30); }
-html.theme-san-valentin .festive-banner__date { color: #FF4D6D; }
-html.theme-san-valentin .navbar-logo-img { background: radial-gradient(circle, #FFE0E6 0%, #FFC2CC 100%); box-shadow: 0 2px 12px rgba(255, 77, 109, 0.30); }
+html.theme-san-valentin .card-cute { border-color: #B0001D !important; }
 html.theme-san-valentin .card-cute::after {
-  background: radial-gradient(circle at 85% 15%, rgba(255, 77, 109, 0.22) 0%, transparent 55%);
-  animation: card-pulse 3.2s ease-in-out infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FF1744' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
-html.theme-san-valentin footer { background-color: #7A2540 !important; color: #FFE0E6; }
-html.theme-san-valentin footer::before { background: linear-gradient(90deg, #FF4D6D, #FF8FA3, #FFB3BD); }
+html.theme-san-valentin .btn-primary { background-color: #FF1744 !important; color: #FFF !important; }
+html.theme-san-valentin .btn-primary:hover { background-color: #B0001D !important; }
+html.theme-san-valentin .btn-secondary { background-color: #FFD0DC !important; color: #B0001D !important; }
+html.theme-san-valentin nav { background-color: #FFB3BD !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-san-valentin .navbar-logo-img { background: #FF1744; }
+html.theme-san-valentin footer { background-color: #B0001D !important; color: #FFE5EA; }
+html.theme-san-valentin ::selection { background-color: #FF1744; color: white; }
+html.theme-san-valentin ::-webkit-scrollbar-thumb { background: #FF1744; }
+html.theme-san-valentin .festive-banner__date { color: #B0001D; }
 
-/* ════════════ Día de la Flor Amarilla ════════════
-   Patrón: anillos concéntricos (rayos solares) + puntos dorados */
-html.theme-flor-amarilla body {
-  background: linear-gradient(135deg, #FFF6B8 0%, #FFE066 50%, #FFEFA0 100%);
-}
+/* ─── Flor Amarilla ─── */
+html.theme-flor-amarilla { --card-shadow: #C99800; }
+html.theme-flor-amarilla body { background-color: #FFF6B8; }
 html.theme-flor-amarilla body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%23E5B100' stroke-opacity='0.32'><circle cx='80' cy='80' r='30' stroke-width='1.5'/><circle cx='80' cy='80' r='20' stroke-width='1.5'/><circle cx='80' cy='80' r='10' stroke-width='1.5'/><circle cx='240' cy='220' r='24' stroke-width='1.5'/><circle cx='240' cy='220' r='16' stroke-width='1.5'/><circle cx='240' cy='220' r='8' stroke-width='1.5'/></g><g fill='%23E5B100' fill-opacity='0.40'><circle cx='80' cy='80' r='3'/><circle cx='240' cy='220' r='3'/></g></svg>");
+  background-image: radial-gradient(circle, #E5B100 1.6px, transparent 2.2px);
 }
 html.theme-flor-amarilla body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23E5B100' fill-opacity='0.30'><circle cx='80' cy='150' r='3'/><circle cx='380' cy='100' r='2.5'/><circle cx='200' cy='380' r='3'/><circle cx='420' cy='320' r='2.5'/><circle cx='100' cy='400' r='2'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(229, 177, 0, 0.13) 60px 62px);
 }
-html.theme-flor-amarilla nav { background-color: #FFE066 !important; border-bottom: 2px solid rgba(229, 177, 0, 0.45); }
-html.theme-flor-amarilla .card-cute { border-color: #F5C518; box-shadow: inset 0 3px 0 0 #E5B100, 0 4px 20px rgba(229, 177, 0, 0.18); }
-html.theme-flor-amarilla .card-cute:hover { border-color: #E5B100; box-shadow: inset 0 3px 0 0 #E5B100, 0 10px 30px rgba(229, 177, 0, 0.30); }
-html.theme-flor-amarilla .btn-primary { background-color: #E5B100; color: #4A3320; box-shadow: 0 4px 16px rgba(229, 177, 0, 0.40); }
-html.theme-flor-amarilla .btn-primary:hover { background-color: #C99800; color: white; }
-html.theme-flor-amarilla .btn-secondary { background-color: #FFF3B8; color: #8B6543; }
-html.theme-flor-amarilla .input-cute:focus { border-color: #E5B100; box-shadow: 0 0 0 3px rgba(229, 177, 0, 0.25); }
-html.theme-flor-amarilla ::selection { background-color: #E5B100; color: #4A3320; }
-html.theme-flor-amarilla ::-webkit-scrollbar-thumb { background: #E5B100; }
-html.theme-flor-amarilla ::-webkit-scrollbar-thumb:hover { background: #C99800; }
-html.theme-flor-amarilla .festive-banner { background: rgba(255, 249, 220, 0.85); color: #8B6543; border-color: rgba(229, 177, 0, 0.40); }
-html.theme-flor-amarilla .festive-banner__date { color: #C99800; }
-html.theme-flor-amarilla .navbar-logo-img { background: radial-gradient(circle, #FFF6B8 0%, #FFE066 100%); box-shadow: 0 2px 12px rgba(229, 177, 0, 0.35); }
+html.theme-flor-amarilla .card-cute { border-color: #C99800 !important; }
 html.theme-flor-amarilla .card-cute::after {
-  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(229, 177, 0, 0.18) 60deg, transparent 120deg, rgba(229, 177, 0, 0.18) 240deg, transparent 360deg);
-  animation: card-rotate 14s linear infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FFD93D' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-flor-amarilla .btn-primary { background-color: #FFD93D !important; color: #1A1A1A !important; }
+html.theme-flor-amarilla .btn-primary:hover { background-color: #E5B100 !important; color: #FFF !important; }
+html.theme-flor-amarilla .btn-secondary { background-color: #FFEFA0 !important; color: #8B6543 !important; }
+html.theme-flor-amarilla nav { background-color: #FFE066 !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-flor-amarilla .navbar-logo-img { background: #FFD93D; }
 html.theme-flor-amarilla footer { background-color: #6B4A00 !important; color: #FFF6B8; }
-html.theme-flor-amarilla footer::before { background: linear-gradient(90deg, #E5B100, #F5C518, #FFD93D); }
+html.theme-flor-amarilla ::selection { background-color: #FFD93D; color: #1A1A1A; }
+html.theme-flor-amarilla ::-webkit-scrollbar-thumb { background: #E5B100; }
+html.theme-flor-amarilla .festive-banner__date { color: #C99800; }
 
-/* ════════════ Día del Niño ════════════
-   Patrón: confeti — puntos en 5 colores festivos */
-html.theme-dia-nino body {
-  background: linear-gradient(135deg, #FFE5F0 0%, #C8E7FF 35%, #FFF6C8 70%, #D4F5E0 100%);
-  background-size: 200% 200%;
-  animation: gradient-shift 22s ease infinite;
-}
+/* ─── Día del Niño ─── */
+html.theme-dia-nino { --card-shadow: #2A5485; }
+html.theme-dia-nino body { background-color: #E0F2FE; }
 html.theme-dia-nino body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><circle cx='60' cy='60' r='5' fill='%235BC0EB' fill-opacity='0.55'/><circle cx='150' cy='90' r='5' fill='%23FF8FA3' fill-opacity='0.55'/><circle cx='240' cy='70' r='5' fill='%23E5B100' fill-opacity='0.55'/><circle cx='80' cy='180' r='5' fill='%234ADE80' fill-opacity='0.55'/><circle cx='200' cy='200' r='5' fill='%23A78BFA' fill-opacity='0.55'/><circle cx='270' cy='250' r='5' fill='%23FF8FA3' fill-opacity='0.55'/><rect x='110' y='245' width='8' height='8' fill='%235BC0EB' fill-opacity='0.50' transform='rotate(20 114 249)'/><rect x='40' y='270' width='8' height='8' fill='%23E5B100' fill-opacity='0.50' transform='rotate(-15 44 274)'/><rect x='250' y='150' width='8' height='8' fill='%234ADE80' fill-opacity='0.50' transform='rotate(40 254 154)'/></g></svg>");
+  background-image:
+    radial-gradient(circle, #FF8FA3 1.5px, transparent 2px),
+    radial-gradient(circle, #FFD93D 1.5px, transparent 2px),
+    radial-gradient(circle, #4ADE80 1.5px, transparent 2px),
+    radial-gradient(circle, #5BC0EB 1.5px, transparent 2px);
+  background-size: 18px 18px, 22px 22px, 26px 26px, 30px 30px;
 }
 html.theme-dia-nino body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g><circle cx='90' cy='100' r='3' fill='%235BC0EB' fill-opacity='0.50'/><circle cx='400' cy='180' r='3' fill='%23FF8FA3' fill-opacity='0.50'/><circle cx='250' cy='400' r='3' fill='%23E5B100' fill-opacity='0.50'/><circle cx='80' cy='400' r='3' fill='%234ADE80' fill-opacity='0.50'/><circle cx='420' cy='400' r='3' fill='%23A78BFA' fill-opacity='0.50'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(91, 192, 235, 0.12) 60px 62px);
 }
-html.theme-dia-nino nav { background-color: #C8E7FF !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #FF8FA3, #E5B100, #4ADE80, #5BC0EB, #A78BFA) 1; }
-html.theme-dia-nino .card-cute { border-color: #5BC0EB; box-shadow: inset 0 3px 0 0 #5BC0EB, 0 4px 20px rgba(91, 192, 235, 0.18); }
-html.theme-dia-nino .card-cute:hover { border-color: #FF8FA3; box-shadow: inset 0 3px 0 0 #FF8FA3, 0 10px 30px rgba(255, 143, 163, 0.30); transform: translateY(-3px); }
-html.theme-dia-nino .btn-primary { background-color: #5BC0EB; box-shadow: 0 4px 16px rgba(91, 192, 235, 0.35); }
-html.theme-dia-nino .btn-primary:hover { background-color: #3DA8D8; }
-html.theme-dia-nino .btn-secondary { background-color: #FFE5F0; color: #C0395A; }
-html.theme-dia-nino .input-cute:focus { border-color: #5BC0EB; box-shadow: 0 0 0 3px rgba(91, 192, 235, 0.25); }
-html.theme-dia-nino ::selection { background-color: #5BC0EB; color: white; }
-html.theme-dia-nino ::-webkit-scrollbar-thumb { background: #5BC0EB; }
-html.theme-dia-nino ::-webkit-scrollbar-thumb:hover { background: #3DA8D8; }
-html.theme-dia-nino .festive-banner { background: rgba(255, 255, 255, 0.80); color: #2A5485; border-color: rgba(91, 192, 235, 0.40); }
-html.theme-dia-nino .festive-banner__date { color: #5BC0EB; }
-html.theme-dia-nino .navbar-logo-img { background: linear-gradient(135deg, #FFE5F0, #C8E7FF, #FFF6C8, #D4F5E0); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; box-shadow: 0 2px 12px rgba(91, 192, 235, 0.30); }
+html.theme-dia-nino .card-cute { border-color: #2A5485 !important; }
 html.theme-dia-nino .card-cute::after {
-  background: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(91, 192, 235, 0.30) 50%, transparent 65%, transparent 100%);
-  background-size: 200% 100%;
-  animation: card-shimmer-bg 3.5s ease-in-out infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%235BC0EB' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-dia-nino .btn-primary { background-color: #5BC0EB !important; color: #FFF !important; }
+html.theme-dia-nino .btn-primary:hover { background-color: #2A5485 !important; }
+html.theme-dia-nino .btn-secondary { background-color: #FFE5F0 !important; color: #C0395A !important; }
+html.theme-dia-nino nav { background-color: #C8E7FF !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-dia-nino .navbar-logo-img { background: linear-gradient(135deg, #FF8FA3, #FFD93D, #4ADE80, #5BC0EB, #A78BFA); }
 html.theme-dia-nino footer { background-color: #1A3D5C !important; color: #C8E7FF; }
-html.theme-dia-nino footer::before { background: linear-gradient(90deg, #FF8FA3, #E5B100, #4ADE80, #5BC0EB, #A78BFA); }
+html.theme-dia-nino ::selection { background-color: #5BC0EB; color: #FFF; }
+html.theme-dia-nino ::-webkit-scrollbar-thumb { background: #5BC0EB; }
+html.theme-dia-nino .festive-banner__date { color: #5BC0EB; }
 
-/* ════════════ Día de las Madres ════════════
-   Patrón: puntos rosados con racimos de tres */
-html.theme-dia-mama body {
-  background: linear-gradient(135deg, #FFE0EC 0%, #FFC8DC 50%, #FFEEF5 100%);
-}
+/* ─── Día de las Madres ─── */
+html.theme-dia-mama { --card-shadow: #C0395A; }
+html.theme-dia-mama body { background-color: #FFE0EC; }
 html.theme-dia-mama body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%23FF8FA3' fill-opacity='0.32'><circle cx='80' cy='80' r='6'/><circle cx='95' cy='75' r='4'/><circle cx='75' cy='95' r='4'/><circle cx='220' cy='220' r='6'/><circle cx='235' cy='215' r='4'/><circle cx='215' cy='235' r='4'/></g><g fill='%23FFB3BD' fill-opacity='0.28'><circle cx='160' cy='110' r='5'/><circle cx='250' cy='90' r='4'/><circle cx='110' cy='200' r='4'/><circle cx='270' cy='160' r='5'/></g><g fill='%23FF4D6D' fill-opacity='0.30'><circle cx='80' cy='80' r='2'/><circle cx='220' cy='220' r='2'/></g></svg>");
+  background-image: radial-gradient(circle, #FF6B81 1.6px, transparent 2.2px);
 }
 html.theme-dia-mama body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FF8FA3' fill-opacity='0.22'><circle cx='100' cy='150' r='3'/><circle cx='380' cy='100' r='2.5'/><circle cx='250' cy='370' r='3'/><circle cx='60' cy='400' r='2'/><circle cx='420' cy='350' r='2.5'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(255, 107, 129, 0.10) 60px 62px);
 }
-html.theme-dia-mama nav { background-color: #FFD0DC !important; border-bottom: 2px solid rgba(255, 143, 163, 0.40); }
-html.theme-dia-mama .card-cute { border-color: #FFB3BD; box-shadow: inset 0 3px 0 0 #FF8FA3, 0 4px 20px rgba(255, 143, 163, 0.18); }
-html.theme-dia-mama .card-cute:hover { border-color: #FF8FA3; box-shadow: inset 0 3px 0 0 #FF6B81, 0 10px 30px rgba(255, 143, 163, 0.30); }
-html.theme-dia-mama .btn-primary { background-color: #FF8FA3; box-shadow: 0 4px 16px rgba(255, 143, 163, 0.35); }
-html.theme-dia-mama .btn-primary:hover { background-color: #FF6B81; }
-html.theme-dia-mama .btn-secondary { background-color: #FFE0EC; color: #C0395A; }
-html.theme-dia-mama .input-cute:focus { border-color: #FF8FA3; box-shadow: 0 0 0 3px rgba(255, 143, 163, 0.25); }
-html.theme-dia-mama ::selection { background-color: #FF8FA3; color: white; }
-html.theme-dia-mama ::-webkit-scrollbar-thumb { background: #FF8FA3; }
-html.theme-dia-mama ::-webkit-scrollbar-thumb:hover { background: #FF6B81; }
-html.theme-dia-mama .festive-banner { background: rgba(255, 240, 245, 0.85); color: #C0395A; border-color: rgba(255, 143, 163, 0.40); }
-html.theme-dia-mama .festive-banner__date { color: #FF6B81; }
-html.theme-dia-mama .navbar-logo-img { background: radial-gradient(circle, #FFEEF5 0%, #FFC8DC 100%); box-shadow: 0 2px 12px rgba(255, 143, 163, 0.35); }
+html.theme-dia-mama .card-cute { border-color: #C0395A !important; }
 html.theme-dia-mama .card-cute::after {
-  background:
-    radial-gradient(circle at 20% 80%, rgba(255, 143, 163, 0.22) 0%, transparent 55%),
-    radial-gradient(circle at 80% 30%, rgba(255, 179, 189, 0.18) 0%, transparent 55%);
-  animation: card-drift 7s ease-in-out infinite, card-pulse 4s ease-in-out infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FF8FA3' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-dia-mama .btn-primary { background-color: #FF8FA3 !important; color: #FFF !important; }
+html.theme-dia-mama .btn-primary:hover { background-color: #FF6B81 !important; }
+html.theme-dia-mama .btn-secondary { background-color: #FFD0DC !important; color: #C0395A !important; }
+html.theme-dia-mama nav { background-color: #FFC8DC !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-dia-mama .navbar-logo-img { background: #FF8FA3; }
 html.theme-dia-mama footer { background-color: #7A2540 !important; color: #FFE0EC; }
-html.theme-dia-mama footer::before { background: linear-gradient(90deg, #FF8FA3, #FFB3BD, #FFD0DC); }
+html.theme-dia-mama ::selection { background-color: #FF8FA3; color: #FFF; }
+html.theme-dia-mama ::-webkit-scrollbar-thumb { background: #FF8FA3; }
+html.theme-dia-mama .festive-banner__date { color: #C0395A; }
 
-/* ════════════ Día del Padre ════════════
-   Patrón: hexágonos en cuadrícula (geométrico, sobrio) */
-html.theme-dia-papa body {
-  background: linear-gradient(135deg, #D5E4F2 0%, #B3CCE5 50%, #E0EBF5 100%);
-}
+/* ─── Día del Padre ─── */
+html.theme-dia-papa { --card-shadow: #2A5485; }
+html.theme-dia-papa body { background-color: #D5E4F2; }
 html.theme-dia-papa body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%233B6EA5' stroke-width='1.5' stroke-opacity='0.35'><polygon points='80,50 100,62 100,86 80,98 60,86 60,62'/><polygon points='240,180 260,192 260,216 240,228 220,216 220,192'/><polygon points='160,230 180,242 180,266 160,278 140,266 140,242'/></g></svg>");
+  background-image: radial-gradient(circle, #3B6EA5 1.6px, transparent 2.2px);
 }
 html.theme-dia-papa body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%233B6EA5' fill-opacity='0.20'><circle cx='100' cy='100' r='2.5'/><circle cx='380' cy='150' r='2.5'/><circle cx='250' cy='380' r='2.5'/><circle cx='60' cy='400' r='2.5'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(59, 110, 165, 0.10) 60px 62px);
 }
-html.theme-dia-papa nav { background-color: #B3CCE5 !important; border-bottom: 2px solid rgba(59, 110, 165, 0.45); }
-html.theme-dia-papa .card-cute { border-color: #7CC4F5; box-shadow: inset 0 3px 0 0 #3B6EA5, 0 4px 20px rgba(59, 110, 165, 0.15); }
-html.theme-dia-papa .card-cute:hover { border-color: #3B6EA5; box-shadow: inset 0 3px 0 0 #2A5485, 0 10px 30px rgba(59, 110, 165, 0.28); }
-html.theme-dia-papa .btn-primary { background-color: #3B6EA5; box-shadow: 0 4px 16px rgba(59, 110, 165, 0.35); }
-html.theme-dia-papa .btn-primary:hover { background-color: #2A5485; }
-html.theme-dia-papa .btn-secondary { background-color: #D5E4F2; color: #2A5485; }
-html.theme-dia-papa .input-cute:focus { border-color: #3B6EA5; box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.25); }
-html.theme-dia-papa ::selection { background-color: #3B6EA5; color: white; }
-html.theme-dia-papa ::-webkit-scrollbar-thumb { background: #7CC4F5; }
-html.theme-dia-papa ::-webkit-scrollbar-thumb:hover { background: #3B6EA5; }
-html.theme-dia-papa .festive-banner { background: rgba(238, 244, 250, 0.85); color: #2A5485; border-color: rgba(59, 110, 165, 0.40); }
-html.theme-dia-papa .festive-banner__date { color: #3B6EA5; }
-html.theme-dia-papa .navbar-logo-img { background: radial-gradient(circle, #E0EBF5 0%, #B3CCE5 100%); box-shadow: 0 2px 12px rgba(59, 110, 165, 0.30); }
+html.theme-dia-papa .card-cute { border-color: #2A5485 !important; }
 html.theme-dia-papa .card-cute::after {
-  background: linear-gradient(135deg, transparent 0%, rgba(59, 110, 165, 0.18) 50%, transparent 100%);
-  background-size: 250% 250%;
-  animation: gradient-shift 6s ease infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%233B6EA5' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-dia-papa .btn-primary { background-color: #3B6EA5 !important; color: #FFF !important; }
+html.theme-dia-papa .btn-primary:hover { background-color: #2A5485 !important; }
+html.theme-dia-papa .btn-secondary { background-color: #B3CCE5 !important; color: #2A5485 !important; }
+html.theme-dia-papa nav { background-color: #B3CCE5 !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-dia-papa .navbar-logo-img { background: #3B6EA5; }
 html.theme-dia-papa footer { background-color: #1A3D5C !important; color: #D5E4F2; }
-html.theme-dia-papa footer::before { background: linear-gradient(90deg, #2A5485, #3B6EA5, #7CC4F5); }
+html.theme-dia-papa ::selection { background-color: #3B6EA5; color: #FFF; }
+html.theme-dia-papa ::-webkit-scrollbar-thumb { background: #7CC4F5; }
+html.theme-dia-papa .festive-banner__date { color: #3B6EA5; }
 
-/* ════════════ Independencia ════════════
-   Bandera de México como fondo (3 franjas verticales) + emblema central CSS */
+/* ─── Independencia (Bandera Mexicana real) ─── */
+html.theme-independencia { --card-shadow: #155F2C; }
 html.theme-independencia body {
   background:
     linear-gradient(90deg,
@@ -523,399 +477,187 @@ html.theme-independencia body {
   background-size: 100vw 100vh;
 }
 html.theme-independencia body::before {
-  background-color: rgba(255, 255, 255, 0.38);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'><g fill='none' stroke='%23155F2C' stroke-opacity='0.55'><circle cx='140' cy='140' r='110' stroke-width='3' stroke-dasharray='6,4'/><circle cx='140' cy='140' r='90' stroke-width='1.5'/></g><g fill='%23155F2C' fill-opacity='0.55'><path d='M140 80 L148 110 L180 110 L154 128 L162 158 L140 140 L118 158 L126 128 L100 110 L132 110 Z'/></g><g fill='%23CE1126' fill-opacity='0.50'><circle cx='140' cy='195' r='7'/><circle cx='112' cy='185' r='5'/><circle cx='168' cy='185' r='5'/><circle cx='95' cy='168' r='4'/><circle cx='185' cy='168' r='4'/></g></svg>");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: 280px 280px;
-  background-attachment: fixed;
-  animation: theme-fade-bg 1.4s ease-out both, indep-breathe 9s ease-in-out infinite;
-}
-@keyframes indep-breathe {
-  0%, 100% { background-color: rgba(255, 255, 255, 0.42); }
-  50%      { background-color: rgba(255, 255, 255, 0.30); }
+  background-image:
+    radial-gradient(circle, rgba(26, 26, 26, 0.45) 1.5px, transparent 2px),
+    none;
+  background-color: rgba(255, 255, 255, 0.30);
+  background-size: 14px 14px, auto;
 }
 html.theme-independencia body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g><path d='M100 80 L106 96 L122 96 L110 106 L114 122 L100 113 L86 122 L90 106 L78 96 L94 96 Z' fill='%23FFFFFF' fill-opacity='0.55'/><path d='M380 200 L386 216 L402 216 L390 226 L394 242 L380 233 L366 242 L370 226 L358 216 L374 216 Z' fill='%23FFFFFF' fill-opacity='0.45'/><path d='M250 380 L256 396 L272 396 L260 406 L264 422 L250 413 L236 422 L240 406 L228 396 L244 396 Z' fill='%23FFFFFF' fill-opacity='0.50'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(0, 104, 71, 0.12) 60px 62px);
 }
-html.theme-independencia nav { background-color: #C8E8D0 !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%) 1; }
-html.theme-independencia .card-cute { border-color: #1F7A3A; box-shadow: inset 0 3px 0 0 #1F7A3A, 0 4px 20px rgba(31, 122, 58, 0.18); }
-html.theme-independencia .card-cute:hover { border-color: #CE1126; box-shadow: inset 0 3px 0 0 #CE1126, 0 10px 30px rgba(206, 17, 38, 0.22); }
-html.theme-independencia .btn-primary { background-color: #1F7A3A; box-shadow: 0 4px 16px rgba(31, 122, 58, 0.35); }
-html.theme-independencia .btn-primary:hover { background-color: #155F2C; }
-html.theme-independencia .btn-secondary { background-color: #C8E8D0; color: #155F2C; }
-html.theme-independencia .input-cute:focus { border-color: #1F7A3A; box-shadow: 0 0 0 3px rgba(31, 122, 58, 0.25); }
-html.theme-independencia ::selection { background-color: #1F7A3A; color: white; }
-html.theme-independencia ::-webkit-scrollbar-thumb { background: #1F7A3A; }
-html.theme-independencia ::-webkit-scrollbar-thumb:hover { background: #CE1126; }
-html.theme-independencia .festive-banner { background: rgba(255, 255, 255, 0.85); color: #155F2C; border-color: rgba(31, 122, 58, 0.40); }
-html.theme-independencia .festive-banner__date { color: #CE1126; }
-html.theme-independencia .navbar-logo-img { background: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%); box-shadow: 0 2px 12px rgba(31, 122, 58, 0.35); }
-html.theme-independencia .card-cute:hover { animation: card-tricolor 3.5s ease-in-out infinite; }
+html.theme-independencia .card-cute { border-color: #155F2C !important; }
 html.theme-independencia .card-cute::after {
-  background: linear-gradient(180deg, transparent 0%, rgba(31, 122, 58, 0.10) 30%, transparent 50%, rgba(206, 17, 38, 0.10) 70%, transparent 100%);
-  background-size: 100% 200%;
-  animation: card-shimmer-bg 5s ease-in-out infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23006847' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
-html.theme-independencia footer { background-color: #155F2C !important; color: #C8E8D0; }
-html.theme-independencia footer::before { background: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%); height: 4px; }
+html.theme-independencia .btn-primary { background-color: #006847 !important; color: #FFF !important; }
+html.theme-independencia .btn-primary:hover { background-color: #155F2C !important; }
+html.theme-independencia .btn-secondary { background-color: #CE1126 !important; color: #FFF !important; }
+html.theme-independencia nav { background-color: #FFFFFF !important; border-bottom: 4px solid #1A1A1A !important; }
+html.theme-independencia .navbar-logo-img {
+  background: linear-gradient(90deg, #006847 0%, #006847 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%);
+}
+html.theme-independencia footer { background-color: #155F2C !important; color: #FFF; }
+html.theme-independencia ::selection { background-color: #006847; color: #FFF; }
+html.theme-independencia ::-webkit-scrollbar-thumb { background: #006847; }
+html.theme-independencia .festive-banner__date { color: #006847; }
 
-/* ════════════ Halloween ════════════
-   Patrón: rayos radiales (web abstracta) + puntos */
-html.theme-halloween body {
-  background: linear-gradient(135deg, #FFB870 0%, #FF7518 40%, #4A1F5C 100%);
-  color: #2D1B33;
-}
+/* ─── Halloween ─── */
+html.theme-halloween { --card-shadow: #4A1F5C; }
+html.theme-halloween body { background-color: #FFC080; color: #1A1A1A; }
 html.theme-halloween body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g stroke='%234A1F5C' stroke-width='1.4' stroke-opacity='0.40' fill='none'><line x1='80' y1='80' x2='30' y2='30'/><line x1='80' y1='80' x2='130' y2='30'/><line x1='80' y1='80' x2='30' y2='130'/><line x1='80' y1='80' x2='130' y2='130'/><line x1='80' y1='80' x2='80' y2='20'/><line x1='80' y1='80' x2='140' y2='80'/><line x1='80' y1='80' x2='80' y2='140'/><line x1='80' y1='80' x2='20' y2='80'/></g><g fill='%234A1F5C' fill-opacity='0.55'><circle cx='80' cy='80' r='4'/><circle cx='240' cy='220' r='3'/></g></svg>");
+  background-image: radial-gradient(circle, #4A1F5C 1.8px, transparent 2.4px);
 }
 html.theme-halloween body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%234A1F5C' fill-opacity='0.35'><circle cx='100' cy='120' r='2'/><circle cx='380' cy='180' r='2'/><circle cx='240' cy='380' r='2'/><circle cx='80' cy='400' r='2'/><circle cx='420' cy='400' r='2'/><circle cx='200' cy='80' r='2'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(74, 31, 92, 0.18) 60px 62px);
 }
-html.theme-halloween nav { background-color: #FF7518 !important; border-bottom: 2px solid #4A1F5C; }
-html.theme-halloween .card-cute { border-color: #FF7518; box-shadow: inset 0 3px 0 0 #4A1F5C, 0 4px 20px rgba(255, 117, 24, 0.20); background-color: #FFF7EC; }
-html.theme-halloween .card-cute:hover { border-color: #4A1F5C; box-shadow: inset 0 3px 0 0 #4A1F5C, 0 10px 30px rgba(74, 31, 92, 0.32); }
-html.theme-halloween .btn-primary { background-color: #FF7518; color: white; box-shadow: 0 4px 16px rgba(255, 117, 24, 0.40); }
-html.theme-halloween .btn-primary:hover { background-color: #E76F00; }
-html.theme-halloween .btn-secondary { background-color: #4A1F5C; color: #FFD9B3; }
-html.theme-halloween .btn-secondary:hover { background-color: #2D1B33; }
-html.theme-halloween .input-cute:focus { border-color: #FF7518; box-shadow: 0 0 0 3px rgba(255, 117, 24, 0.30); }
-html.theme-halloween ::selection { background-color: #FF7518; color: #2D1B33; }
-html.theme-halloween ::-webkit-scrollbar-thumb { background: #FF7518; }
-html.theme-halloween ::-webkit-scrollbar-thumb:hover { background: #4A1F5C; }
-html.theme-halloween .festive-banner { background: rgba(255, 247, 236, 0.90); color: #4A1F5C; border-color: rgba(74, 31, 92, 0.45); }
-html.theme-halloween .festive-banner__date { color: #FF7518; }
-html.theme-halloween .navbar-logo-img { background: radial-gradient(circle, #FFB870 0%, #FF7518 100%); box-shadow: 0 2px 14px rgba(255, 117, 24, 0.45); }
-html.theme-halloween .card-cute:hover { animation: card-flicker 1.6s ease-in-out infinite; }
+html.theme-halloween .card-cute { border-color: #4A1F5C !important; }
 html.theme-halloween .card-cute::after {
-  background: radial-gradient(circle at 50% 100%, rgba(74, 31, 92, 0.30) 0%, transparent 60%);
-  animation: card-pulse 2.5s ease-in-out infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FF7518' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-halloween .btn-primary { background-color: #FF7518 !important; color: #FFF !important; }
+html.theme-halloween .btn-primary:hover { background-color: #E76F00 !important; }
+html.theme-halloween .btn-secondary { background-color: #4A1F5C !important; color: #FFC080 !important; }
+html.theme-halloween nav { background-color: #FF7518 !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-halloween .navbar-logo-img { background: #4A1F5C; }
 html.theme-halloween footer { background-color: #2D1B33 !important; color: #FFB870; }
-html.theme-halloween footer::before { background: linear-gradient(90deg, #FF7518, #4A1F5C, #FF7518); height: 4px; }
+html.theme-halloween ::selection { background-color: #FF7518; color: #1A1A1A; }
+html.theme-halloween ::-webkit-scrollbar-thumb { background: #FF7518; }
+html.theme-halloween .festive-banner__date { color: #FF7518; }
 
-/* ════════════ Día de Muertos ════════════
-   Patrón: flores radiales abstractas (8 elipses + centro) */
-html.theme-dia-muertos body {
-  background: linear-gradient(135deg, #FFCC80 0%, #E76F00 40%, #7B3F9F 100%);
-  background-size: 200% 200%;
-  animation: gradient-shift 28s ease infinite;
-}
+/* ─── Día de Muertos ─── */
+html.theme-dia-muertos { --card-shadow: #5A2C7A; }
+html.theme-dia-muertos body { background-color: #FFD9A8; }
 html.theme-dia-muertos body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(80 80)'><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50'/><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50' transform='rotate(45)'/><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50' transform='rotate(90)'/><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50' transform='rotate(135)'/><circle r='4' fill='%23B23A00' fill-opacity='0.65'/></g><g transform='translate(240 220)'><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45'/><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45' transform='rotate(45)'/><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45' transform='rotate(90)'/><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45' transform='rotate(135)'/><circle r='3' fill='%235A2C7A' fill-opacity='0.65'/></g></g></svg>");
+  background-image:
+    radial-gradient(circle, #E76F00 1.5px, transparent 2px),
+    radial-gradient(circle, #7B3F9F 1.5px, transparent 2px);
+  background-size: 14px 14px, 22px 22px;
 }
 html.theme-dia-muertos body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23E5B100' fill-opacity='0.32'><circle cx='100' cy='100' r='2.5'/><circle cx='380' cy='250' r='2.5'/><circle cx='200' cy='380' r='2.5'/><circle cx='60' cy='400' r='2'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(123, 63, 159, 0.12) 60px 62px);
 }
-html.theme-dia-muertos nav { background-color: #E76F00 !important; border-bottom: 3px solid #7B3F9F; }
-html.theme-dia-muertos .card-cute { border-color: #E76F00; box-shadow: inset 0 3px 0 0 #7B3F9F, 0 4px 20px rgba(231, 111, 0, 0.22); background-color: #FFF7EC; }
-html.theme-dia-muertos .card-cute:hover { border-color: #7B3F9F; box-shadow: inset 0 3px 0 0 #5A2C7A, 0 10px 30px rgba(123, 63, 159, 0.28); }
-html.theme-dia-muertos .btn-primary { background-color: #E76F00; box-shadow: 0 4px 16px rgba(231, 111, 0, 0.40); }
-html.theme-dia-muertos .btn-primary:hover { background-color: #B23A00; }
-html.theme-dia-muertos .btn-secondary { background-color: #7B3F9F; color: white; }
-html.theme-dia-muertos .btn-secondary:hover { background-color: #5A2C7A; }
-html.theme-dia-muertos .input-cute:focus { border-color: #E76F00; box-shadow: 0 0 0 3px rgba(231, 111, 0, 0.30); }
-html.theme-dia-muertos ::selection { background-color: #E76F00; color: white; }
-html.theme-dia-muertos ::-webkit-scrollbar-thumb { background: #E76F00; }
-html.theme-dia-muertos ::-webkit-scrollbar-thumb:hover { background: #7B3F9F; }
-html.theme-dia-muertos .festive-banner { background: rgba(255, 247, 236, 0.90); color: #5A2C7A; border-color: rgba(123, 63, 159, 0.45); }
-html.theme-dia-muertos .festive-banner__date { color: #E76F00; }
-html.theme-dia-muertos .navbar-logo-img { background: linear-gradient(135deg, #FFCC80, #E76F00, #7B3F9F); background-size: 200% 200%; animation: gradient-shift 8s ease infinite; box-shadow: 0 2px 14px rgba(231, 111, 0, 0.40); }
+html.theme-dia-muertos .card-cute { border-color: #5A2C7A !important; }
 html.theme-dia-muertos .card-cute::after {
-  background: conic-gradient(from 0deg, rgba(231, 111, 0, 0.18), rgba(229, 177, 0, 0.18), rgba(123, 63, 159, 0.18), rgba(231, 111, 0, 0.18));
-  animation: card-rotate 18s linear infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23E76F00' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-dia-muertos .btn-primary { background-color: #E76F00 !important; color: #FFF !important; }
+html.theme-dia-muertos .btn-primary:hover { background-color: #B23A00 !important; }
+html.theme-dia-muertos .btn-secondary { background-color: #7B3F9F !important; color: #FFF !important; }
+html.theme-dia-muertos nav { background-color: #FFB870 !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-dia-muertos .navbar-logo-img { background: linear-gradient(135deg, #E76F00, #7B3F9F); }
 html.theme-dia-muertos footer { background-color: #3D1A4F !important; color: #FFCC80; }
-html.theme-dia-muertos footer::before { background: linear-gradient(90deg, #E76F00, #FFD93D, #7B3F9F, #E76F00); height: 4px; }
+html.theme-dia-muertos ::selection { background-color: #E76F00; color: #FFF; }
+html.theme-dia-muertos ::-webkit-scrollbar-thumb { background: #E76F00; }
+html.theme-dia-muertos .festive-banner__date { color: #E76F00; }
 
-/* ════════════ Navidad ════════════
-   Patrón: cristales de nieve (líneas geométricas) + puntos blancos */
-html.theme-navidad body {
-  background: linear-gradient(135deg, #C8E8D0 0%, #F8C8CC 50%, #E8F5EC 100%);
-  background-size: 200% 200%;
-  animation: gradient-shift 25s ease infinite;
-}
+/* ─── Navidad ─── */
+html.theme-navidad { --card-shadow: #0A4A2A; }
+html.theme-navidad body { background-color: #C8E8D0; }
 html.theme-navidad body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g stroke='%230F8A4D' stroke-width='1.4' stroke-opacity='0.40' fill='none' stroke-linecap='round'><g transform='translate(80 80)'><line x1='0' y1='-22' x2='0' y2='22'/><line x1='-22' y1='0' x2='22' y2='0'/><line x1='-16' y1='-16' x2='16' y2='16'/><line x1='16' y1='-16' x2='-16' y2='16'/><line x1='-3' y1='-19' x2='3' y2='-19'/><line x1='-3' y1='19' x2='3' y2='19'/></g></g><g stroke='%23C8102E' stroke-width='1.4' stroke-opacity='0.40' fill='none' stroke-linecap='round'><g transform='translate(240 220)'><line x1='0' y1='-18' x2='0' y2='18'/><line x1='-18' y1='0' x2='18' y2='0'/><line x1='-13' y1='-13' x2='13' y2='13'/><line x1='13' y1='-13' x2='-13' y2='13'/></g></g></svg>");
+  background-image: radial-gradient(circle, #0F8A4D 1.6px, transparent 2.2px);
 }
 html.theme-navidad body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFFFFF' fill-opacity='0.65'><circle cx='100' cy='100' r='2'/><circle cx='350' cy='180' r='2.5'/><circle cx='200' cy='350' r='2'/><circle cx='420' cy='400' r='2.5'/><circle cx='80' cy='420' r='2'/><circle cx='280' cy='80' r='2'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(200, 16, 46, 0.13) 60px 62px);
 }
-html.theme-navidad nav { background-color: #0F8A4D !important; border-bottom: 3px solid #C8102E; }
-html.theme-navidad nav a, html.theme-navidad nav button { color: #FFFFFF !important; }
-html.theme-navidad .card-cute { border-color: #0F8A4D; box-shadow: inset 0 3px 0 0 #C8102E, 0 4px 20px rgba(15, 138, 77, 0.18); }
-html.theme-navidad .card-cute:hover { border-color: #C8102E; box-shadow: inset 0 3px 0 0 #A00D24, 0 10px 30px rgba(200, 16, 46, 0.22); }
-html.theme-navidad .btn-primary { background-color: #C8102E; box-shadow: 0 4px 16px rgba(200, 16, 46, 0.35); }
-html.theme-navidad .btn-primary:hover { background-color: #A00D24; }
-html.theme-navidad .btn-secondary { background-color: #0F8A4D; color: white; }
-html.theme-navidad .btn-secondary:hover { background-color: #0A6A3A; }
-html.theme-navidad .input-cute:focus { border-color: #0F8A4D; box-shadow: 0 0 0 3px rgba(15, 138, 77, 0.25); }
-html.theme-navidad ::selection { background-color: #C8102E; color: white; }
-html.theme-navidad ::-webkit-scrollbar-thumb { background: #0F8A4D; }
-html.theme-navidad ::-webkit-scrollbar-thumb:hover { background: #C8102E; }
-html.theme-navidad .festive-banner { background: rgba(255, 255, 255, 0.85); color: #0A6A3A; border-color: rgba(15, 138, 77, 0.40); }
-html.theme-navidad .festive-banner__date { color: #C8102E; }
-html.theme-navidad .navbar-logo-img { background: radial-gradient(circle, #E8F5EC 0%, #C8E8D0 50%, #F8C8CC 100%); box-shadow: 0 2px 12px rgba(15, 138, 77, 0.35); }
+html.theme-navidad .card-cute { border-color: #0A4A2A !important; }
 html.theme-navidad .card-cute::after {
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(255,255,255,0.95) 1.2px, transparent 2px),
-    radial-gradient(circle at 55% 65%, rgba(255,255,255,0.85) 1.5px, transparent 2.5px),
-    radial-gradient(circle at 80% 35%, rgba(255,255,255,0.90) 1px, transparent 2px);
-  background-size: 80px 80px, 80px 80px, 80px 80px;
-  animation: card-snow-fall 6s linear infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23C8102E' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-navidad .btn-primary { background-color: #C8102E !important; color: #FFF !important; }
+html.theme-navidad .btn-primary:hover { background-color: #A00D24 !important; }
+html.theme-navidad .btn-secondary { background-color: #0F8A4D !important; color: #FFF !important; }
+html.theme-navidad nav { background-color: #0F8A4D !important; border-bottom: 4px solid #C8102E !important; }
+html.theme-navidad nav a, html.theme-navidad nav button { color: #FFFFFF !important; }
+html.theme-navidad .navbar-logo-img { background: linear-gradient(90deg, #0F8A4D 0%, #0F8A4D 50%, #C8102E 50%, #C8102E 100%); }
 html.theme-navidad footer { background-color: #0A4A2A !important; color: #C8E8D0; }
-html.theme-navidad footer::before { background: linear-gradient(90deg, #0F8A4D, #FFFFFF, #C8102E); height: 4px; }
+html.theme-navidad ::selection { background-color: #C8102E; color: #FFF; }
+html.theme-navidad ::-webkit-scrollbar-thumb { background: #0F8A4D; }
+html.theme-navidad .festive-banner__date { color: #C8102E; }
 
-/* ════════════ Día de Reyes ════════════
-   Patrón: estrella de 8 puntas (cuadrados superpuestos) + chispas doradas */
-html.theme-reyes body {
-  background: linear-gradient(135deg, #FFEFC0 0%, #FFD970 50%, #FFF8DC 100%);
-}
+/* ─── Día de Reyes ─── */
+html.theme-reyes { --card-shadow: #8B6A0B; }
+html.theme-reyes body { background-color: #FFEFC0; }
 html.theme-reyes body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(80 80)'><rect x='-15' y='-15' width='30' height='30' fill='%23D4AF37' fill-opacity='0.40'/><rect x='-15' y='-15' width='30' height='30' fill='%23B8860B' fill-opacity='0.30' transform='rotate(45)'/><circle r='4' fill='%23FFFFFF' fill-opacity='0.7'/></g><g transform='translate(240 220)'><rect x='-12' y='-12' width='24' height='24' fill='%23B8860B' fill-opacity='0.35'/><rect x='-12' y='-12' width='24' height='24' fill='%23D4AF37' fill-opacity='0.30' transform='rotate(45)'/></g></g></svg>");
+  background-image: radial-gradient(circle, #B8860B 1.6px, transparent 2.2px);
 }
 html.theme-reyes body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23B8860B' fill-opacity='0.30'><circle cx='100' cy='150' r='2.5'/><circle cx='380' cy='100' r='2'/><circle cx='200' cy='380' r='2.5'/><circle cx='420' cy='350' r='2'/></g></svg>");
+  background-image: repeating-linear-gradient(45deg, transparent 0 60px, rgba(212, 175, 55, 0.16) 60px 62px);
 }
-html.theme-reyes nav { background-color: #FFD970 !important; border-bottom: 3px solid #D4AF37; }
-html.theme-reyes .card-cute { border-color: #D4AF37; box-shadow: inset 0 3px 0 0 #B8860B, 0 4px 20px rgba(212, 175, 55, 0.22); }
-html.theme-reyes .card-cute:hover { border-color: #B8860B; box-shadow: inset 0 3px 0 0 #B8860B, 0 10px 30px rgba(184, 134, 11, 0.32); }
-html.theme-reyes .btn-primary { background-color: #D4AF37; color: #4A3320; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.40); }
-html.theme-reyes .btn-primary:hover { background-color: #B8860B; color: white; }
-html.theme-reyes .btn-secondary { background-color: #FFEFC0; color: #8B6543; }
-html.theme-reyes .input-cute:focus { border-color: #D4AF37; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.30); }
-html.theme-reyes ::selection { background-color: #D4AF37; color: #4A3320; }
-html.theme-reyes ::-webkit-scrollbar-thumb { background: #D4AF37; }
-html.theme-reyes ::-webkit-scrollbar-thumb:hover { background: #B8860B; }
-html.theme-reyes .festive-banner { background: rgba(255, 248, 220, 0.90); color: #8B6543; border-color: rgba(184, 134, 11, 0.45); }
-html.theme-reyes .festive-banner__date { color: #B8860B; }
-html.theme-reyes .navbar-logo-img { background: radial-gradient(circle, #FFF8DC 0%, #FFD970 100%); box-shadow: 0 2px 14px rgba(212, 175, 55, 0.45); }
+html.theme-reyes .card-cute { border-color: #8B6A0B !important; }
 html.theme-reyes .card-cute::after {
-  background: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(212, 175, 55, 0.40) 50%, transparent 65%, transparent 100%);
-  background-size: 200% 100%;
-  animation: card-shimmer-bg 3s ease-in-out infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23D4AF37' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
 }
+html.theme-reyes .btn-primary { background-color: #D4AF37 !important; color: #1A1A1A !important; }
+html.theme-reyes .btn-primary:hover { background-color: #B8860B !important; color: #FFF !important; }
+html.theme-reyes .btn-secondary { background-color: #FFEFC0 !important; color: #8B6A0B !important; }
+html.theme-reyes nav { background-color: #FFD970 !important; border-bottom: 3px solid #1A1A1A !important; }
+html.theme-reyes .navbar-logo-img { background: #D4AF37; }
 html.theme-reyes footer { background-color: #4A3320 !important; color: #FFD970; }
-html.theme-reyes footer::before { background: linear-gradient(90deg, #B8860B, #D4AF37, #FFD970, #D4AF37, #B8860B); height: 4px; }
+html.theme-reyes ::selection { background-color: #D4AF37; color: #1A1A1A; }
+html.theme-reyes ::-webkit-scrollbar-thumb { background: #D4AF37; }
+html.theme-reyes .festive-banner__date { color: #B8860B; }
 
 /* ════════════════════════════════════════════════════════════════════
-   DECORACIONES TEMÁTICAS GLOBALES (main::before)
-   Tercera capa de decoración: elementos icónicos de cada fecha que
-   cubren toda la página (caen, ondean o brillan).
+   VARIACIONES POR PÁGINA — animación distinta del fondo según la ruta
    ════════════════════════════════════════════════════════════════════ */
 
-@keyframes decor-fall {
-  0%   { background-position: 0 -220px; }
-  100% { background-position: 0 100vh; }
-}
-@keyframes decor-fall-3 {
-  0%   { background-position: 0 -220px, 40px -220px, 80px -220px; }
-  100% { background-position: 0 100vh, 40px 100vh, 80px 100vh; }
-}
-@keyframes decor-fall-5 {
-  0%   { background-position: 0 -220px, 25px -220px, 50px -220px, 75px -220px, 100px -220px; }
-  100% { background-position: 0 100vh, 25px 100vh, 50px 100vh, 75px 100vh, 100px 100vh; }
-}
-@keyframes papel-sway {
-  0%, 100% { background-position: 0 top; }
-  50%      { background-position: 40px top; }
-}
-@keyframes star-shine {
-  0%, 100% { opacity: 0.55; }
-  50%      { opacity: 0.95; }
-}
+@keyframes page-bg-pulse   { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+@keyframes page-bg-rotate  { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes page-bg-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@keyframes page-bg-hue     { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(20deg) saturate(1.1); } }
+@keyframes page-bg-sway    { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(15px); } }
 
-html[class*="theme-"]:not(.theme-none) main {
-  position: relative;
-  isolation: isolate;
-}
-html[class*="theme-"]:not(.theme-none) main::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background-repeat: repeat;
-}
-
-/* San Valentín — corazones cayendo */
-html.theme-san-valentin main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M30 48 C18 40 8 32 14 22 C18 16 26 17 30 24 C34 17 42 16 46 22 C52 32 42 40 30 48 Z' fill='%23FF4D6D' fill-opacity='0.42'/></svg>");
-  background-size: 100px 130px;
-  animation: decor-fall 16s linear infinite;
-}
-
-/* Flor Amarilla — pétalos / soles abstractos cayendo */
-html.theme-flor-amarilla main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><g><circle cx='35' cy='35' r='9' fill='%23FFD93D' fill-opacity='0.50'/><ellipse cx='20' cy='35' rx='8' ry='4' fill='%23F5C518' fill-opacity='0.45'/><ellipse cx='50' cy='35' rx='8' ry='4' fill='%23F5C518' fill-opacity='0.45'/><ellipse cx='35' cy='20' rx='4' ry='8' fill='%23F5C518' fill-opacity='0.45'/><ellipse cx='35' cy='50' rx='4' ry='8' fill='%23F5C518' fill-opacity='0.45'/><circle cx='35' cy='35' r='4' fill='%23E76F00' fill-opacity='0.70'/></g></svg>");
-  background-size: 130px 160px;
-  animation: decor-fall 22s linear infinite;
-}
-
-/* Día del Niño — confeti multicolor cayendo (5 capas) */
-html.theme-dia-nino main::before {
-  background-image:
-    radial-gradient(circle, #FF8FA3 2.5px, transparent 3.5px),
-    radial-gradient(circle, #5BC0EB 2.5px, transparent 3.5px),
-    radial-gradient(circle, #FFD93D 2.5px, transparent 3.5px),
-    radial-gradient(circle, #4ADE80 2.5px, transparent 3.5px),
-    radial-gradient(circle, #A78BFA 2.5px, transparent 3.5px);
-  background-size: 80px 110px, 100px 130px, 120px 150px, 140px 170px, 160px 190px;
-  animation: decor-fall-5 9s linear infinite;
-}
-
-/* Día de las Madres — corazones rosa pastel cayendo más lento */
-html.theme-dia-mama main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><path d='M30 48 C18 40 8 32 14 22 C18 16 26 17 30 24 C34 17 42 16 46 22 C52 32 42 40 30 48 Z' fill='%23FF8FA3' fill-opacity='0.45'/></svg>");
-  background-size: 110px 140px;
-  animation: decor-fall 18s linear infinite;
-}
-
-/* Día del Padre — hexágonos drift sobrio (sin caer, solo flotando) */
-html.theme-dia-papa main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><polygon points='40,15 60,28 60,52 40,65 20,52 20,28' fill='none' stroke='%233B6EA5' stroke-width='1.5' stroke-opacity='0.40'/></svg>");
-  background-size: 140px 140px;
-  animation: theme-float 100s linear infinite;
-}
-
-/* Independencia — papel picado tricolor en lo alto (no cae, ondea) */
-html.theme-independencia main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='340' height='95' viewBox='0 0 340 95'><line x1='0' y1='4' x2='340' y2='4' stroke='%23222' stroke-width='1.4' stroke-opacity='0.55'/><g fill='%23006847'><path d='M30 4 L30 78 L48 86 L66 78 L84 86 L102 78 L102 4 Z'/></g><g fill='%23FFFFFF' fill-opacity='0.85'><circle cx='66' cy='22' r='3.5'/><path d='M66 38 L72 44 L66 50 L60 44 Z'/><circle cx='52' cy='60' r='2.8'/><circle cx='80' cy='60' r='2.8'/><path d='M62 70 L66 74 L70 70 L66 66 Z'/></g><g fill='%23FFFFFF' stroke='%23BBBBBB' stroke-width='0.5'><path d='M138 4 L138 78 L156 86 L174 78 L192 86 L210 78 L210 4 Z'/></g><g fill='%23CE1126' fill-opacity='0.85'><circle cx='174' cy='22' r='3.5'/></g><g fill='%23006847' fill-opacity='0.85'><path d='M174 38 L180 44 L174 50 L168 44 Z'/><circle cx='160' cy='60' r='2.8'/><circle cx='188' cy='60' r='2.8'/></g><g fill='%23CE1126'><path d='M246 4 L246 78 L264 86 L282 78 L300 86 L318 78 L318 4 Z'/></g><g fill='%23FFFFFF' fill-opacity='0.85'><circle cx='282' cy='22' r='3.5'/><path d='M282 38 L288 44 L282 50 L276 44 Z'/><circle cx='268' cy='60' r='2.8'/><circle cx='296' cy='60' r='2.8'/><path d='M278 70 L282 74 L286 70 L282 66 Z'/></g></svg>");
-  background-position: 0 top;
-  background-repeat: repeat-x;
-  background-size: 340px 95px;
-  animation: papel-sway 8s ease-in-out infinite;
-}
-
-/* Halloween — calabazas / murciélagos abstractos cayendo */
-html.theme-halloween main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><path d='M40 40 Q22 32 12 40 Q22 38 26 46 Q32 50 40 46 Q48 50 54 46 Q58 38 68 40 Q58 32 40 40 Z' fill='%231A1A1A' fill-opacity='0.40'/><circle cx='30' cy='42' r='1.5' fill='%23FF7518' fill-opacity='0.7'/><circle cx='50' cy='42' r='1.5' fill='%23FF7518' fill-opacity='0.7'/></svg>");
-  background-size: 130px 160px;
-  animation: decor-fall 12s linear infinite;
-}
-
-/* Día de Muertos — papel picado en colores cempasúchil (naranja/morado/rosa) en lo alto */
-html.theme-dia-muertos main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='340' height='95' viewBox='0 0 340 95'><line x1='0' y1='4' x2='340' y2='4' stroke='%23222' stroke-width='1.4' stroke-opacity='0.55'/><g fill='%23E76F00'><path d='M30 4 L30 78 L48 86 L66 78 L84 86 L102 78 L102 4 Z'/></g><g fill='%23FFFFFF' fill-opacity='0.85'><circle cx='66' cy='22' r='3.5'/><path d='M66 38 L72 44 L66 50 L60 44 Z'/><circle cx='52' cy='60' r='2.8'/><circle cx='80' cy='60' r='2.8'/></g><g fill='%237B3F9F'><path d='M138 4 L138 78 L156 86 L174 78 L192 86 L210 78 L210 4 Z'/></g><g fill='%23FFD93D' fill-opacity='0.90'><circle cx='174' cy='22' r='3.5'/><path d='M174 38 L180 44 L174 50 L168 44 Z'/><circle cx='160' cy='60' r='2.8'/><circle cx='188' cy='60' r='2.8'/></g><g fill='%23FF8FA3'><path d='M246 4 L246 78 L264 86 L282 78 L300 86 L318 78 L318 4 Z'/></g><g fill='%23FFFFFF' fill-opacity='0.85'><circle cx='282' cy='22' r='3.5'/><path d='M282 38 L288 44 L282 50 L276 44 Z'/><circle cx='268' cy='60' r='2.8'/><circle cx='296' cy='60' r='2.8'/></g></svg>");
-  background-position: 0 top;
-  background-repeat: repeat-x;
-  background-size: 340px 95px;
-  animation: papel-sway 9s ease-in-out infinite;
-}
-
-/* Navidad — nieve cayendo en toda la página (3 capas con paralaje) */
-html.theme-navidad main::before {
-  background-image:
-    radial-gradient(circle, rgba(255,255,255,0.95) 1.2px, transparent 2px),
-    radial-gradient(circle, rgba(255,255,255,0.85) 1.6px, transparent 2.6px),
-    radial-gradient(circle, rgba(255,255,255,0.75) 2px, transparent 3px);
-  background-size: 60px 80px, 90px 110px, 130px 150px;
-  animation: decor-fall-3 7s linear infinite;
-}
-
-/* Reyes — estrellas doradas cayendo con destello pulsante */
-html.theme-reyes main::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><path d='M35 12 L41 28 L58 28 L45 38 L50 55 L35 45 L20 55 L25 38 L12 28 L29 28 Z' fill='%23D4AF37' fill-opacity='0.55'/><path d='M35 18 L38 28 L48 28 L40 34 L43 44 L35 38 L27 44 L30 34 L22 28 L32 28 Z' fill='%23FFD970' fill-opacity='0.40'/></svg>");
-  background-size: 130px 160px;
-  animation: decor-fall 15s linear infinite, star-shine 3s ease-in-out infinite;
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   VARIACIONES POR PÁGINA — cada ruta tiene su propia animación de fondo
-   Se combinan con el tema activo. Si no hay tema, no aplica nada.
-   ════════════════════════════════════════════════════════════════════ */
-
-@keyframes page-bg-pulse {
-  0%, 100% { opacity: 0.45; }
-  50%      { opacity: 1; }
-}
-@keyframes page-bg-rotate {
-  0%   { transform: rotate(0deg) scale(1.4); }
-  100% { transform: rotate(360deg) scale(1.4); }
-}
-@keyframes page-bg-breathe {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50%      { opacity: 1;    transform: scale(1.06); }
-}
-@keyframes page-bg-hue {
-  0%, 100% { filter: hue-rotate(0deg); }
-  50%      { filter: hue-rotate(28deg) saturate(1.15); }
-}
-@keyframes page-bg-sway {
-  0%, 100% { transform: translateX(0); }
-  50%      { transform: translateX(20px); }
-}
-
-/* Home — drift constante (animación por defecto, sin override) */
-
-/* Catálogo — pulso rítmico (sin desplazamiento, solo opacidad) */
+/* Catálogo — pulso ritmico de las action lines */
 html[class*="theme-"]:not(.theme-none).page-catalogo body::after {
-  animation: theme-float-rev 240s linear infinite, page-bg-pulse 5s ease-in-out infinite;
+  animation: lines-shift 30s linear infinite, page-bg-pulse 4s ease-in-out infinite;
 }
-
-/* FAQ — rotación lenta (gira 360 grados sobre el centro) */
+/* FAQ — rotación lenta */
 html[class*="theme-"]:not(.theme-none).page-faq body::after {
   animation: page-bg-rotate 240s linear infinite;
   transform-origin: 50% 50%;
 }
-
-/* Nosotros — respiración (zoom in/out suave) */
+/* Nosotros — breathing */
 html[class*="theme-"]:not(.theme-none).page-nosotros body::after {
-  animation: theme-float-rev 200s linear infinite, page-bg-breathe 8s ease-in-out infinite;
+  animation: lines-shift 25s linear infinite, page-bg-breathe 7s ease-in-out infinite;
 }
-
-/* Carrito — cambio cromático sutil (hue-rotate cíclico) */
+/* Carrito — hue cycle */
 html[class*="theme-"]:not(.theme-none).page-carrito body::after {
-  animation: theme-float-rev 200s linear infinite, page-bg-hue 14s ease-in-out infinite;
+  animation: lines-shift 25s linear infinite, page-bg-hue 12s ease-in-out infinite;
 }
-
-/* Producto — sway lateral suave */
+/* Producto — sway */
 html[class*="theme-"]:not(.theme-none).page-producto body::after {
-  animation: theme-float-rev 200s linear infinite, page-bg-sway 12s ease-in-out infinite;
+  animation: lines-shift 25s linear infinite, page-bg-sway 10s ease-in-out infinite;
 }
-
-/* Favoritos — pulso más rápido (energía positiva) */
+/* Favoritos — pulso rapido */
 html[class*="theme-"]:not(.theme-none).page-favoritos body::after {
-  animation: theme-float-rev 240s linear infinite, page-bg-pulse 3s ease-in-out infinite;
+  animation: lines-shift 30s linear infinite, page-bg-pulse 2.5s ease-in-out infinite;
 }
 
-/* ─── Override por tema en hero del home ─── */
-/* Cuando hay un tema activo, las secciones con bg-gradient pastel del home
-   se sustituyen por degradados temáticos sutiles. Solo afecta al home. */
-html.theme-san-valentin.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #FFE0E6, #FFC2CC, #FFD8DD) !important;
-}
-html.theme-flor-amarilla.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #FFF6B8, #FFE066, #FFEFA0) !important;
-}
-html.theme-dia-nino.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #FFE5F0, #C8E7FF, #D4F5E0) !important;
-}
-html.theme-dia-mama.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #FFE0EC, #FFC8DC, #FFEEF5) !important;
-}
-html.theme-dia-papa.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #D5E4F2, #B3CCE5, #E0EBF5) !important;
-}
-html.theme-independencia.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, rgba(0,104,71,0.18), rgba(255,255,255,0.50), rgba(206,17,38,0.18)) !important;
-}
-html.theme-halloween.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #FFB870, #FF7518, #4A1F5C) !important;
-}
-html.theme-dia-muertos.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #FFCC80, #E76F00, #7B3F9F) !important;
-}
-html.theme-navidad.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #C8E8D0, #FFFFFF, #F8C8CC) !important;
-}
-html.theme-reyes.page-home main section.bg-gradient-to-br.from-blush-50 {
-  background-image: linear-gradient(to bottom right, #FFEFC0, #FFD970, #FFF8DC) !important;
+/* ════════════════════════════════════════════════════════════════════
+   OVERRIDES DEL HOME — el hero usa gradientes inline, los reemplazamos
+   por flat color del tema para mantener el look comic plano
+   ════════════════════════════════════════════════════════════════════ */
+
+html.theme-san-valentin.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFE5EA !important; background-image: none !important; }
+html.theme-flor-amarilla.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFF6B8 !important; background-image: none !important; }
+html.theme-dia-nino.page-home main section.bg-gradient-to-br.from-blush-50 { background: #E0F2FE !important; background-image: none !important; }
+html.theme-dia-mama.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFE0EC !important; background-image: none !important; }
+html.theme-dia-papa.page-home main section.bg-gradient-to-br.from-blush-50 { background: #D5E4F2 !important; background-image: none !important; }
+html.theme-independencia.page-home main section.bg-gradient-to-br.from-blush-50 { background: rgba(255,255,255,0.30) !important; background-image: none !important; }
+html.theme-halloween.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFC080 !important; background-image: none !important; }
+html.theme-dia-muertos.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFD9A8 !important; background-image: none !important; }
+html.theme-navidad.page-home main section.bg-gradient-to-br.from-blush-50 { background: #C8E8D0 !important; background-image: none !important; }
+html.theme-reyes.page-home main section.bg-gradient-to-br.from-blush-50 { background: #FFEFC0 !important; background-image: none !important; }
+
+/* Override secundario: las otras secciones del home con bg-gradient-to-r */
+html[class*="theme-"]:not(.theme-none).page-home main section.bg-gradient-to-r {
+  background: transparent !important;
+  background-image: none !important;
 }
 
-/* Título principal del hero del home: color de acento temático */
-html.theme-san-valentin.page-home h1 .text-blush-400 { color: #FF4D6D !important; }
+/* Acento del titulo del hero */
+html.theme-san-valentin.page-home h1 .text-blush-400 { color: #FF1744 !important; }
 html.theme-flor-amarilla.page-home h1 .text-blush-400 { color: #C99800 !important; }
 html.theme-dia-nino.page-home h1 .text-blush-400 { color: #5BC0EB !important; }
 html.theme-dia-mama.page-home h1 .text-blush-400 { color: #FF6B81 !important; }
