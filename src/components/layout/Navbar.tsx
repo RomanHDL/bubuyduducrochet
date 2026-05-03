@@ -63,7 +63,7 @@ export default function Navbar() {
             <img
               src={LOGO}
               alt="Bubu & Dudu Crochet"
-              className="h-14 sm:h-16 w-auto object-contain rounded-xl group-hover:scale-105 transition-transform"
+              className="navbar-logo-img h-14 sm:h-16 w-auto object-contain rounded-xl group-hover:scale-105 transition-all"
             />
           </Link>
 

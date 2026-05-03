@@ -177,6 +177,47 @@ body {
    Sin tema activo (.theme-none o ausencia de clase) = render base intacto.
    ════════════════════════════════════════════════════════════════════ */
 
+/* === ANIMACIONES INTERNAS DE CARDS POR TEMA === */
+@keyframes card-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+@keyframes card-rotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes card-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50%      { opacity: 0.65; transform: scale(1.08); }
+}
+@keyframes card-fall {
+  0%   { transform: translateY(-20px); opacity: 0; }
+  20%  { opacity: 0.6; }
+  100% { transform: translateY(120%); opacity: 0; }
+}
+@keyframes card-drift {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(8px, 12px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes card-tricolor {
+  0%, 100% { box-shadow: inset 0 3px 0 0 #1F7A3A, 0 4px 20px rgba(31, 122, 58, 0.18); }
+  33%      { box-shadow: inset 0 3px 0 0 #FFFFFF, 0 4px 20px rgba(255, 255, 255, 0.30); }
+  66%      { box-shadow: inset 0 3px 0 0 #CE1126, 0 4px 20px rgba(206, 17, 38, 0.18); }
+}
+@keyframes card-flicker {
+  0%, 100% { box-shadow: inset 0 3px 0 0 #4A1F5C, 0 4px 20px rgba(255, 117, 24, 0.20), 0 0 18px rgba(255, 117, 24, 0.10); }
+  50%      { box-shadow: inset 0 3px 0 0 #4A1F5C, 0 4px 24px rgba(255, 117, 24, 0.40), 0 0 28px rgba(255, 117, 24, 0.30); }
+}
+@keyframes card-snow-fall {
+  0%   { background-position: 0 -80px, 30px -80px, 60px -80px; }
+  100% { background-position: 0 80px, 30px 80px, 60px 80px; }
+}
+@keyframes card-shimmer-bg {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* === BASE COMÚN A TODOS LOS TEMAS === */
 
 @keyframes theme-float {
@@ -268,6 +309,47 @@ html[class*="theme-"]:not(.theme-none) .card-cute {
   overflow: hidden;
 }
 
+/* ─── Logo de la nav: fondo temático para que no se vea blanco ─── */
+html[class*="theme-"]:not(.theme-none) .navbar-logo-img {
+  padding: 4px;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.2s ease;
+}
+
+/* ─── Cards: capa decorativa interna animada (::after dentro de la card) ─── */
+html[class*="theme-"]:not(.theme-none) .card-cute {
+  position: relative;
+}
+html[class*="theme-"]:not(.theme-none) .card-cute::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.4;
+  transition: opacity 0.4s ease;
+  border-radius: inherit;
+}
+html[class*="theme-"]:not(.theme-none) .card-cute:hover::after {
+  opacity: 0.75;
+}
+html[class*="theme-"]:not(.theme-none) .card-cute > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── Footer: tinte temático ─── */
+html[class*="theme-"]:not(.theme-none) footer {
+  position: relative;
+  transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+html[class*="theme-"]:not(.theme-none) footer::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--theme-footer-stripe, transparent);
+}
+
 /* ════════════ San Valentín ════════════
    Patrón: diamantes (cuadrados rotados) + chispas */
 html.theme-san-valentin body {
@@ -291,6 +373,13 @@ html.theme-san-valentin ::-webkit-scrollbar-thumb { background: #FF8FA3; }
 html.theme-san-valentin ::-webkit-scrollbar-thumb:hover { background: #FF4D6D; }
 html.theme-san-valentin .festive-banner { background: rgba(255, 240, 243, 0.85); color: #B23A52; border-color: rgba(255, 77, 109, 0.30); }
 html.theme-san-valentin .festive-banner__date { color: #FF4D6D; }
+html.theme-san-valentin .navbar-logo-img { background: radial-gradient(circle, #FFE0E6 0%, #FFC2CC 100%); box-shadow: 0 2px 12px rgba(255, 77, 109, 0.30); }
+html.theme-san-valentin .card-cute::after {
+  background: radial-gradient(circle at 85% 15%, rgba(255, 77, 109, 0.22) 0%, transparent 55%);
+  animation: card-pulse 3.2s ease-in-out infinite;
+}
+html.theme-san-valentin footer { background-color: #7A2540 !important; color: #FFE0E6; }
+html.theme-san-valentin footer::before { background: linear-gradient(90deg, #FF4D6D, #FF8FA3, #FFB3BD); }
 
 /* ════════════ Día de la Flor Amarilla ════════════
    Patrón: anillos concéntricos (rayos solares) + puntos dorados */
@@ -315,6 +404,13 @@ html.theme-flor-amarilla ::-webkit-scrollbar-thumb { background: #E5B100; }
 html.theme-flor-amarilla ::-webkit-scrollbar-thumb:hover { background: #C99800; }
 html.theme-flor-amarilla .festive-banner { background: rgba(255, 249, 220, 0.85); color: #8B6543; border-color: rgba(229, 177, 0, 0.40); }
 html.theme-flor-amarilla .festive-banner__date { color: #C99800; }
+html.theme-flor-amarilla .navbar-logo-img { background: radial-gradient(circle, #FFF6B8 0%, #FFE066 100%); box-shadow: 0 2px 12px rgba(229, 177, 0, 0.35); }
+html.theme-flor-amarilla .card-cute::after {
+  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(229, 177, 0, 0.18) 60deg, transparent 120deg, rgba(229, 177, 0, 0.18) 240deg, transparent 360deg);
+  animation: card-rotate 14s linear infinite;
+}
+html.theme-flor-amarilla footer { background-color: #6B4A00 !important; color: #FFF6B8; }
+html.theme-flor-amarilla footer::before { background: linear-gradient(90deg, #E5B100, #F5C518, #FFD93D); }
 
 /* ════════════ Día del Niño ════════════
    Patrón: confeti — puntos en 5 colores festivos */
@@ -341,6 +437,14 @@ html.theme-dia-nino ::-webkit-scrollbar-thumb { background: #5BC0EB; }
 html.theme-dia-nino ::-webkit-scrollbar-thumb:hover { background: #3DA8D8; }
 html.theme-dia-nino .festive-banner { background: rgba(255, 255, 255, 0.80); color: #2A5485; border-color: rgba(91, 192, 235, 0.40); }
 html.theme-dia-nino .festive-banner__date { color: #5BC0EB; }
+html.theme-dia-nino .navbar-logo-img { background: linear-gradient(135deg, #FFE5F0, #C8E7FF, #FFF6C8, #D4F5E0); background-size: 200% 200%; animation: gradient-shift 5s ease infinite; box-shadow: 0 2px 12px rgba(91, 192, 235, 0.30); }
+html.theme-dia-nino .card-cute::after {
+  background: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(91, 192, 235, 0.30) 50%, transparent 65%, transparent 100%);
+  background-size: 200% 100%;
+  animation: card-shimmer-bg 3.5s ease-in-out infinite;
+}
+html.theme-dia-nino footer { background-color: #1A3D5C !important; color: #C8E7FF; }
+html.theme-dia-nino footer::before { background: linear-gradient(90deg, #FF8FA3, #E5B100, #4ADE80, #5BC0EB, #A78BFA); }
 
 /* ════════════ Día de las Madres ════════════
    Patrón: puntos rosados con racimos de tres */
@@ -365,6 +469,15 @@ html.theme-dia-mama ::-webkit-scrollbar-thumb { background: #FF8FA3; }
 html.theme-dia-mama ::-webkit-scrollbar-thumb:hover { background: #FF6B81; }
 html.theme-dia-mama .festive-banner { background: rgba(255, 240, 245, 0.85); color: #C0395A; border-color: rgba(255, 143, 163, 0.40); }
 html.theme-dia-mama .festive-banner__date { color: #FF6B81; }
+html.theme-dia-mama .navbar-logo-img { background: radial-gradient(circle, #FFEEF5 0%, #FFC8DC 100%); box-shadow: 0 2px 12px rgba(255, 143, 163, 0.35); }
+html.theme-dia-mama .card-cute::after {
+  background:
+    radial-gradient(circle at 20% 80%, rgba(255, 143, 163, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(255, 179, 189, 0.18) 0%, transparent 55%);
+  animation: card-drift 7s ease-in-out infinite, card-pulse 4s ease-in-out infinite;
+}
+html.theme-dia-mama footer { background-color: #7A2540 !important; color: #FFE0EC; }
+html.theme-dia-mama footer::before { background: linear-gradient(90deg, #FF8FA3, #FFB3BD, #FFD0DC); }
 
 /* ════════════ Día del Padre ════════════
    Patrón: hexágonos en cuadrícula (geométrico, sobrio) */
@@ -389,6 +502,14 @@ html.theme-dia-papa ::-webkit-scrollbar-thumb { background: #7CC4F5; }
 html.theme-dia-papa ::-webkit-scrollbar-thumb:hover { background: #3B6EA5; }
 html.theme-dia-papa .festive-banner { background: rgba(238, 244, 250, 0.85); color: #2A5485; border-color: rgba(59, 110, 165, 0.40); }
 html.theme-dia-papa .festive-banner__date { color: #3B6EA5; }
+html.theme-dia-papa .navbar-logo-img { background: radial-gradient(circle, #E0EBF5 0%, #B3CCE5 100%); box-shadow: 0 2px 12px rgba(59, 110, 165, 0.30); }
+html.theme-dia-papa .card-cute::after {
+  background: linear-gradient(135deg, transparent 0%, rgba(59, 110, 165, 0.18) 50%, transparent 100%);
+  background-size: 250% 250%;
+  animation: gradient-shift 6s ease infinite;
+}
+html.theme-dia-papa footer { background-color: #1A3D5C !important; color: #D5E4F2; }
+html.theme-dia-papa footer::before { background: linear-gradient(90deg, #2A5485, #3B6EA5, #7CC4F5); }
 
 /* ════════════ Independencia ════════════
    Patrón: estrellas de 5 puntas en tricolor */
@@ -413,6 +534,15 @@ html.theme-independencia ::-webkit-scrollbar-thumb { background: #1F7A3A; }
 html.theme-independencia ::-webkit-scrollbar-thumb:hover { background: #CE1126; }
 html.theme-independencia .festive-banner { background: rgba(255, 255, 255, 0.85); color: #155F2C; border-color: rgba(31, 122, 58, 0.40); }
 html.theme-independencia .festive-banner__date { color: #CE1126; }
+html.theme-independencia .navbar-logo-img { background: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%); box-shadow: 0 2px 12px rgba(31, 122, 58, 0.35); }
+html.theme-independencia .card-cute:hover { animation: card-tricolor 3.5s ease-in-out infinite; }
+html.theme-independencia .card-cute::after {
+  background: linear-gradient(180deg, transparent 0%, rgba(31, 122, 58, 0.10) 30%, transparent 50%, rgba(206, 17, 38, 0.10) 70%, transparent 100%);
+  background-size: 100% 200%;
+  animation: card-shimmer-bg 5s ease-in-out infinite;
+}
+html.theme-independencia footer { background-color: #155F2C !important; color: #C8E8D0; }
+html.theme-independencia footer::before { background: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%); height: 4px; }
 
 /* ════════════ Halloween ════════════
    Patrón: rayos radiales (web abstracta) + puntos */
@@ -439,6 +569,14 @@ html.theme-halloween ::-webkit-scrollbar-thumb { background: #FF7518; }
 html.theme-halloween ::-webkit-scrollbar-thumb:hover { background: #4A1F5C; }
 html.theme-halloween .festive-banner { background: rgba(255, 247, 236, 0.90); color: #4A1F5C; border-color: rgba(74, 31, 92, 0.45); }
 html.theme-halloween .festive-banner__date { color: #FF7518; }
+html.theme-halloween .navbar-logo-img { background: radial-gradient(circle, #FFB870 0%, #FF7518 100%); box-shadow: 0 2px 14px rgba(255, 117, 24, 0.45); }
+html.theme-halloween .card-cute:hover { animation: card-flicker 1.6s ease-in-out infinite; }
+html.theme-halloween .card-cute::after {
+  background: radial-gradient(circle at 50% 100%, rgba(74, 31, 92, 0.30) 0%, transparent 60%);
+  animation: card-pulse 2.5s ease-in-out infinite;
+}
+html.theme-halloween footer { background-color: #2D1B33 !important; color: #FFB870; }
+html.theme-halloween footer::before { background: linear-gradient(90deg, #FF7518, #4A1F5C, #FF7518); height: 4px; }
 
 /* ════════════ Día de Muertos ════════════
    Patrón: flores radiales abstractas (8 elipses + centro) */
@@ -466,6 +604,13 @@ html.theme-dia-muertos ::-webkit-scrollbar-thumb { background: #E76F00; }
 html.theme-dia-muertos ::-webkit-scrollbar-thumb:hover { background: #7B3F9F; }
 html.theme-dia-muertos .festive-banner { background: rgba(255, 247, 236, 0.90); color: #5A2C7A; border-color: rgba(123, 63, 159, 0.45); }
 html.theme-dia-muertos .festive-banner__date { color: #E76F00; }
+html.theme-dia-muertos .navbar-logo-img { background: linear-gradient(135deg, #FFCC80, #E76F00, #7B3F9F); background-size: 200% 200%; animation: gradient-shift 8s ease infinite; box-shadow: 0 2px 14px rgba(231, 111, 0, 0.40); }
+html.theme-dia-muertos .card-cute::after {
+  background: conic-gradient(from 0deg, rgba(231, 111, 0, 0.18), rgba(229, 177, 0, 0.18), rgba(123, 63, 159, 0.18), rgba(231, 111, 0, 0.18));
+  animation: card-rotate 18s linear infinite;
+}
+html.theme-dia-muertos footer { background-color: #3D1A4F !important; color: #FFCC80; }
+html.theme-dia-muertos footer::before { background: linear-gradient(90deg, #E76F00, #FFD93D, #7B3F9F, #E76F00); height: 4px; }
 
 /* ════════════ Navidad ════════════
    Patrón: cristales de nieve (líneas geométricas) + puntos blancos */
@@ -494,6 +639,17 @@ html.theme-navidad ::-webkit-scrollbar-thumb { background: #0F8A4D; }
 html.theme-navidad ::-webkit-scrollbar-thumb:hover { background: #C8102E; }
 html.theme-navidad .festive-banner { background: rgba(255, 255, 255, 0.85); color: #0A6A3A; border-color: rgba(15, 138, 77, 0.40); }
 html.theme-navidad .festive-banner__date { color: #C8102E; }
+html.theme-navidad .navbar-logo-img { background: radial-gradient(circle, #E8F5EC 0%, #C8E8D0 50%, #F8C8CC 100%); box-shadow: 0 2px 12px rgba(15, 138, 77, 0.35); }
+html.theme-navidad .card-cute::after {
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(255,255,255,0.95) 1.2px, transparent 2px),
+    radial-gradient(circle at 55% 65%, rgba(255,255,255,0.85) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 80% 35%, rgba(255,255,255,0.90) 1px, transparent 2px);
+  background-size: 80px 80px, 80px 80px, 80px 80px;
+  animation: card-snow-fall 6s linear infinite;
+}
+html.theme-navidad footer { background-color: #0A4A2A !important; color: #C8E8D0; }
+html.theme-navidad footer::before { background: linear-gradient(90deg, #0F8A4D, #FFFFFF, #C8102E); height: 4px; }
 
 /* ════════════ Día de Reyes ════════════
    Patrón: estrella de 8 puntas (cuadrados superpuestos) + chispas doradas */
@@ -518,4 +674,12 @@ html.theme-reyes ::-webkit-scrollbar-thumb { background: #D4AF37; }
 html.theme-reyes ::-webkit-scrollbar-thumb:hover { background: #B8860B; }
 html.theme-reyes .festive-banner { background: rgba(255, 248, 220, 0.90); color: #8B6543; border-color: rgba(184, 134, 11, 0.45); }
 html.theme-reyes .festive-banner__date { color: #B8860B; }
+html.theme-reyes .navbar-logo-img { background: radial-gradient(circle, #FFF8DC 0%, #FFD970 100%); box-shadow: 0 2px 14px rgba(212, 175, 55, 0.45); }
+html.theme-reyes .card-cute::after {
+  background: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(212, 175, 55, 0.40) 50%, transparent 65%, transparent 100%);
+  background-size: 200% 100%;
+  animation: card-shimmer-bg 3s ease-in-out infinite;
+}
+html.theme-reyes footer { background-color: #4A3320 !important; color: #FFD970; }
+html.theme-reyes footer::before { background: linear-gradient(90deg, #B8860B, #D4AF37, #FFD970, #D4AF37, #B8860B); height: 4px; }
 /* ═══ Fin temas festivos ═══ */
