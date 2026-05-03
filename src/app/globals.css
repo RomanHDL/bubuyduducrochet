@@ -188,16 +188,24 @@ body {
 
 /* === BASE COMÚN A TODOS LOS TEMAS === */
 
-/* Override AnimatedBg: cuando hay tema activo, su gradiente se vuelve
-   transparente para que el body tematizado se vea en todas las paginas */
+/* Override AnimatedBg: cuando hay tema activo, gradiente transparente */
 html[class*="theme-"]:not(.theme-none) .themed-page-bg {
   background-image: none !important;
 }
-html[class*="theme-"]:not(.theme-none) .themed-page-bg__blob {
-  opacity: 0.35;
-}
+
+/* OCULTAR completamente decoraciones del diseño base cuando hay tema activo:
+   blobs, emojis flotantes, etc. — para que no se mezclen con el comic */
+html[class*="theme-"]:not(.theme-none) .themed-page-bg__blob,
 html[class*="theme-"]:not(.theme-none) .themed-page-bg__emoji {
-  opacity: 0.06 !important;
+  display: none !important;
+}
+html[class*="theme-"]:not(.theme-none):not(.page-admin) main .anim-blob,
+html[class*="theme-"]:not(.theme-none):not(.page-admin) main .anim-float,
+html[class*="theme-"]:not(.theme-none):not(.page-admin) main .anim-float-r,
+html[class*="theme-"]:not(.theme-none):not(.page-admin) main .anim-drift,
+html[class*="theme-"]:not(.theme-none):not(.page-admin) main .anim-sparkle,
+html[class*="theme-"]:not(.theme-none):not(.page-admin) main .anim-glow {
+  display: none !important;
 }
 
 html[class*="theme-"]:not(.theme-none) body {
@@ -356,7 +364,11 @@ html.theme-san-valentin body::after {
 }
 html.theme-san-valentin .card-cute { border-color: #B0001D !important; }
 html.theme-san-valentin .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FF1744' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 50 C18 42 8 32 14 22 C18 16 26 17 30 24 C34 17 42 16 46 22 C52 32 42 42 30 50 Z' fill='%23FF1744' stroke='%231A1A1A' stroke-width='2.5' stroke-linejoin='round'/></svg>");
+}
+html.theme-san-valentin body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><path d='M50 78 C32 68 16 54 22 38 C28 28 40 30 50 42 C60 30 72 28 78 38 C84 54 68 68 50 78 Z' fill='%23FF1744' fill-opacity='0.30' stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'/></svg>");
+  background-size: 100px 100px;
 }
 html.theme-san-valentin .btn-primary { background-color: #FF1744 !important; color: #FFF !important; }
 html.theme-san-valentin .btn-primary:hover { background-color: #B0001D !important; }
@@ -379,7 +391,11 @@ html.theme-flor-amarilla body::after {
 }
 html.theme-flor-amarilla .card-cute { border-color: #C99800 !important; }
 html.theme-flor-amarilla .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FFD93D' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g stroke='%231A1A1A' stroke-width='2'><circle cx='30' cy='30' r='12' fill='%23FFD93D'/><ellipse cx='12' cy='30' rx='7' ry='4' fill='%23FFD93D'/><ellipse cx='48' cy='30' rx='7' ry='4' fill='%23FFD93D'/><ellipse cx='30' cy='12' rx='4' ry='7' fill='%23FFD93D'/><ellipse cx='30' cy='48' rx='4' ry='7' fill='%23FFD93D'/><circle cx='30' cy='30' r='5' fill='%23E76F00'/></g></svg>");
+}
+html.theme-flor-amarilla body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='110' height='110' viewBox='0 0 110 110'><g stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5'><circle cx='55' cy='55' r='14' fill='%23FFD93D' fill-opacity='0.45'/><ellipse cx='35' cy='55' rx='8' ry='5' fill='%23FFD93D' fill-opacity='0.45'/><ellipse cx='75' cy='55' rx='8' ry='5' fill='%23FFD93D' fill-opacity='0.45'/><ellipse cx='55' cy='35' rx='5' ry='8' fill='%23FFD93D' fill-opacity='0.45'/><ellipse cx='55' cy='75' rx='5' ry='8' fill='%23FFD93D' fill-opacity='0.45'/><circle cx='55' cy='55' r='6' fill='%23E76F00' fill-opacity='0.55'/></g></svg>");
+  background-size: 110px 110px;
 }
 html.theme-flor-amarilla .btn-primary { background-color: #FFD93D !important; color: #1A1A1A !important; }
 html.theme-flor-amarilla .btn-primary:hover { background-color: #E5B100 !important; color: #FFF !important; }
@@ -407,7 +423,11 @@ html.theme-dia-nino body::after {
 }
 html.theme-dia-nino .card-cute { border-color: #2A5485 !important; }
 html.theme-dia-nino .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%235BC0EB' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g stroke='%231A1A1A' stroke-width='2'><ellipse cx='30' cy='25' rx='15' ry='18' fill='%235BC0EB'/><polygon points='30,42 27,46 33,46' fill='%235BC0EB' stroke-linejoin='round'/></g><line x1='30' y1='46' x2='30' y2='58' stroke='%231A1A1A' stroke-width='1.5'/></svg>");
+}
+html.theme-dia-nino body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130' viewBox='0 0 130 130'><g stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5'><ellipse cx='30' cy='35' rx='13' ry='16' fill='%23FF8FA3' fill-opacity='0.40'/><line x1='30' y1='51' x2='30' y2='70' stroke-opacity='0.40'/><ellipse cx='95' cy='90' rx='13' ry='16' fill='%23FFD93D' fill-opacity='0.45'/><line x1='95' y1='106' x2='95' y2='125' stroke-opacity='0.40'/><ellipse cx='95' cy='30' rx='10' ry='13' fill='%234ADE80' fill-opacity='0.40'/><line x1='95' y1='43' x2='95' y2='60' stroke-opacity='0.40'/></g></svg>");
+  background-size: 130px 130px;
 }
 html.theme-dia-nino .btn-primary { background-color: #5BC0EB !important; color: #FFF !important; }
 html.theme-dia-nino .btn-primary:hover { background-color: #2A5485 !important; }
@@ -430,7 +450,11 @@ html.theme-dia-mama body::after {
 }
 html.theme-dia-mama .card-cute { border-color: #C0395A !important; }
 html.theme-dia-mama .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FF8FA3' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g stroke='%231A1A1A' stroke-width='2'><circle cx='30' cy='30' r='18' fill='%23FFB3BD'/><circle cx='30' cy='30' r='12' fill='%23FF8FA3'/><circle cx='30' cy='30' r='6' fill='%23FF6B81'/><circle cx='30' cy='30' r='2.5' fill='%23B0001D'/></g></svg>");
+}
+html.theme-dia-mama body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='110' height='110' viewBox='0 0 110 110'><g stroke='%231A1A1A' stroke-opacity='0.30' stroke-width='1.5'><circle cx='55' cy='55' r='15' fill='%23FFB3BD' fill-opacity='0.40'/><circle cx='55' cy='55' r='10' fill='%23FF8FA3' fill-opacity='0.50'/><circle cx='55' cy='55' r='5' fill='%23FF6B81' fill-opacity='0.55'/></g></svg>");
+  background-size: 110px 110px;
 }
 html.theme-dia-mama .btn-primary { background-color: #FF8FA3 !important; color: #FFF !important; }
 html.theme-dia-mama .btn-primary:hover { background-color: #FF6B81 !important; }
@@ -453,7 +477,11 @@ html.theme-dia-papa body::after {
 }
 html.theme-dia-papa .card-cute { border-color: #2A5485 !important; }
 html.theme-dia-papa .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%233B6EA5' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g stroke='%231A1A1A' stroke-width='2' stroke-linejoin='round'><path d='M5 22 L25 32 L5 42 L8 32 Z' fill='%233B6EA5'/><path d='M55 22 L35 32 L55 42 L52 32 Z' fill='%233B6EA5'/><rect x='25' y='27' width='10' height='10' fill='%233B6EA5'/></g></svg>");
+}
+html.theme-dia-papa body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><g stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'><path d='M30 50 L55 60 L30 70 L33 60 Z' fill='%233B6EA5' fill-opacity='0.30'/><path d='M90 50 L65 60 L90 70 L87 60 Z' fill='%233B6EA5' fill-opacity='0.30'/><rect x='55' y='54' width='10' height='12' fill='%233B6EA5' fill-opacity='0.30'/></g></svg>");
+  background-size: 120px 120px;
 }
 html.theme-dia-papa .btn-primary { background-color: #3B6EA5 !important; color: #FFF !important; }
 html.theme-dia-papa .btn-primary:hover { background-color: #2A5485 !important; }
@@ -488,7 +516,11 @@ html.theme-independencia body::after {
 }
 html.theme-independencia .card-cute { border-color: #155F2C !important; }
 html.theme-independencia .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23006847' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 22 L54 22 L40 33 L46 50 L30 40 L14 50 L20 33 L6 22 L24 22 Z' fill='%23006847' stroke='%231A1A1A' stroke-width='2.5' stroke-linejoin='round'/><circle cx='30' cy='28' r='5' fill='%23FFFFFF' stroke='%231A1A1A' stroke-width='1.5'/><circle cx='30' cy='28' r='2.5' fill='%23CE1126'/></svg>");
+}
+html.theme-independencia body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130' viewBox='0 0 130 130'><g stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'><path d='M30 30 L36 47 L54 47 L40 58 L46 75 L30 65 L14 75 L20 58 L6 47 L24 47 Z' fill='%23006847' fill-opacity='0.30'/><path d='M100 100 L106 117 L124 117 L110 128 L116 145 L100 135 L84 145 L90 128 L76 117 L94 117 Z' fill='%23CE1126' fill-opacity='0.28'/></g></svg>");
+  background-size: 130px 130px;
 }
 html.theme-independencia .btn-primary { background-color: #006847 !important; color: #FFF !important; }
 html.theme-independencia .btn-primary:hover { background-color: #155F2C !important; }
@@ -513,7 +545,11 @@ html.theme-halloween body::after {
 }
 html.theme-halloween .card-cute { border-color: #4A1F5C !important; }
 html.theme-halloween .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23FF7518' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><circle cx='30' cy='34' r='18' fill='%23FF7518' stroke='%231A1A1A' stroke-width='2.5'/><rect x='28' y='14' width='4' height='6' fill='%232D5016' stroke='%231A1A1A' stroke-width='1.5'/><path d='M22 30 Q22 24 28 30' stroke='%231A1A1A' stroke-width='1.5' fill='none'/><path d='M38 30 Q38 24 32 30' stroke='%231A1A1A' stroke-width='1.5' fill='none'/></svg>");
+}
+html.theme-halloween body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130' viewBox='0 0 130 130'><g><path d='M30 50 Q15 42 8 50 Q15 47 18 55 Q22 58 30 55 Q38 58 42 55 Q45 47 52 50 Q45 42 30 50 Z' fill='%231A1A1A' fill-opacity='0.45' stroke='%231A1A1A' stroke-opacity='0.55' stroke-width='1.5' stroke-linejoin='round'/><path d='M100 100 Q90 94 84 100 Q90 98 92 104 Q95 106 100 104 Q105 106 108 104 Q110 98 116 100 Q110 94 100 100 Z' fill='%231A1A1A' fill-opacity='0.35' stroke='%231A1A1A' stroke-opacity='0.45' stroke-width='1.2'/></g></svg>");
+  background-size: 130px 130px;
 }
 html.theme-halloween .btn-primary { background-color: #FF7518 !important; color: #FFF !important; }
 html.theme-halloween .btn-primary:hover { background-color: #E76F00 !important; }
@@ -539,7 +575,11 @@ html.theme-dia-muertos body::after {
 }
 html.theme-dia-muertos .card-cute { border-color: #5A2C7A !important; }
 html.theme-dia-muertos .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23E76F00' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><ellipse cx='30' cy='28' rx='15' ry='17' fill='%23FFFFFF' stroke='%231A1A1A' stroke-width='2.5'/><circle cx='24' cy='25' r='3.5' fill='%23E76F00' stroke='%231A1A1A' stroke-width='1.5'/><circle cx='36' cy='25' r='3.5' fill='%237B3F9F' stroke='%231A1A1A' stroke-width='1.5'/><rect x='28' y='34' width='4' height='4' fill='%231A1A1A'/><path d='M22 41 L24 39 L26 41 L28 39 L30 41 L32 39 L34 41 L36 39 L38 41' stroke='%231A1A1A' stroke-width='1.5' fill='none'/><circle cx='30' cy='12' r='2.5' fill='%23E76F00' stroke='%231A1A1A' stroke-width='1'/></svg>");
+}
+html.theme-dia-muertos body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130' viewBox='0 0 130 130'><g stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5'><circle cx='35' cy='35' r='5' fill='%23B23A00' fill-opacity='0.50'/><ellipse cx='35' cy='17' rx='4' ry='10' fill='%23E76F00' fill-opacity='0.40'/><ellipse cx='35' cy='53' rx='4' ry='10' fill='%23E76F00' fill-opacity='0.40'/><ellipse cx='17' cy='35' rx='10' ry='4' fill='%23E76F00' fill-opacity='0.40'/><ellipse cx='53' cy='35' rx='10' ry='4' fill='%23E76F00' fill-opacity='0.40'/><ellipse cx='95' cy='95' rx='8' ry='10' fill='%23FFFFFF' fill-opacity='0.55'/><circle cx='91' cy='93' r='1.8' fill='%237B3F9F' fill-opacity='0.7'/><circle cx='99' cy='93' r='1.8' fill='%23E76F00' fill-opacity='0.7'/></g></svg>");
+  background-size: 130px 130px;
 }
 html.theme-dia-muertos .btn-primary { background-color: #E76F00 !important; color: #FFF !important; }
 html.theme-dia-muertos .btn-primary:hover { background-color: #B23A00 !important; }
@@ -562,7 +602,11 @@ html.theme-navidad body::after {
 }
 html.theme-navidad .card-cute { border-color: #0A4A2A !important; }
 html.theme-navidad .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23C8102E' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g stroke='%231A1A1A' stroke-width='2' stroke-linejoin='round'><polygon points='30,8 18,28 42,28' fill='%230F8A4D'/><polygon points='30,22 14,42 46,42' fill='%230F8A4D'/><rect x='27' y='42' width='6' height='8' fill='%238B6543'/></g><circle cx='30' cy='8' r='3' fill='%23FFD700' stroke='%231A1A1A' stroke-width='1.5'/></svg>");
+}
+html.theme-navidad body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130' viewBox='0 0 130 130'><g stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'><polygon points='30,30 18,50 42,50' fill='%230F8A4D' fill-opacity='0.30'/><polygon points='30,44 14,64 46,64' fill='%230F8A4D' fill-opacity='0.30'/><rect x='27' y='64' width='6' height='8' fill='%238B6543' fill-opacity='0.40'/><circle cx='100' cy='100' r='10' fill='%23C8102E' fill-opacity='0.45'/><circle cx='100' cy='100' r='3' fill='%23FFD700' fill-opacity='0.7'/><line x1='100' y1='90' x2='100' y2='84' stroke-opacity='0.35'/></g></svg>");
+  background-size: 130px 130px;
 }
 html.theme-navidad .btn-primary { background-color: #C8102E !important; color: #FFF !important; }
 html.theme-navidad .btn-primary:hover { background-color: #A00D24 !important; }
@@ -586,7 +630,11 @@ html.theme-reyes body::after {
 }
 html.theme-reyes .card-cute { border-color: #8B6A0B !important; }
 html.theme-reyes .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M30 5 L36 20 L52 15 L42 28 L57 30 L42 32 L52 45 L36 40 L30 55 L24 40 L8 45 L18 32 L3 30 L18 28 L8 15 L24 20 Z' fill='%23D4AF37' stroke='%231A1A1A' stroke-width='2.2' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><path d='M8 38 L12 18 L20 30 L26 12 L30 28 L34 12 L40 30 L48 18 L52 38 L52 48 L8 48 Z' fill='%23D4AF37' stroke='%231A1A1A' stroke-width='2.5' stroke-linejoin='round'/><circle cx='12' cy='18' r='2.5' fill='%23FFFFFF' stroke='%231A1A1A' stroke-width='1.2'/><circle cx='30' cy='28' r='2.5' fill='%23CE1126' stroke='%231A1A1A' stroke-width='1.2'/><circle cx='48' cy='18' r='2.5' fill='%23FFFFFF' stroke='%231A1A1A' stroke-width='1.2'/></svg>");
+}
+html.theme-reyes body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><g stroke='%231A1A1A' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'><path d='M20 70 L24 50 L32 62 L38 44 L42 60 L46 44 L52 62 L60 50 L64 70 L64 78 L20 78 Z' fill='%23D4AF37' fill-opacity='0.40'/><path d='M85 25 L88 33 L96 33 L90 38 L92 46 L85 41 L78 46 L80 38 L74 33 L82 33 Z' fill='%23D4AF37' fill-opacity='0.45'/></g></svg>");
+  background-size: 120px 120px;
 }
 html.theme-reyes .btn-primary { background-color: #D4AF37 !important; color: #1A1A1A !important; }
 html.theme-reyes .btn-primary:hover { background-color: #B8860B !important; color: #FFF !important; }
