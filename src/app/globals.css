@@ -162,3 +162,139 @@ body {
   .card-cute { @apply bg-white rounded-cute shadow-soft border border-cream-200 overflow-hidden transition-all duration-200 hover:shadow-warm hover:-translate-y-1; }
   .input-cute { @apply w-full px-4 py-3 rounded-2xl border-2 border-cream-200 bg-cream-50 text-cocoa-700 placeholder-cocoa-300 focus:outline-none focus:border-blush-300 focus:ring-2 focus:ring-blush-100 transition-all; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   ═══ TEMAS FESTIVOS (append-only) ═══
+   Las clases .theme-* se aplican a <html> y solo añaden decoración:
+   - Gradiente de fondo en body
+   - Patrón SVG flotante con ornamentos festivos
+   - Acentos sutiles en botones y enlaces
+   Si ningún .theme-* está activo, el sitio se ve idéntico al diseño base.
+   ════════════════════════════════════════════════════════════════════ */
+
+@keyframes theme-drift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 200px 200px, 0 0; }
+}
+
+@keyframes theme-drift-rev {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: -200px 200px, 0 0; }
+}
+
+/* Base aplicada a todos los temas activos: animación de drift suave */
+html[class*="theme-"]:not(.theme-none) body {
+  background-attachment: fixed;
+  animation: theme-drift 90s linear infinite;
+}
+
+/* ─── San Valentín 💖 ─── */
+html.theme-san-valentin body {
+  background-color: #FFF0F3;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><path d='M40 70 C25 58, 14 47, 22 35 C26 29, 36 29, 40 38 C44 29, 54 29, 58 35 C66 47, 55 58, 40 70 Z' fill='%23FF4D6D' fill-opacity='0.12'/><path d='M120 130 C105 118, 94 107, 102 95 C106 89, 116 89, 120 98 C124 89, 134 89, 138 95 C146 107, 135 118, 120 130 Z' fill='%23FF8FA3' fill-opacity='0.10'/></svg>"),
+    linear-gradient(135deg, #FFF0F3 0%, #FFE0E6 50%, #FFEEF1 100%);
+  background-size: 160px 160px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-san-valentin .btn-primary { box-shadow: 0 4px 16px rgba(255, 77, 109, 0.25); }
+
+/* ─── Día de la Flor Amarilla 🌼 ─── */
+html.theme-flor-amarilla body {
+  background-color: #FFF8DC;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g fill='%23F5C518' fill-opacity='0.16'><circle cx='40' cy='40' r='10'/><circle cx='28' cy='40' r='8'/><circle cx='52' cy='40' r='8'/><circle cx='40' cy='28' r='8'/><circle cx='40' cy='52' r='8'/><circle cx='40' cy='40' r='5' fill='%23E76F00' fill-opacity='0.5'/></g><g fill='%23FFD93D' fill-opacity='0.14'><circle cx='130' cy='130' r='9'/><circle cx='120' cy='130' r='7'/><circle cx='140' cy='130' r='7'/><circle cx='130' cy='120' r='7'/><circle cx='130' cy='140' r='7'/></g></svg>"),
+    linear-gradient(135deg, #FFFBE6 0%, #FFF3B8 50%, #FFFBE6 100%);
+  background-size: 180px 180px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-flor-amarilla .btn-primary { box-shadow: 0 4px 16px rgba(245, 197, 24, 0.30); }
+
+/* ─── Día del Niño 🎈 ─── */
+html.theme-dia-nino body {
+  background-color: #F0F8FF;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><g><ellipse cx='40' cy='40' rx='14' ry='17' fill='%235BC0EB' fill-opacity='0.16'/><line x1='40' y1='57' x2='40' y2='80' stroke='%235BC0EB' stroke-opacity='0.25' stroke-width='1'/><ellipse cx='100' cy='110' rx='14' ry='17' fill='%23FF8FA3' fill-opacity='0.16'/><line x1='100' y1='127' x2='100' y2='150' stroke='%23FF8FA3' stroke-opacity='0.25' stroke-width='1'/><ellipse cx='160' cy='60' rx='14' ry='17' fill='%23FFD93D' fill-opacity='0.18'/><line x1='160' y1='77' x2='160' y2='100' stroke='%23FFD93D' stroke-opacity='0.30' stroke-width='1'/></g></svg>"),
+    linear-gradient(135deg, #FFF8E7 0%, #E0F2FE 50%, #FFE8F0 100%);
+  background-size: 200px 200px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-dia-nino .btn-primary { box-shadow: 0 4px 16px rgba(91, 192, 235, 0.30); }
+
+/* ─── Día de las Madres 🌸 ─── */
+html.theme-dia-mama body {
+  background-color: #FFF0F5;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'><g fill='%23FF8FA3' fill-opacity='0.16'><circle cx='40' cy='40' r='8'/><circle cx='30' cy='40' r='7'/><circle cx='50' cy='40' r='7'/><circle cx='40' cy='30' r='7'/><circle cx='40' cy='50' r='7'/><circle cx='40' cy='40' r='4' fill='%23FFD700' fill-opacity='0.6'/></g><g fill='%23FFB3BD' fill-opacity='0.14'><circle cx='125' cy='125' r='7'/><circle cx='117' cy='125' r='6'/><circle cx='133' cy='125' r='6'/><circle cx='125' cy='117' r='6'/><circle cx='125' cy='133' r='6'/></g></svg>"),
+    linear-gradient(135deg, #FFF5F8 0%, #FFE0EC 50%, #FFF0F5 100%);
+  background-size: 170px 170px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-dia-mama .btn-primary { box-shadow: 0 4px 16px rgba(255, 143, 163, 0.30); }
+
+/* ─── Día del Padre 👔 ─── */
+html.theme-dia-papa body {
+  background-color: #EEF4FA;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'><g fill='%233B6EA5' fill-opacity='0.14'><polygon points='40,25 50,35 50,60 40,75 30,60 30,35'/><rect x='34' y='20' width='12' height='6' rx='2'/></g><g fill='%237CC4F5' fill-opacity='0.16'><polygon points='130,110 138,118 138,138 130,150 122,138 122,118'/><rect x='126' y='106' width='8' height='4' rx='1'/></g></svg>"),
+    linear-gradient(135deg, #EEF4FA 0%, #D5E4F2 50%, #EEF4FA 100%);
+  background-size: 170px 170px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-dia-papa .btn-primary { box-shadow: 0 4px 16px rgba(59, 110, 165, 0.28); }
+
+/* ─── Independencia 🇲🇽 ─── */
+html.theme-independencia body {
+  background-color: #F4FBF6;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g fill-opacity='0.14'><path d='M40 30 L46 45 L62 45 L50 55 L54 70 L40 60 L26 70 L30 55 L18 45 L34 45 Z' fill='%231F7A3A'/><path d='M130 100 L136 115 L152 115 L140 125 L144 140 L130 130 L116 140 L120 125 L108 115 L124 115 Z' fill='%23CE1126'/></g></svg>"),
+    linear-gradient(135deg, #E8F5EE 0%, #FFFFFF 50%, #FCE6E9 100%);
+  background-size: 180px 180px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-independencia .btn-primary { box-shadow: 0 4px 16px rgba(31, 122, 58, 0.30); }
+
+/* ─── Halloween 🎃 ─── */
+html.theme-halloween body {
+  background-color: #FFF1E0;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g><circle cx='40' cy='45' r='14' fill='%23FF7518' fill-opacity='0.18'/><path d='M40 31 Q42 27 46 30' stroke='%232D5016' stroke-width='2' fill='none' stroke-opacity='0.4'/><path d='M130 130 Q133 124 138 128' stroke='%232D5016' stroke-width='2' fill='none' stroke-opacity='0.4'/><circle cx='130' cy='140' r='13' fill='%23E76F00' fill-opacity='0.16'/></g></svg>"),
+    linear-gradient(135deg, #FFF1E0 0%, #FFD9B3 50%, #2D1B33 200%);
+  background-size: 180px 180px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-halloween .btn-primary { box-shadow: 0 4px 16px rgba(255, 117, 24, 0.32); }
+
+/* ─── Día de Muertos 💀 ─── */
+html.theme-dia-muertos body {
+  background-color: #FFF4E0;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g fill='%23E76F00' fill-opacity='0.16'><circle cx='40' cy='40' r='4'/><circle cx='34' cy='38' r='3'/><circle cx='46' cy='38' r='3'/><circle cx='34' cy='44' r='3'/><circle cx='46' cy='44' r='3'/><circle cx='40' cy='34' r='3'/><circle cx='40' cy='46' r='3'/></g><g fill='%237B3F9F' fill-opacity='0.13'><circle cx='130' cy='130' r='4'/><circle cx='124' cy='128' r='3'/><circle cx='136' cy='128' r='3'/><circle cx='124' cy='134' r='3'/><circle cx='136' cy='134' r='3'/><circle cx='130' cy='124' r='3'/><circle cx='130' cy='136' r='3'/></g></svg>"),
+    linear-gradient(135deg, #FFF4E0 0%, #F4E1FF 50%, #FFE9CC 100%);
+  background-size: 180px 180px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-dia-muertos .btn-primary { box-shadow: 0 4px 16px rgba(231, 111, 0, 0.28); }
+
+/* ─── Navidad 🎄 ─── */
+html.theme-navidad body {
+  background-color: #F0F8F2;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g><polygon points='40,20 28,42 52,42' fill='%230F8A4D' fill-opacity='0.16'/><polygon points='40,32 26,56 54,56' fill='%230F8A4D' fill-opacity='0.16'/><polygon points='40,46 24,70 56,70' fill='%230F8A4D' fill-opacity='0.16'/><circle cx='130' cy='130' r='8' fill='%23C8102E' fill-opacity='0.18'/><circle cx='130' cy='130' r='3' fill='%23FFD700' fill-opacity='0.5'/></g></svg>"),
+    linear-gradient(135deg, #F0F8F2 0%, #FFFFFF 50%, #FCE4E4 100%);
+  background-size: 180px 180px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-navidad .btn-primary { box-shadow: 0 4px 16px rgba(15, 138, 77, 0.30); }
+
+/* ─── Día de Reyes 👑 ─── */
+html.theme-reyes body {
+  background-color: #FFF8E1;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'><g><path d='M30 50 L36 35 L42 48 L48 32 L54 48 L60 35 L66 50 L66 60 L30 60 Z' fill='%23D4AF37' fill-opacity='0.18'/><circle cx='36' cy='35' r='2.5' fill='%23D4AF37' fill-opacity='0.5'/><circle cx='48' cy='32' r='2.5' fill='%23D4AF37' fill-opacity='0.5'/><circle cx='60' cy='35' r='2.5' fill='%23D4AF37' fill-opacity='0.5'/><path d='M120 130 L124 120 L128 129 L132 118 L136 129 L140 120 L144 130 L144 137 L120 137 Z' fill='%23B8860B' fill-opacity='0.16'/></g></svg>"),
+    linear-gradient(135deg, #FFF8E1 0%, #FFE9B0 50%, #FFF8E1 100%);
+  background-size: 170px 170px, cover;
+  background-repeat: repeat, no-repeat;
+}
+html.theme-reyes .btn-primary { box-shadow: 0 4px 16px rgba(212, 175, 55, 0.32); }
+/* ═══ Fin temas festivos ═══ */

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import ProfileAvatar, { ProfileFrame } from '@/components/ProfileAvatar';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { isSystemsAdmin } from '@/lib/systemsAdmin';
 
 const LOGO = 'https://i.pinimg.com/originals/f7/97/e0/f797e0d435f74e1b41a49ba08f908d25.png';
@@ -93,6 +94,9 @@ export default function Navbar() {
                     )}
                   </div>
                 )}
+
+                {/* Selector de tema festivo — solo admins */}
+                {isAdmin && <ThemeSwitcher />}
 
                 {/* Avatar con marco + badge — refleja lo que el admin guardó */}
                 <Link href="/mi-cuenta" className="inline-flex items-center hover:scale-105 transition-transform" title={session.user?.name || 'Mi cuenta'}>
