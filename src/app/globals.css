@@ -164,137 +164,283 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   ═══ TEMAS FESTIVOS (append-only) ═══
-   Las clases .theme-* se aplican a <html> y solo añaden decoración:
-   - Gradiente de fondo en body
-   - Patrón SVG flotante con ornamentos festivos
-   - Acentos sutiles en botones y enlaces
-   Si ningún .theme-* está activo, el sitio se ve idéntico al diseño base.
+   ═══ TEMAS FESTIVOS — versión completa (append-only) ═══
+   Las clases .theme-* se aplican a <html> y transforman:
+     - body (gradiente de fondo + capa decorativa animada flotante)
+     - navbar (color de fondo + borde inferior festivo)
+     - cards (.card-cute) con borde y sombra temáticos
+     - botones (.btn-primary, .btn-secondary)
+     - inputs, selección de texto, scrollbar
+     - footer
+   Sin tema activo (.theme-none o ausencia de clase) = render base intacto.
    ════════════════════════════════════════════════════════════════════ */
 
-@keyframes theme-drift {
-  0%   { background-position: 0 0, 0 0; }
-  100% { background-position: 200px 200px, 0 0; }
+/* === BASE COMÚN A TODOS LOS TEMAS === */
+
+@keyframes theme-float {
+  0%   { background-position: 0 0; }
+  100% { background-position: 320px 320px; }
+}
+@keyframes theme-float-rev {
+  0%   { background-position: 0 0; }
+  100% { background-position: -320px -320px; }
+}
+@keyframes theme-pulse-bg {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+@keyframes theme-fade-bg {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-@keyframes theme-drift-rev {
-  0%   { background-position: 0 0, 0 0; }
-  100% { background-position: -200px 200px, 0 0; }
-}
-
-/* Base aplicada a todos los temas activos: animación de drift suave */
 html[class*="theme-"]:not(.theme-none) body {
-  background-attachment: fixed;
-  animation: theme-drift 90s linear infinite;
+  position: relative;
+  isolation: isolate;
+  transition: background-color 0.6s ease;
+}
+html[class*="theme-"]:not(.theme-none) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: repeat;
+  background-size: 320px 320px;
+  animation: theme-float 80s linear infinite, theme-fade-bg 1.2s ease-out both;
+}
+html[class*="theme-"]:not(.theme-none) body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: repeat;
+  background-size: 480px 480px;
+  animation: theme-float-rev 140s linear infinite, theme-pulse-bg 8s ease-in-out infinite;
+}
+html[class*="theme-"]:not(.theme-none) .card-cute {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-/* ─── San Valentín 💖 ─── */
+/* ════════════ San Valentín 💖 ════════════ */
 html.theme-san-valentin body {
-  background-color: #FFF0F3;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><path d='M40 70 C25 58, 14 47, 22 35 C26 29, 36 29, 40 38 C44 29, 54 29, 58 35 C66 47, 55 58, 40 70 Z' fill='%23FF4D6D' fill-opacity='0.12'/><path d='M120 130 C105 118, 94 107, 102 95 C106 89, 116 89, 120 98 C124 89, 134 89, 138 95 C146 107, 135 118, 120 130 Z' fill='%23FF8FA3' fill-opacity='0.10'/></svg>"),
-    linear-gradient(135deg, #FFF0F3 0%, #FFE0E6 50%, #FFEEF1 100%);
-  background-size: 160px 160px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #FFE0E6 0%, #FFC2CC 50%, #FFD8DD 100%);
 }
-html.theme-san-valentin .btn-primary { box-shadow: 0 4px 16px rgba(255, 77, 109, 0.25); }
+html.theme-san-valentin body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%23FF4D6D' fill-opacity='0.22'><path d='M70 110 C45 90, 25 70, 35 45 C42 30, 65 30, 70 50 C75 30, 98 30, 105 45 C115 70, 95 90, 70 110 Z'/><path d='M230 230 C210 215, 195 200, 202 182 C208 170, 224 170, 230 184 C236 170, 252 170, 258 182 C265 200, 250 215, 230 230 Z'/></g><g fill='%23FF8FA3' fill-opacity='0.20'><path d='M250 80 C235 65, 220 50, 228 35 C232 25, 248 25, 250 38 C252 25, 268 25, 272 35 C280 50, 265 65, 250 80 Z'/></g></svg>");
+}
+html.theme-san-valentin body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFB3BD' fill-opacity='0.14'><circle cx='100' cy='100' r='4'/><circle cx='400' cy='160' r='3'/><circle cx='240' cy='340' r='5'/><circle cx='60' cy='420' r='3'/><circle cx='420' cy='400' r='4'/></g></svg>");
+}
+html.theme-san-valentin nav { background-color: #FFD0D9 !important; border-bottom: 2px solid rgba(255, 77, 109, 0.25); }
+html.theme-san-valentin .card-cute { border-color: #FFB3BD; box-shadow: 0 4px 20px rgba(255, 77, 109, 0.10); }
+html.theme-san-valentin .card-cute:hover { border-color: #FF8FA3; box-shadow: 0 10px 30px rgba(255, 77, 109, 0.20); }
+html.theme-san-valentin .btn-primary { background-color: #FF4D6D; box-shadow: 0 4px 16px rgba(255, 77, 109, 0.30); }
+html.theme-san-valentin .btn-primary:hover { background-color: #E63950; }
+html.theme-san-valentin .btn-secondary { background-color: #FFE0E6; color: #B23A52; }
+html.theme-san-valentin .input-cute:focus { border-color: #FF8FA3; box-shadow: 0 0 0 3px rgba(255, 143, 163, 0.25); }
+html.theme-san-valentin ::selection { background-color: #FF4D6D; color: white; }
+html.theme-san-valentin ::-webkit-scrollbar-thumb { background: #FF8FA3; }
+html.theme-san-valentin ::-webkit-scrollbar-thumb:hover { background: #FF4D6D; }
 
-/* ─── Día de la Flor Amarilla 🌼 ─── */
+/* ════════════ Día de la Flor Amarilla 🌼 ════════════ */
 html.theme-flor-amarilla body {
-  background-color: #FFF8DC;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g fill='%23F5C518' fill-opacity='0.16'><circle cx='40' cy='40' r='10'/><circle cx='28' cy='40' r='8'/><circle cx='52' cy='40' r='8'/><circle cx='40' cy='28' r='8'/><circle cx='40' cy='52' r='8'/><circle cx='40' cy='40' r='5' fill='%23E76F00' fill-opacity='0.5'/></g><g fill='%23FFD93D' fill-opacity='0.14'><circle cx='130' cy='130' r='9'/><circle cx='120' cy='130' r='7'/><circle cx='140' cy='130' r='7'/><circle cx='130' cy='120' r='7'/><circle cx='130' cy='140' r='7'/></g></svg>"),
-    linear-gradient(135deg, #FFFBE6 0%, #FFF3B8 50%, #FFFBE6 100%);
-  background-size: 180px 180px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #FFF6B8 0%, #FFE066 50%, #FFEFA0 100%);
 }
-html.theme-flor-amarilla .btn-primary { box-shadow: 0 4px 16px rgba(245, 197, 24, 0.30); }
+html.theme-flor-amarilla body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 70)'><circle r='14' fill='%23FFD93D' fill-opacity='0.45'/><circle cx='-18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle cx='18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle cy='-18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle cy='18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle r='6' fill='%23E76F00' fill-opacity='0.6'/></g><g transform='translate(240 230)'><circle r='12' fill='%23FFD93D' fill-opacity='0.40'/><circle cx='-15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle cx='15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle cy='-15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle cy='15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle r='5' fill='%23E76F00' fill-opacity='0.55'/></g></g></svg>");
+}
+html.theme-flor-amarilla body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFC107' fill-opacity='0.25'><circle cx='80' cy='150' r='5'/><circle cx='380' cy='100' r='4'/><circle cx='200' cy='380' r='5'/><circle cx='420' cy='320' r='4'/></g></svg>");
+}
+html.theme-flor-amarilla nav { background-color: #FFE066 !important; border-bottom: 2px solid rgba(245, 197, 24, 0.40); }
+html.theme-flor-amarilla .card-cute { border-color: #F5C518; box-shadow: 0 4px 20px rgba(245, 197, 24, 0.15); }
+html.theme-flor-amarilla .card-cute:hover { border-color: #E76F00; box-shadow: 0 10px 30px rgba(245, 197, 24, 0.25); }
+html.theme-flor-amarilla .btn-primary { background-color: #F5C518; color: #4A3320; box-shadow: 0 4px 16px rgba(245, 197, 24, 0.35); }
+html.theme-flor-amarilla .btn-primary:hover { background-color: #E5B100; }
+html.theme-flor-amarilla .btn-secondary { background-color: #FFF3B8; color: #8B6543; }
+html.theme-flor-amarilla .input-cute:focus { border-color: #F5C518; box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.25); }
+html.theme-flor-amarilla ::selection { background-color: #F5C518; color: #4A3320; }
+html.theme-flor-amarilla ::-webkit-scrollbar-thumb { background: #F5C518; }
+html.theme-flor-amarilla ::-webkit-scrollbar-thumb:hover { background: #E5B100; }
 
-/* ─── Día del Niño 🎈 ─── */
+/* ════════════ Día del Niño 🎈 ════════════ */
 html.theme-dia-nino body {
-  background-color: #F0F8FF;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><g><ellipse cx='40' cy='40' rx='14' ry='17' fill='%235BC0EB' fill-opacity='0.16'/><line x1='40' y1='57' x2='40' y2='80' stroke='%235BC0EB' stroke-opacity='0.25' stroke-width='1'/><ellipse cx='100' cy='110' rx='14' ry='17' fill='%23FF8FA3' fill-opacity='0.16'/><line x1='100' y1='127' x2='100' y2='150' stroke='%23FF8FA3' stroke-opacity='0.25' stroke-width='1'/><ellipse cx='160' cy='60' rx='14' ry='17' fill='%23FFD93D' fill-opacity='0.18'/><line x1='160' y1='77' x2='160' y2='100' stroke='%23FFD93D' stroke-opacity='0.30' stroke-width='1'/></g></svg>"),
-    linear-gradient(135deg, #FFF8E7 0%, #E0F2FE 50%, #FFE8F0 100%);
-  background-size: 200px 200px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #FFE5F0 0%, #C8E7FF 35%, #FFF6C8 70%, #D4F5E0 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 18s ease infinite;
 }
-html.theme-dia-nino .btn-primary { box-shadow: 0 4px 16px rgba(91, 192, 235, 0.30); }
+html.theme-dia-nino body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><ellipse cx='65' cy='75' rx='22' ry='28' fill='%235BC0EB' fill-opacity='0.40'/><line x1='65' y1='103' x2='65' y2='150' stroke='%235BC0EB' stroke-opacity='0.60' stroke-width='1.5'/><ellipse cx='180' cy='180' rx='22' ry='28' fill='%23FF8FA3' fill-opacity='0.40'/><line x1='180' y1='208' x2='180' y2='255' stroke='%23FF8FA3' stroke-opacity='0.60' stroke-width='1.5'/><ellipse cx='260' cy='80' rx='22' ry='28' fill='%23FFD93D' fill-opacity='0.45'/><line x1='260' y1='108' x2='260' y2='155' stroke='%23FFD93D' stroke-opacity='0.65' stroke-width='1.5'/><ellipse cx='90' cy='250' rx='20' ry='26' fill='%234ADE80' fill-opacity='0.40'/><line x1='90' y1='276' x2='90' y2='318' stroke='%234ADE80' stroke-opacity='0.55' stroke-width='1.5'/></g></svg>");
+}
+html.theme-dia-nino body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill-opacity='0.25'><circle cx='80' cy='80' r='3' fill='%235BC0EB'/><circle cx='350' cy='200' r='4' fill='%23FF8FA3'/><circle cx='200' cy='400' r='3' fill='%23FFD93D'/><circle cx='420' cy='400' r='4' fill='%234ADE80'/></g></svg>");
+}
+html.theme-dia-nino nav { background-color: #C8E7FF !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #FF8FA3, #FFD93D, #5BC0EB, #4ADE80) 1; }
+html.theme-dia-nino .card-cute { border-color: #5BC0EB; box-shadow: 0 4px 20px rgba(91, 192, 235, 0.18); }
+html.theme-dia-nino .card-cute:hover { border-color: #FF8FA3; box-shadow: 0 10px 30px rgba(255, 143, 163, 0.30); transform: translateY(-3px) rotate(-0.5deg); }
+html.theme-dia-nino .btn-primary { background-color: #5BC0EB; box-shadow: 0 4px 16px rgba(91, 192, 235, 0.35); }
+html.theme-dia-nino .btn-primary:hover { background-color: #3DA8D8; }
+html.theme-dia-nino .btn-secondary { background-color: #FFE5F0; color: #C0395A; }
+html.theme-dia-nino .input-cute:focus { border-color: #5BC0EB; box-shadow: 0 0 0 3px rgba(91, 192, 235, 0.25); }
+html.theme-dia-nino ::selection { background-color: #5BC0EB; color: white; }
+html.theme-dia-nino ::-webkit-scrollbar-thumb { background: #5BC0EB; }
+html.theme-dia-nino ::-webkit-scrollbar-thumb:hover { background: #3DA8D8; }
 
-/* ─── Día de las Madres 🌸 ─── */
+/* ════════════ Día de las Madres 🌸 ════════════ */
 html.theme-dia-mama body {
-  background-color: #FFF0F5;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'><g fill='%23FF8FA3' fill-opacity='0.16'><circle cx='40' cy='40' r='8'/><circle cx='30' cy='40' r='7'/><circle cx='50' cy='40' r='7'/><circle cx='40' cy='30' r='7'/><circle cx='40' cy='50' r='7'/><circle cx='40' cy='40' r='4' fill='%23FFD700' fill-opacity='0.6'/></g><g fill='%23FFB3BD' fill-opacity='0.14'><circle cx='125' cy='125' r='7'/><circle cx='117' cy='125' r='6'/><circle cx='133' cy='125' r='6'/><circle cx='125' cy='117' r='6'/><circle cx='125' cy='133' r='6'/></g></svg>"),
-    linear-gradient(135deg, #FFF5F8 0%, #FFE0EC 50%, #FFF0F5 100%);
-  background-size: 170px 170px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #FFE0EC 0%, #FFC8DC 50%, #FFEEF5 100%);
 }
-html.theme-dia-mama .btn-primary { box-shadow: 0 4px 16px rgba(255, 143, 163, 0.30); }
+html.theme-dia-mama body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 70)'><circle r='12' fill='%23FF8FA3' fill-opacity='0.40'/><circle cx='-14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle cx='14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle cy='-14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle cy='14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle r='5' fill='%23FFD700' fill-opacity='0.7'/></g><g transform='translate(240 230)'><circle r='10' fill='%23FF8FA3' fill-opacity='0.35'/><circle cx='-12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle cx='12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle cy='-12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle cy='12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle r='4' fill='%23FFD700' fill-opacity='0.6'/></g><g transform='translate(170 90)'><circle r='9' fill='%23FF8FA3' fill-opacity='0.30'/><circle cx='-11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/><circle cx='11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/><circle cy='-11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/><circle cy='11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/></g></g></svg>");
+}
+html.theme-dia-mama body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FF8FA3' fill-opacity='0.18'><circle cx='100' cy='150' r='4'/><circle cx='380' cy='100' r='3'/><circle cx='250' cy='370' r='4'/><circle cx='60' cy='400' r='3'/></g></svg>");
+}
+html.theme-dia-mama nav { background-color: #FFD0DC !important; border-bottom: 2px solid rgba(255, 143, 163, 0.40); }
+html.theme-dia-mama .card-cute { border-color: #FFB3BD; box-shadow: 0 4px 20px rgba(255, 143, 163, 0.15); }
+html.theme-dia-mama .card-cute:hover { border-color: #FF8FA3; box-shadow: 0 10px 30px rgba(255, 143, 163, 0.28); }
+html.theme-dia-mama .btn-primary { background-color: #FF8FA3; box-shadow: 0 4px 16px rgba(255, 143, 163, 0.35); }
+html.theme-dia-mama .btn-primary:hover { background-color: #FF6B81; }
+html.theme-dia-mama .btn-secondary { background-color: #FFE0EC; color: #C0395A; }
+html.theme-dia-mama .input-cute:focus { border-color: #FF8FA3; box-shadow: 0 0 0 3px rgba(255, 143, 163, 0.25); }
+html.theme-dia-mama ::selection { background-color: #FF8FA3; color: white; }
+html.theme-dia-mama ::-webkit-scrollbar-thumb { background: #FF8FA3; }
+html.theme-dia-mama ::-webkit-scrollbar-thumb:hover { background: #FF6B81; }
 
-/* ─── Día del Padre 👔 ─── */
+/* ════════════ Día del Padre 👔 ════════════ */
 html.theme-dia-papa body {
-  background-color: #EEF4FA;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'><g fill='%233B6EA5' fill-opacity='0.14'><polygon points='40,25 50,35 50,60 40,75 30,60 30,35'/><rect x='34' y='20' width='12' height='6' rx='2'/></g><g fill='%237CC4F5' fill-opacity='0.16'><polygon points='130,110 138,118 138,138 130,150 122,138 122,118'/><rect x='126' y='106' width='8' height='4' rx='1'/></g></svg>"),
-    linear-gradient(135deg, #EEF4FA 0%, #D5E4F2 50%, #EEF4FA 100%);
-  background-size: 170px 170px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #D5E4F2 0%, #B3CCE5 50%, #E0EBF5 100%);
 }
-html.theme-dia-papa .btn-primary { box-shadow: 0 4px 16px rgba(59, 110, 165, 0.28); }
+html.theme-dia-papa body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%233B6EA5' fill-opacity='0.30'><polygon points='70,60 84,76 84,120 70,140 56,120 56,76'/><rect x='62' y='52' width='16' height='8' rx='2'/><polygon points='240,200 252,214 252,250 240,270 228,250 228,214'/><rect x='234' y='194' width='12' height='6' rx='1.5'/></g><g fill='%237CC4F5' fill-opacity='0.30'><polygon points='180,90 192,104 192,138 180,156 168,138 168,104'/><rect x='174' y='84' width='12' height='6' rx='1.5'/></g></svg>");
+}
+html.theme-dia-papa body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%233B6EA5' fill-opacity='0.18'><polygon points='100,100 105,110 116,112 108,120 110,131 100,126 90,131 92,120 84,112 95,110'/><polygon points='380,200 385,210 396,212 388,220 390,231 380,226 370,231 372,220 364,212 375,210'/></g></svg>");
+}
+html.theme-dia-papa nav { background-color: #B3CCE5 !important; border-bottom: 2px solid rgba(59, 110, 165, 0.40); }
+html.theme-dia-papa .card-cute { border-color: #7CC4F5; box-shadow: 0 4px 20px rgba(59, 110, 165, 0.15); }
+html.theme-dia-papa .card-cute:hover { border-color: #3B6EA5; box-shadow: 0 10px 30px rgba(59, 110, 165, 0.25); }
+html.theme-dia-papa .btn-primary { background-color: #3B6EA5; box-shadow: 0 4px 16px rgba(59, 110, 165, 0.35); }
+html.theme-dia-papa .btn-primary:hover { background-color: #2A5485; }
+html.theme-dia-papa .btn-secondary { background-color: #D5E4F2; color: #2A5485; }
+html.theme-dia-papa .input-cute:focus { border-color: #3B6EA5; box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.25); }
+html.theme-dia-papa ::selection { background-color: #3B6EA5; color: white; }
+html.theme-dia-papa ::-webkit-scrollbar-thumb { background: #7CC4F5; }
+html.theme-dia-papa ::-webkit-scrollbar-thumb:hover { background: #3B6EA5; }
 
-/* ─── Independencia 🇲🇽 ─── */
+/* ════════════ Independencia 🇲🇽 ════════════ */
 html.theme-independencia body {
-  background-color: #F4FBF6;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g fill-opacity='0.14'><path d='M40 30 L46 45 L62 45 L50 55 L54 70 L40 60 L26 70 L30 55 L18 45 L34 45 Z' fill='%231F7A3A'/><path d='M130 100 L136 115 L152 115 L140 125 L144 140 L130 130 L116 140 L120 125 L108 115 L124 115 Z' fill='%23CE1126'/></g></svg>"),
-    linear-gradient(135deg, #E8F5EE 0%, #FFFFFF 50%, #FCE6E9 100%);
-  background-size: 180px 180px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #C8E8D0 0%, #FFFFFF 50%, #F8C8CC 100%);
 }
-html.theme-independencia .btn-primary { box-shadow: 0 4px 16px rgba(31, 122, 58, 0.30); }
+html.theme-independencia body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill-opacity='0.30'><path d='M70 60 L78 82 L100 82 L82 96 L88 118 L70 104 L52 118 L58 96 L40 82 L62 82 Z' fill='%231F7A3A'/><path d='M240 220 L248 242 L270 242 L252 256 L258 278 L240 264 L222 278 L228 256 L210 242 L232 242 Z' fill='%23CE1126'/><path d='M180 100 L186 116 L202 116 L188 126 L194 142 L180 132 L166 142 L172 126 L158 116 L174 116 Z' fill='%23FFFFFF'/></g></svg>");
+}
+html.theme-independencia body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill-opacity='0.22'><circle cx='100' cy='100' r='4' fill='%231F7A3A'/><circle cx='400' cy='150' r='4' fill='%23CE1126'/><circle cx='250' cy='400' r='4' fill='%231F7A3A'/><circle cx='80' cy='400' r='4' fill='%23CE1126'/></g></svg>");
+}
+html.theme-independencia nav { background-color: #C8E8D0 !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%) 1; }
+html.theme-independencia .card-cute { border-color: #1F7A3A; box-shadow: 0 4px 20px rgba(31, 122, 58, 0.15); }
+html.theme-independencia .card-cute:hover { border-color: #CE1126; box-shadow: 0 10px 30px rgba(206, 17, 38, 0.20); }
+html.theme-independencia .btn-primary { background-color: #1F7A3A; box-shadow: 0 4px 16px rgba(31, 122, 58, 0.35); }
+html.theme-independencia .btn-primary:hover { background-color: #155F2C; }
+html.theme-independencia .btn-secondary { background-color: #C8E8D0; color: #155F2C; }
+html.theme-independencia .input-cute:focus { border-color: #1F7A3A; box-shadow: 0 0 0 3px rgba(31, 122, 58, 0.25); }
+html.theme-independencia ::selection { background-color: #1F7A3A; color: white; }
+html.theme-independencia ::-webkit-scrollbar-thumb { background: #1F7A3A; }
+html.theme-independencia ::-webkit-scrollbar-thumb:hover { background: #CE1126; }
 
-/* ─── Halloween 🎃 ─── */
+/* ════════════ Halloween 🎃 ════════════ */
 html.theme-halloween body {
-  background-color: #FFF1E0;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g><circle cx='40' cy='45' r='14' fill='%23FF7518' fill-opacity='0.18'/><path d='M40 31 Q42 27 46 30' stroke='%232D5016' stroke-width='2' fill='none' stroke-opacity='0.4'/><path d='M130 130 Q133 124 138 128' stroke='%232D5016' stroke-width='2' fill='none' stroke-opacity='0.4'/><circle cx='130' cy='140' r='13' fill='%23E76F00' fill-opacity='0.16'/></g></svg>"),
-    linear-gradient(135deg, #FFF1E0 0%, #FFD9B3 50%, #2D1B33 200%);
-  background-size: 180px 180px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #FFB870 0%, #FF7518 40%, #4A1F5C 100%);
+  color: #2D1B33;
 }
-html.theme-halloween .btn-primary { box-shadow: 0 4px 16px rgba(255, 117, 24, 0.32); }
+html.theme-halloween body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><circle cx='70' cy='80' r='22' fill='%23FF7518' fill-opacity='0.50'/><path d='M70 58 Q73 50 80 54' stroke='%232D5016' stroke-width='3' fill='none' stroke-opacity='0.65'/><polygon points='62,76 66,84 58,84' fill='%231A1A1A' fill-opacity='0.6'/><polygon points='78,76 82,84 74,84' fill='%231A1A1A' fill-opacity='0.6'/><path d='M60 92 Q70 100 80 92' stroke='%231A1A1A' stroke-width='2' fill='none' stroke-opacity='0.6'/><circle cx='240' cy='220' r='20' fill='%23E76F00' fill-opacity='0.45'/><path d='M240 200 Q243 192 250 196' stroke='%232D5016' stroke-width='3' fill='none' stroke-opacity='0.55'/></g><g fill='%231A1A1A' fill-opacity='0.40'><path d='M170 100 Q160 95 156 100 Q160 92 170 92 Q180 92 184 100 Q180 95 170 100 Z'/><path d='M180 230 Q170 225 166 230 Q170 222 180 222 Q190 222 194 230 Q190 225 180 230 Z'/></g></svg>");
+}
+html.theme-halloween body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%231A1A1A' fill-opacity='0.18'><circle cx='100' cy='120' r='2'/><circle cx='400' cy='200' r='2'/><circle cx='240' cy='380' r='2'/><circle cx='80' cy='400' r='2'/><circle cx='420' cy='400' r='2'/></g></svg>");
+}
+html.theme-halloween nav { background-color: #FF7518 !important; border-bottom: 2px solid #4A1F5C; }
+html.theme-halloween .card-cute { border-color: #FF7518; box-shadow: 0 4px 20px rgba(255, 117, 24, 0.20); background-color: #FFF7EC; }
+html.theme-halloween .card-cute:hover { border-color: #4A1F5C; box-shadow: 0 10px 30px rgba(74, 31, 92, 0.30); }
+html.theme-halloween .btn-primary { background-color: #FF7518; color: white; box-shadow: 0 4px 16px rgba(255, 117, 24, 0.40); }
+html.theme-halloween .btn-primary:hover { background-color: #E76F00; }
+html.theme-halloween .btn-secondary { background-color: #4A1F5C; color: #FFD9B3; }
+html.theme-halloween .btn-secondary:hover { background-color: #2D1B33; }
+html.theme-halloween .input-cute:focus { border-color: #FF7518; box-shadow: 0 0 0 3px rgba(255, 117, 24, 0.30); }
+html.theme-halloween ::selection { background-color: #FF7518; color: #2D1B33; }
+html.theme-halloween ::-webkit-scrollbar-thumb { background: #FF7518; }
+html.theme-halloween ::-webkit-scrollbar-thumb:hover { background: #4A1F5C; }
 
-/* ─── Día de Muertos 💀 ─── */
+/* ════════════ Día de Muertos 💀 ════════════ */
 html.theme-dia-muertos body {
-  background-color: #FFF4E0;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g fill='%23E76F00' fill-opacity='0.16'><circle cx='40' cy='40' r='4'/><circle cx='34' cy='38' r='3'/><circle cx='46' cy='38' r='3'/><circle cx='34' cy='44' r='3'/><circle cx='46' cy='44' r='3'/><circle cx='40' cy='34' r='3'/><circle cx='40' cy='46' r='3'/></g><g fill='%237B3F9F' fill-opacity='0.13'><circle cx='130' cy='130' r='4'/><circle cx='124' cy='128' r='3'/><circle cx='136' cy='128' r='3'/><circle cx='124' cy='134' r='3'/><circle cx='136' cy='134' r='3'/><circle cx='130' cy='124' r='3'/><circle cx='130' cy='136' r='3'/></g></svg>"),
-    linear-gradient(135deg, #FFF4E0 0%, #F4E1FF 50%, #FFE9CC 100%);
-  background-size: 180px 180px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #FFCC80 0%, #E76F00 40%, #7B3F9F 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 25s ease infinite;
 }
-html.theme-dia-muertos .btn-primary { box-shadow: 0 4px 16px rgba(231, 111, 0, 0.28); }
+html.theme-dia-muertos body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 80)'><ellipse rx='18' ry='22' fill='%23FFFFFF' fill-opacity='0.55'/><circle cx='-7' cy='-3' r='3.5' fill='%231A1A1A' fill-opacity='0.65'/><circle cx='7' cy='-3' r='3.5' fill='%231A1A1A' fill-opacity='0.65'/><path d='M-6 8 L-3 12 L0 8 L3 12 L6 8' stroke='%231A1A1A' stroke-width='1.5' fill='none' stroke-opacity='0.65'/></g><g transform='translate(240 230)'><circle r='12' fill='%23E76F00' fill-opacity='0.55'/><circle cx='-14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle cx='14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle cy='-14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle cy='14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle r='5' fill='%23B23A00' fill-opacity='0.60'/></g></g></svg>");
+}
+html.theme-dia-muertos body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFD93D' fill-opacity='0.30'><path d='M100 100 L102 106 L108 106 L103 110 L105 116 L100 112 L95 116 L97 110 L92 106 L98 106 Z'/><path d='M380 250 L382 256 L388 256 L383 260 L385 266 L380 262 L375 266 L377 260 L372 256 L378 256 Z'/><path d='M200 380 L202 386 L208 386 L203 390 L205 396 L200 392 L195 396 L197 390 L192 386 L198 386 Z'/></g></svg>");
+}
+html.theme-dia-muertos nav { background-color: #E76F00 !important; border-bottom: 3px solid #7B3F9F; }
+html.theme-dia-muertos .card-cute { border-color: #E76F00; box-shadow: 0 4px 20px rgba(231, 111, 0, 0.20); background-color: #FFF7EC; }
+html.theme-dia-muertos .card-cute:hover { border-color: #7B3F9F; box-shadow: 0 10px 30px rgba(123, 63, 159, 0.25); }
+html.theme-dia-muertos .btn-primary { background-color: #E76F00; box-shadow: 0 4px 16px rgba(231, 111, 0, 0.40); }
+html.theme-dia-muertos .btn-primary:hover { background-color: #B23A00; }
+html.theme-dia-muertos .btn-secondary { background-color: #7B3F9F; color: #FFF; }
+html.theme-dia-muertos .btn-secondary:hover { background-color: #5A2C7A; }
+html.theme-dia-muertos .input-cute:focus { border-color: #E76F00; box-shadow: 0 0 0 3px rgba(231, 111, 0, 0.30); }
+html.theme-dia-muertos ::selection { background-color: #E76F00; color: white; }
+html.theme-dia-muertos ::-webkit-scrollbar-thumb { background: #E76F00; }
+html.theme-dia-muertos ::-webkit-scrollbar-thumb:hover { background: #7B3F9F; }
 
-/* ─── Navidad 🎄 ─── */
+/* ════════════ Navidad 🎄 ════════════ */
 html.theme-navidad body {
-  background-color: #F0F8F2;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><g><polygon points='40,20 28,42 52,42' fill='%230F8A4D' fill-opacity='0.16'/><polygon points='40,32 26,56 54,56' fill='%230F8A4D' fill-opacity='0.16'/><polygon points='40,46 24,70 56,70' fill='%230F8A4D' fill-opacity='0.16'/><circle cx='130' cy='130' r='8' fill='%23C8102E' fill-opacity='0.18'/><circle cx='130' cy='130' r='3' fill='%23FFD700' fill-opacity='0.5'/></g></svg>"),
-    linear-gradient(135deg, #F0F8F2 0%, #FFFFFF 50%, #FCE4E4 100%);
-  background-size: 180px 180px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #C8E8D0 0%, #F8C8CC 50%, #E8F5EC 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 22s ease infinite;
 }
-html.theme-navidad .btn-primary { box-shadow: 0 4px 16px rgba(15, 138, 77, 0.30); }
+html.theme-navidad body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 80)'><polygon points='0,-30 -18,0 18,0' fill='%230F8A4D' fill-opacity='0.45'/><polygon points='0,-15 -22,18 22,18' fill='%230F8A4D' fill-opacity='0.45'/><polygon points='0,3 -26,38 26,38' fill='%230F8A4D' fill-opacity='0.45'/><rect x='-4' y='38' width='8' height='8' fill='%238B6543' fill-opacity='0.6'/><circle cx='0' cy='-30' r='4' fill='%23FFD700' fill-opacity='0.7'/></g><g transform='translate(240 220)'><circle r='12' fill='%23C8102E' fill-opacity='0.55'/><circle r='4' fill='%23FFD700' fill-opacity='0.7'/><rect x='-2' y='-18' width='4' height='6' fill='%23FFD700' fill-opacity='0.7'/></g><g transform='translate(180 90)'><polygon points='0,-3 1,1 5,1 2,3 3,7 0,5 -3,7 -2,3 -5,1 -1,1' fill='%23FFFFFF' fill-opacity='0.8'/></g></g></svg>");
+}
+html.theme-navidad body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFFFFF' fill-opacity='0.50'><circle cx='100' cy='100' r='2'/><circle cx='350' cy='180' r='2.5'/><circle cx='200' cy='350' r='2'/><circle cx='420' cy='400' r='2.5'/><circle cx='80' cy='420' r='2'/><circle cx='280' cy='80' r='2'/></g></svg>");
+}
+html.theme-navidad nav { background-color: #0F8A4D !important; border-bottom: 3px solid #C8102E; }
+html.theme-navidad nav a, html.theme-navidad nav button { color: #FFFFFF !important; }
+html.theme-navidad .card-cute { border-color: #0F8A4D; box-shadow: 0 4px 20px rgba(15, 138, 77, 0.18); }
+html.theme-navidad .card-cute:hover { border-color: #C8102E; box-shadow: 0 10px 30px rgba(200, 16, 46, 0.20); }
+html.theme-navidad .btn-primary { background-color: #C8102E; box-shadow: 0 4px 16px rgba(200, 16, 46, 0.35); }
+html.theme-navidad .btn-primary:hover { background-color: #A00D24; }
+html.theme-navidad .btn-secondary { background-color: #0F8A4D; color: white; }
+html.theme-navidad .btn-secondary:hover { background-color: #0A6A3A; }
+html.theme-navidad .input-cute:focus { border-color: #0F8A4D; box-shadow: 0 0 0 3px rgba(15, 138, 77, 0.25); }
+html.theme-navidad ::selection { background-color: #C8102E; color: white; }
+html.theme-navidad ::-webkit-scrollbar-thumb { background: #0F8A4D; }
+html.theme-navidad ::-webkit-scrollbar-thumb:hover { background: #C8102E; }
 
-/* ─── Día de Reyes 👑 ─── */
+/* ════════════ Día de Reyes 👑 ════════════ */
 html.theme-reyes body {
-  background-color: #FFF8E1;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'><g><path d='M30 50 L36 35 L42 48 L48 32 L54 48 L60 35 L66 50 L66 60 L30 60 Z' fill='%23D4AF37' fill-opacity='0.18'/><circle cx='36' cy='35' r='2.5' fill='%23D4AF37' fill-opacity='0.5'/><circle cx='48' cy='32' r='2.5' fill='%23D4AF37' fill-opacity='0.5'/><circle cx='60' cy='35' r='2.5' fill='%23D4AF37' fill-opacity='0.5'/><path d='M120 130 L124 120 L128 129 L132 118 L136 129 L140 120 L144 130 L144 137 L120 137 Z' fill='%23B8860B' fill-opacity='0.16'/></g></svg>"),
-    linear-gradient(135deg, #FFF8E1 0%, #FFE9B0 50%, #FFF8E1 100%);
-  background-size: 170px 170px, cover;
-  background-repeat: repeat, no-repeat;
+  background: linear-gradient(135deg, #FFEFC0 0%, #FFD970 50%, #FFF8DC 100%);
 }
-html.theme-reyes .btn-primary { box-shadow: 0 4px 16px rgba(212, 175, 55, 0.32); }
+html.theme-reyes body::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><path d='M50 110 L60 80 L70 105 L80 70 L90 105 L100 80 L110 110 L110 125 L50 125 Z' fill='%23D4AF37' fill-opacity='0.55'/><circle cx='60' cy='80' r='4' fill='%23B8860B' fill-opacity='0.7'/><circle cx='80' cy='70' r='4' fill='%23B8860B' fill-opacity='0.7'/><circle cx='100' cy='80' r='4' fill='%23B8860B' fill-opacity='0.7'/><path d='M210 240 L218 220 L226 238 L234 215 L242 238 L250 220 L258 240 L258 252 L210 252 Z' fill='%23B8860B' fill-opacity='0.45'/></g><g fill='%23FFD700' fill-opacity='0.40'><path d='M180 90 L184 100 L194 100 L186 106 L190 116 L180 110 L170 116 L174 106 L166 100 L176 100 Z'/></g></svg>");
+}
+html.theme-reyes body::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23D4AF37' fill-opacity='0.28'><path d='M100 100 L103 110 L113 110 L105 116 L108 126 L100 120 L92 126 L95 116 L87 110 L97 110 Z'/><path d='M380 200 L383 210 L393 210 L385 216 L388 226 L380 220 L372 226 L375 216 L367 210 L377 210 Z'/><path d='M250 380 L253 390 L263 390 L255 396 L258 406 L250 400 L242 406 L245 396 L237 390 L247 390 Z'/></g></svg>");
+}
+html.theme-reyes nav { background-color: #FFD970 !important; border-bottom: 3px solid #D4AF37; }
+html.theme-reyes .card-cute { border-color: #D4AF37; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.20); }
+html.theme-reyes .card-cute:hover { border-color: #B8860B; box-shadow: 0 10px 30px rgba(184, 134, 11, 0.30); }
+html.theme-reyes .btn-primary { background-color: #D4AF37; color: #4A3320; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.40); }
+html.theme-reyes .btn-primary:hover { background-color: #B8860B; color: white; }
+html.theme-reyes .btn-secondary { background-color: #FFEFC0; color: #8B6543; }
+html.theme-reyes .input-cute:focus { border-color: #D4AF37; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.30); }
+html.theme-reyes ::selection { background-color: #D4AF37; color: #4A3320; }
+html.theme-reyes ::-webkit-scrollbar-thumb { background: #D4AF37; }
+html.theme-reyes ::-webkit-scrollbar-thumb:hover { background: #B8860B; }
 /* ═══ Fin temas festivos ═══ */
