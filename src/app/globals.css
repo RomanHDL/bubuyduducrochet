@@ -214,16 +214,11 @@ html[class*="theme-"]:not(.theme-none) body {
   transition: background-color 0.5s ease;
 }
 
-/* Capa 1: halftone (Ben-Day dots) — patrón comic clásico */
+/* Capa 1: desactivada — los puntos halftone tapaban el fondo.
+   El patron principal vive ahora en body::after (iconos del tema)
+   y el body color es directamente visible. */
 html[class*="theme-"]:not(.theme-none) body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-repeat: repeat;
-  background-size: 14px 14px;
-  animation: halftone-shift 25s linear infinite, theme-fade-bg 0.8s ease-out both;
+  content: none;
 }
 
 /* Capa 2: diagonal action lines */
@@ -450,11 +445,11 @@ html.theme-dia-mama body::after {
 }
 html.theme-dia-mama .card-cute { border-color: #C0395A !important; }
 html.theme-dia-mama .card-cute::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g stroke='%231A1A1A' stroke-width='2'><circle cx='30' cy='30' r='18' fill='%23FFB3BD'/><circle cx='30' cy='30' r='12' fill='%23FF8FA3'/><circle cx='30' cy='30' r='6' fill='%23FF6B81'/><circle cx='30' cy='30' r='2.5' fill='%23B0001D'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g stroke='%231A1A1A' stroke-width='1.6' stroke-linejoin='round'><ellipse cx='30' cy='14' rx='4' ry='7' fill='%23FFB3BD'/><ellipse cx='13' cy='28' rx='7' ry='4' fill='%23FFB3BD'/><ellipse cx='47' cy='28' rx='7' ry='4' fill='%23FFB3BD'/><ellipse cx='30' cy='42' rx='4' ry='7' fill='%23FFB3BD'/><circle cx='30' cy='28' r='10' fill='%23FF8FA3'/><circle cx='30' cy='28' r='6' fill='%23FF6B81'/><circle cx='30' cy='28' r='2.8' fill='%23B0001D'/></g><g stroke='%231A1A1A' stroke-width='1.2' stroke-linejoin='round'><path d='M14 50 C12 48 9 49 9 51 C9 53 14 56 14 56 C14 56 19 53 19 51 C19 49 16 48 14 50 Z' fill='%23FF1744'/><path d='M46 50 C44 48 41 49 41 51 C41 53 46 56 46 56 C46 56 51 53 51 51 C51 49 48 48 46 50 Z' fill='%23FF1744'/></g></svg>");
 }
 html.theme-dia-mama body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='110' height='110' viewBox='0 0 110 110'><g stroke='%231A1A1A' stroke-opacity='0.30' stroke-width='1.5'><circle cx='55' cy='55' r='15' fill='%23FFB3BD' fill-opacity='0.40'/><circle cx='55' cy='55' r='10' fill='%23FF8FA3' fill-opacity='0.50'/><circle cx='55' cy='55' r='5' fill='%23FF6B81' fill-opacity='0.55'/></g></svg>");
-  background-size: 110px 110px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><g stroke='%231A1A1A' stroke-opacity='0.32' stroke-width='1.5' stroke-linejoin='round'><ellipse cx='40' cy='22' rx='4' ry='8' fill='%23FFB3BD' fill-opacity='0.45'/><ellipse cx='22' cy='40' rx='8' ry='4' fill='%23FFB3BD' fill-opacity='0.45'/><ellipse cx='58' cy='40' rx='8' ry='4' fill='%23FFB3BD' fill-opacity='0.45'/><ellipse cx='40' cy='58' rx='4' ry='8' fill='%23FFB3BD' fill-opacity='0.45'/><circle cx='40' cy='40' r='11' fill='%23FF8FA3' fill-opacity='0.55'/><circle cx='40' cy='40' r='6' fill='%23FF6B81' fill-opacity='0.65'/><circle cx='40' cy='40' r='2.5' fill='%23B0001D' fill-opacity='0.7'/></g><g stroke='%231A1A1A' stroke-opacity='0.30' stroke-width='1.4' stroke-linejoin='round'><path d='M115 100 C112 96 106 97 106 102 C106 106 115 114 115 114 C115 114 124 106 124 102 C124 97 118 96 115 100 Z' fill='%23FF1744' fill-opacity='0.45'/><path d='M125 30 C123 28 119 28 119 32 C119 35 125 40 125 40 C125 40 131 35 131 32 C131 28 127 28 125 30 Z' fill='%23FF8FA3' fill-opacity='0.40'/></g></svg>");
+  background-size: 160px 160px;
 }
 html.theme-dia-mama .btn-primary { background-color: #FF8FA3 !important; color: #FFF !important; }
 html.theme-dia-mama .btn-primary:hover { background-color: #FF6B81 !important; }
