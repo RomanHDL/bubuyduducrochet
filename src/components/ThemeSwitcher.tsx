@@ -81,7 +81,7 @@ export default function ThemeSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-warm border border-cream-200 p-3 z-[60] max-h-[80vh] overflow-y-auto">
+        <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-warm border border-cream-200 p-3 z-[60] max-h-[80vh] overflow-y-auto">
           <div className="flex items-center justify-between px-1 mb-3">
             <div className="text-xs font-bold uppercase tracking-wider text-cocoa-700">
               Tema del sitio

@@ -214,11 +214,24 @@ html[class*="theme-"]:not(.theme-none) body {
   transition: background-color 0.5s ease;
 }
 
-/* Capa 1: desactivada — los puntos halftone tapaban el fondo.
-   El patron principal vive ahora en body::after (iconos del tema)
-   y el body color es directamente visible. */
+/* Capa 1: desactivada por defecto — los puntos halftone tapaban el fondo.
+   El patron principal vive en body::after (iconos del tema) y el body
+   color es directamente visible. */
 html[class*="theme-"]:not(.theme-none) body::before {
   content: none;
+}
+
+/* Excepción: Independencia re-habilita body::before como capa de
+   legibilidad sobre la bandera. La bandera sin overlay deja texto
+   ilegible en las franjas verde y roja. Overlay blanco 38% suaviza
+   sin tapar la bandera. */
+html.theme-independencia body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.38);
 }
 
 /* Capa 2: diagonal action lines */
@@ -528,6 +541,14 @@ html.theme-independencia footer { background-color: #155F2C !important; color: #
 html.theme-independencia ::selection { background-color: #006847; color: #FFF; }
 html.theme-independencia ::-webkit-scrollbar-thumb { background: #006847; }
 html.theme-independencia .festive-banner__date { color: #006847; }
+/* Halo blanco en headings y parrafos para asegurar legibilidad
+   sobre las franjas verde/roja de la bandera */
+html.theme-independencia main h1,
+html.theme-independencia main h2,
+html.theme-independencia main h3,
+html.theme-independencia main p {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95), 0 0 6px rgba(255, 255, 255, 0.65);
+}
 
 /* ─── Halloween ─── */
 html.theme-halloween { --card-shadow: #4A1F5C; }

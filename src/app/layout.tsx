@@ -50,6 +50,12 @@ export const metadata: Metadata = {
   },
 };
 
+// Script inline que aplica la clase page-<ruta> al <html> ANTES de que React
+// hidrate, para que los overrides CSS por página estén activos antes del
+// primer paint. Esto elimina el flash de "diseño base sin tema" al navegar
+// al home desde otra página.
+const pageClassBootstrap = `(function(){try{var p=location.pathname;var c;if(p==='/')c='page-home';else if(p==='/catalogo')c='page-catalogo';else if(p==='/preguntas')c='page-faq';else if(p==='/contacto')c='page-nosotros';else if(p==='/carrito')c='page-carrito';else if(p==='/favoritos')c='page-favoritos';else if(p==='/mi-cuenta')c='page-cuenta';else if(p==='/pedidos')c='page-pedidos';else if(p==='/login'||p==='/registro')c='page-login';else if(p.indexOf('/producto/')===0)c='page-producto';else if(p.indexOf('/admin')===0)c='page-admin';else c='page-other';document.documentElement.classList.add(c);}catch(e){}})();`;
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -58,6 +64,9 @@ export default async function RootLayout({
   const themeClass = await getActiveThemeClass();
   return (
     <html lang="es" className={themeClass}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: pageClassBootstrap }} />
+      </head>
       <body className="min-h-screen flex flex-col">
         <Providers>
           <Navbar />

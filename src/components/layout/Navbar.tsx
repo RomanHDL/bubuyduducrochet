@@ -136,9 +136,16 @@ export default function Navbar() {
                 <Link href="/pedidos" className="block text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 py-1" onClick={() => setMenuOpen(false)}>📦 Mis Pedidos</Link>
                 <Link href="/mi-cuenta" className="block text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 py-1" onClick={() => setMenuOpen(false)}>👤 Mi Cuenta</Link>
                 {isAdmin && (
-                  <Link href="/admin" className="block text-sm font-semibold text-cocoa-600 py-1" onClick={() => setMenuOpen(false)}>
-                    ⚙️ Admin {isSysAdmin && <span className="ml-2 inline-block px-2 py-0.5 rounded bg-black text-green-400 font-mono text-[10px]">{'>_'} SISTEMAS</span>}
-                  </Link>
+                  <>
+                    <Link href="/admin" className="block text-sm font-semibold text-cocoa-600 py-1" onClick={() => setMenuOpen(false)}>
+                      ⚙️ Admin {isSysAdmin && <span className="ml-2 inline-block px-2 py-0.5 rounded bg-black text-green-400 font-mono text-[10px]">{'>_'} SISTEMAS</span>}
+                    </Link>
+                    {/* Selector de tema festivo en mobile — solo admin */}
+                    <div className="flex items-center gap-3 pt-1">
+                      <span className="text-sm font-semibold text-cocoa-600">🎨 Tema festivo:</span>
+                      <ThemeSwitcher />
+                    </div>
+                  </>
                 )}
                 <button onClick={() => signOut({ callbackUrl: '/' })} className="text-sm font-semibold text-cocoa-400 hover:text-cocoa-700 py-1">Cerrar sesion</button>
               </>

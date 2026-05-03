@@ -29,7 +29,7 @@ export default function FestiveBanner() {
 
   return (
     <div
-      className="festive-banner hidden md:flex items-center gap-3 px-5 py-2 mx-2 rounded-full max-w-md"
+      className="festive-banner hidden lg:flex items-center gap-3 px-5 py-2 mx-2 rounded-full max-w-md"
       role="status"
       aria-label={`${theme.date}. ${theme.message}`}
     >

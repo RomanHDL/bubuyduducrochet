@@ -1,7 +1,12 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
+
+// useLayoutEffect aplica el cambio al DOM ANTES de que el navegador pinte,
+// eliminando el flash al navegar entre rutas. En SSR no hay window, asi
+// que caemos a useEffect normal (no hace nada en server).
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 // Mapea cada ruta a una clase page-<ruta> para CSS específico por página.
 const ROUTE_CLASS_MAP: Array<[RegExp | string, string]> = [
@@ -26,8 +31,8 @@ const ROUTE_CLASS_MAP: Array<[RegExp | string, string]> = [
 export default function PageClassMarker() {
   const pathname = usePathname();
 
-  // Page class
-  useEffect(() => {
+  // Page class — useLayoutEffect aplica antes del paint (sin flash)
+  useIsoLayoutEffect(() => {
     if (typeof document === 'undefined') return;
     const html = document.documentElement;
 
