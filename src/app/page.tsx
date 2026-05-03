@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Review from '@/models/Review';
 import ProductReview from '@/models/ProductReview';
+import { faqJsonLd, jsonLdScriptProps } from '@/lib/jsonld';
 
 export const revalidate = 30; // ISR: re-renderiza cada 30s con stats frescos
 
@@ -84,8 +85,13 @@ export default async function HomePage() {
     { num: '100%', label: 'Hecho a mano', emoji: '🤲' },
   ];
 
+  // FAQPage JSON-LD: las preguntas mostradas en el home aparecen expandidas
+  // en los resultados de Google con respuesta visible (rich snippet).
+  const faqLd = faqJsonLd(FAQ_ITEMS.map((f) => ({ question: f.q, answer: f.a })));
+
   return (
     <div>
+      <script {...jsonLdScriptProps(faqLd)} />
       {/* ═══════════════════════════════════════════════════════
           1. HERO — Statement principal + CTA dual + trust signal
           ═══════════════════════════════════════════════════════ */}

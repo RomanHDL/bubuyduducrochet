@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { unstable_cache } from "next/cache";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -8,6 +8,8 @@ import NewOrderNotifier from "@/components/NewOrderNotifier";
 import { connectDB } from "@/lib/mongodb";
 import SiteSettings from "@/models/SiteSettings";
 import { suggestThemeByDate, type ThemeId } from "@/lib/themes";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_OG_IMAGE, SITE_LOCALE, SITE_LANG, BRAND_COLOR, BRAND_BG } from "@/lib/seo";
+import { organizationJsonLd, localBusinessJsonLd, websiteJsonLd, jsonLdScriptProps } from "@/lib/jsonld";
 
 const logoUrl = "https://i.pinimg.com/originals/f7/97/e0/f797e0d435f74e1b41a49ba08f908d25.png";
 
@@ -39,15 +41,74 @@ async function getActiveThemeClass(): Promise<string> {
 }
 
 export const metadata: Metadata = {
-  title: "Bubu & Dudu Crochet | Creaciones hechas con amor",
-  description: "Tienda de crochet artesanal. Amigurumis, accesorios y creaciones hechas a mano con amor y ternura.",
-  icons: {
-    icon: logoUrl,
-    apple: logoUrl,
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} | Crochet artesanal hecho a mano en México`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    'crochet artesanal',
+    'amigurumis México',
+    'crochet Monterrey',
+    'tejidos a mano',
+    'amigurumi personalizado',
+    'regalos hechos a mano',
+    'crochet baby shower',
+    'accesorios crochet',
+    'decoración crochet',
+    'mundo a crochet',
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  alternates: {
+    canonical: SITE_URL,
   },
   openGraph: {
-    images: [logoUrl],
+    type: 'website',
+    locale: SITE_LOCALE,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} | Crochet artesanal hecho a mano`,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: SITE_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+      },
+    ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} | Crochet artesanal`,
+    description: SITE_DESCRIPTION,
+    images: [SITE_OG_IMAGE],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  category: 'shopping',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: BRAND_BG },
+    { media: '(prefers-color-scheme: dark)', color: BRAND_COLOR },
+  ],
 };
 
 // Script inline que aplica la clase page-<ruta> al <html> ANTES de que React
@@ -63,8 +124,20 @@ export default async function RootLayout({
 }>) {
   const themeClass = await getActiveThemeClass();
   return (
-    <html lang="es" className={themeClass}>
+    <html lang={SITE_LANG} className={themeClass}>
       <head>
+        {/* Performance: precarga DNS para CDNs externos usados (logo + Cloudinary uploads) */}
+        <link rel="preconnect" href="https://i.pinimg.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+        {/* JSON-LD: identidad, tienda local, sitio web con search action */}
+        <script {...jsonLdScriptProps(organizationJsonLd())} />
+        <script {...jsonLdScriptProps(localBusinessJsonLd())} />
+        <script {...jsonLdScriptProps(websiteJsonLd())} />
+
+        {/* Bootstrap inline: aplica page-X al <html> antes de hidratar (evita flash entre rutas) */}
         <script dangerouslySetInnerHTML={{ __html: pageClassBootstrap }} />
       </head>
       <body className="min-h-screen flex flex-col">
