@@ -164,14 +164,16 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   ═══ TEMAS FESTIVOS — versión completa (append-only) ═══
+   TEMAS FESTIVOS — versión profesional (append-only)
+   Patrones 100% CSS/SVG geométrico abstracto. Sin emojis.
    Las clases .theme-* se aplican a <html> y transforman:
-     - body (gradiente de fondo + capa decorativa animada flotante)
-     - navbar (color de fondo + borde inferior festivo)
-     - cards (.card-cute) con borde y sombra temáticos
+     - body (gradiente + dos capas decorativas animadas)
+     - navbar (color y borde inferior)
+     - cards (.card-cute) con borde, sombra y línea superior temáticas
      - botones (.btn-primary, .btn-secondary)
-     - inputs, selección de texto, scrollbar
-     - footer
+     - inputs (.input-cute)
+     - selección de texto y scrollbar
+     - banner festivo (.festive-banner) entre logo y nav
    Sin tema activo (.theme-none o ausencia de clase) = render base intacto.
    ════════════════════════════════════════════════════════════════════ */
 
@@ -183,15 +185,19 @@ body {
 }
 @keyframes theme-float-rev {
   0%   { background-position: 0 0; }
-  100% { background-position: -320px -320px; }
+  100% { background-position: -480px -480px; }
 }
 @keyframes theme-pulse-bg {
-  0%, 100% { opacity: 0.7; }
+  0%, 100% { opacity: 0.6; }
   50%      { opacity: 1; }
 }
 @keyframes theme-fade-bg {
-  0% { opacity: 0; }
+  0%   { opacity: 0; }
   100% { opacity: 1; }
+}
+@keyframes festive-banner-appear {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 html[class*="theme-"]:not(.theme-none) body {
@@ -207,7 +213,7 @@ html[class*="theme-"]:not(.theme-none) body::before {
   pointer-events: none;
   background-repeat: repeat;
   background-size: 320px 320px;
-  animation: theme-float 80s linear infinite, theme-fade-bg 1.2s ease-out both;
+  animation: theme-float 90s linear infinite, theme-fade-bg 1.2s ease-out both;
 }
 html[class*="theme-"]:not(.theme-none) body::after {
   content: '';
@@ -217,25 +223,65 @@ html[class*="theme-"]:not(.theme-none) body::after {
   pointer-events: none;
   background-repeat: repeat;
   background-size: 480px 480px;
-  animation: theme-float-rev 140s linear infinite, theme-pulse-bg 8s ease-in-out infinite;
+  animation: theme-float-rev 160s linear infinite, theme-pulse-bg 9s ease-in-out infinite;
 }
 html[class*="theme-"]:not(.theme-none) .card-cute {
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-/* ════════════ San Valentín 💖 ════════════ */
+/* ─── Banner festivo (estilo base, colores se sobrescriben por tema) ─── */
+.festive-banner {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  background: rgba(255, 255, 255, 0.55);
+  color: #4A3320;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: festive-banner-appear 0.5s ease-out both;
+}
+.festive-banner__date {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+.festive-banner__divider {
+  display: inline-block;
+  width: 1px;
+  height: 14px;
+  background: currentColor;
+  opacity: 0.30;
+  flex-shrink: 0;
+}
+.festive-banner__message {
+  font-style: italic;
+  font-weight: 500;
+  opacity: 0.92;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* ════════════ San Valentín ════════════
+   Patrón: diamantes (cuadrados rotados) + chispas */
 html.theme-san-valentin body {
   background: linear-gradient(135deg, #FFE0E6 0%, #FFC2CC 50%, #FFD8DD 100%);
 }
 html.theme-san-valentin body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%23FF4D6D' fill-opacity='0.22'><path d='M70 110 C45 90, 25 70, 35 45 C42 30, 65 30, 70 50 C75 30, 98 30, 105 45 C115 70, 95 90, 70 110 Z'/><path d='M230 230 C210 215, 195 200, 202 182 C208 170, 224 170, 230 184 C236 170, 252 170, 258 182 C265 200, 250 215, 230 230 Z'/></g><g fill='%23FF8FA3' fill-opacity='0.20'><path d='M250 80 C235 65, 220 50, 228 35 C232 25, 248 25, 250 38 C252 25, 268 25, 272 35 C280 50, 265 65, 250 80 Z'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%23FF4D6D' fill-opacity='0.22'><rect x='-7' y='-7' width='14' height='14' transform='translate(70 70) rotate(45)'/><rect x='-5' y='-5' width='10' height='10' transform='translate(220 200) rotate(45)'/></g><g fill='%23FF8FA3' fill-opacity='0.20'><rect x='-6' y='-6' width='12' height='12' transform='translate(245 90) rotate(45)'/><rect x='-4' y='-4' width='8' height='8' transform='translate(110 250) rotate(45)'/></g></svg>");
 }
 html.theme-san-valentin body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFB3BD' fill-opacity='0.14'><circle cx='100' cy='100' r='4'/><circle cx='400' cy='160' r='3'/><circle cx='240' cy='340' r='5'/><circle cx='60' cy='420' r='3'/><circle cx='420' cy='400' r='4'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FF4D6D' fill-opacity='0.18'><circle cx='100' cy='120' r='2.5'/><circle cx='380' cy='160' r='2'/><circle cx='240' cy='340' r='3'/><circle cx='60' cy='400' r='2'/><circle cx='420' cy='400' r='2.5'/><circle cx='200' cy='80' r='2'/></g></svg>");
 }
-html.theme-san-valentin nav { background-color: #FFD0D9 !important; border-bottom: 2px solid rgba(255, 77, 109, 0.25); }
-html.theme-san-valentin .card-cute { border-color: #FFB3BD; box-shadow: 0 4px 20px rgba(255, 77, 109, 0.10); }
-html.theme-san-valentin .card-cute:hover { border-color: #FF8FA3; box-shadow: 0 10px 30px rgba(255, 77, 109, 0.20); }
+html.theme-san-valentin nav { background-color: #FFD0D9 !important; border-bottom: 2px solid rgba(255, 77, 109, 0.30); }
+html.theme-san-valentin .card-cute { border-color: #FFB3BD; box-shadow: inset 0 3px 0 0 #FF4D6D, 0 4px 20px rgba(255, 77, 109, 0.12); }
+html.theme-san-valentin .card-cute:hover { border-color: #FF8FA3; box-shadow: inset 0 3px 0 0 #FF4D6D, 0 10px 30px rgba(255, 77, 109, 0.22); }
 html.theme-san-valentin .btn-primary { background-color: #FF4D6D; box-shadow: 0 4px 16px rgba(255, 77, 109, 0.30); }
 html.theme-san-valentin .btn-primary:hover { background-color: #E63950; }
 html.theme-san-valentin .btn-secondary { background-color: #FFE0E6; color: #B23A52; }
@@ -243,43 +289,49 @@ html.theme-san-valentin .input-cute:focus { border-color: #FF8FA3; box-shadow: 0
 html.theme-san-valentin ::selection { background-color: #FF4D6D; color: white; }
 html.theme-san-valentin ::-webkit-scrollbar-thumb { background: #FF8FA3; }
 html.theme-san-valentin ::-webkit-scrollbar-thumb:hover { background: #FF4D6D; }
+html.theme-san-valentin .festive-banner { background: rgba(255, 240, 243, 0.85); color: #B23A52; border-color: rgba(255, 77, 109, 0.30); }
+html.theme-san-valentin .festive-banner__date { color: #FF4D6D; }
 
-/* ════════════ Día de la Flor Amarilla 🌼 ════════════ */
+/* ════════════ Día de la Flor Amarilla ════════════
+   Patrón: anillos concéntricos (rayos solares) + puntos dorados */
 html.theme-flor-amarilla body {
   background: linear-gradient(135deg, #FFF6B8 0%, #FFE066 50%, #FFEFA0 100%);
 }
 html.theme-flor-amarilla body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 70)'><circle r='14' fill='%23FFD93D' fill-opacity='0.45'/><circle cx='-18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle cx='18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle cy='-18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle cy='18' r='12' fill='%23FFC107' fill-opacity='0.35'/><circle r='6' fill='%23E76F00' fill-opacity='0.6'/></g><g transform='translate(240 230)'><circle r='12' fill='%23FFD93D' fill-opacity='0.40'/><circle cx='-15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle cx='15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle cy='-15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle cy='15' r='10' fill='%23FFC107' fill-opacity='0.30'/><circle r='5' fill='%23E76F00' fill-opacity='0.55'/></g></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%23E5B100' stroke-opacity='0.32'><circle cx='80' cy='80' r='30' stroke-width='1.5'/><circle cx='80' cy='80' r='20' stroke-width='1.5'/><circle cx='80' cy='80' r='10' stroke-width='1.5'/><circle cx='240' cy='220' r='24' stroke-width='1.5'/><circle cx='240' cy='220' r='16' stroke-width='1.5'/><circle cx='240' cy='220' r='8' stroke-width='1.5'/></g><g fill='%23E5B100' fill-opacity='0.40'><circle cx='80' cy='80' r='3'/><circle cx='240' cy='220' r='3'/></g></svg>");
 }
 html.theme-flor-amarilla body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFC107' fill-opacity='0.25'><circle cx='80' cy='150' r='5'/><circle cx='380' cy='100' r='4'/><circle cx='200' cy='380' r='5'/><circle cx='420' cy='320' r='4'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23E5B100' fill-opacity='0.30'><circle cx='80' cy='150' r='3'/><circle cx='380' cy='100' r='2.5'/><circle cx='200' cy='380' r='3'/><circle cx='420' cy='320' r='2.5'/><circle cx='100' cy='400' r='2'/></g></svg>");
 }
-html.theme-flor-amarilla nav { background-color: #FFE066 !important; border-bottom: 2px solid rgba(245, 197, 24, 0.40); }
-html.theme-flor-amarilla .card-cute { border-color: #F5C518; box-shadow: 0 4px 20px rgba(245, 197, 24, 0.15); }
-html.theme-flor-amarilla .card-cute:hover { border-color: #E76F00; box-shadow: 0 10px 30px rgba(245, 197, 24, 0.25); }
-html.theme-flor-amarilla .btn-primary { background-color: #F5C518; color: #4A3320; box-shadow: 0 4px 16px rgba(245, 197, 24, 0.35); }
-html.theme-flor-amarilla .btn-primary:hover { background-color: #E5B100; }
+html.theme-flor-amarilla nav { background-color: #FFE066 !important; border-bottom: 2px solid rgba(229, 177, 0, 0.45); }
+html.theme-flor-amarilla .card-cute { border-color: #F5C518; box-shadow: inset 0 3px 0 0 #E5B100, 0 4px 20px rgba(229, 177, 0, 0.18); }
+html.theme-flor-amarilla .card-cute:hover { border-color: #E5B100; box-shadow: inset 0 3px 0 0 #E5B100, 0 10px 30px rgba(229, 177, 0, 0.30); }
+html.theme-flor-amarilla .btn-primary { background-color: #E5B100; color: #4A3320; box-shadow: 0 4px 16px rgba(229, 177, 0, 0.40); }
+html.theme-flor-amarilla .btn-primary:hover { background-color: #C99800; color: white; }
 html.theme-flor-amarilla .btn-secondary { background-color: #FFF3B8; color: #8B6543; }
-html.theme-flor-amarilla .input-cute:focus { border-color: #F5C518; box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.25); }
-html.theme-flor-amarilla ::selection { background-color: #F5C518; color: #4A3320; }
-html.theme-flor-amarilla ::-webkit-scrollbar-thumb { background: #F5C518; }
-html.theme-flor-amarilla ::-webkit-scrollbar-thumb:hover { background: #E5B100; }
+html.theme-flor-amarilla .input-cute:focus { border-color: #E5B100; box-shadow: 0 0 0 3px rgba(229, 177, 0, 0.25); }
+html.theme-flor-amarilla ::selection { background-color: #E5B100; color: #4A3320; }
+html.theme-flor-amarilla ::-webkit-scrollbar-thumb { background: #E5B100; }
+html.theme-flor-amarilla ::-webkit-scrollbar-thumb:hover { background: #C99800; }
+html.theme-flor-amarilla .festive-banner { background: rgba(255, 249, 220, 0.85); color: #8B6543; border-color: rgba(229, 177, 0, 0.40); }
+html.theme-flor-amarilla .festive-banner__date { color: #C99800; }
 
-/* ════════════ Día del Niño 🎈 ════════════ */
+/* ════════════ Día del Niño ════════════
+   Patrón: confeti — puntos en 5 colores festivos */
 html.theme-dia-nino body {
   background: linear-gradient(135deg, #FFE5F0 0%, #C8E7FF 35%, #FFF6C8 70%, #D4F5E0 100%);
   background-size: 200% 200%;
-  animation: gradient-shift 18s ease infinite;
+  animation: gradient-shift 22s ease infinite;
 }
 html.theme-dia-nino body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><ellipse cx='65' cy='75' rx='22' ry='28' fill='%235BC0EB' fill-opacity='0.40'/><line x1='65' y1='103' x2='65' y2='150' stroke='%235BC0EB' stroke-opacity='0.60' stroke-width='1.5'/><ellipse cx='180' cy='180' rx='22' ry='28' fill='%23FF8FA3' fill-opacity='0.40'/><line x1='180' y1='208' x2='180' y2='255' stroke='%23FF8FA3' stroke-opacity='0.60' stroke-width='1.5'/><ellipse cx='260' cy='80' rx='22' ry='28' fill='%23FFD93D' fill-opacity='0.45'/><line x1='260' y1='108' x2='260' y2='155' stroke='%23FFD93D' stroke-opacity='0.65' stroke-width='1.5'/><ellipse cx='90' cy='250' rx='20' ry='26' fill='%234ADE80' fill-opacity='0.40'/><line x1='90' y1='276' x2='90' y2='318' stroke='%234ADE80' stroke-opacity='0.55' stroke-width='1.5'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><circle cx='60' cy='60' r='5' fill='%235BC0EB' fill-opacity='0.55'/><circle cx='150' cy='90' r='5' fill='%23FF8FA3' fill-opacity='0.55'/><circle cx='240' cy='70' r='5' fill='%23E5B100' fill-opacity='0.55'/><circle cx='80' cy='180' r='5' fill='%234ADE80' fill-opacity='0.55'/><circle cx='200' cy='200' r='5' fill='%23A78BFA' fill-opacity='0.55'/><circle cx='270' cy='250' r='5' fill='%23FF8FA3' fill-opacity='0.55'/><rect x='110' y='245' width='8' height='8' fill='%235BC0EB' fill-opacity='0.50' transform='rotate(20 114 249)'/><rect x='40' y='270' width='8' height='8' fill='%23E5B100' fill-opacity='0.50' transform='rotate(-15 44 274)'/><rect x='250' y='150' width='8' height='8' fill='%234ADE80' fill-opacity='0.50' transform='rotate(40 254 154)'/></g></svg>");
 }
 html.theme-dia-nino body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill-opacity='0.25'><circle cx='80' cy='80' r='3' fill='%235BC0EB'/><circle cx='350' cy='200' r='4' fill='%23FF8FA3'/><circle cx='200' cy='400' r='3' fill='%23FFD93D'/><circle cx='420' cy='400' r='4' fill='%234ADE80'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g><circle cx='90' cy='100' r='3' fill='%235BC0EB' fill-opacity='0.50'/><circle cx='400' cy='180' r='3' fill='%23FF8FA3' fill-opacity='0.50'/><circle cx='250' cy='400' r='3' fill='%23E5B100' fill-opacity='0.50'/><circle cx='80' cy='400' r='3' fill='%234ADE80' fill-opacity='0.50'/><circle cx='420' cy='400' r='3' fill='%23A78BFA' fill-opacity='0.50'/></g></svg>");
 }
-html.theme-dia-nino nav { background-color: #C8E7FF !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #FF8FA3, #FFD93D, #5BC0EB, #4ADE80) 1; }
-html.theme-dia-nino .card-cute { border-color: #5BC0EB; box-shadow: 0 4px 20px rgba(91, 192, 235, 0.18); }
-html.theme-dia-nino .card-cute:hover { border-color: #FF8FA3; box-shadow: 0 10px 30px rgba(255, 143, 163, 0.30); transform: translateY(-3px) rotate(-0.5deg); }
+html.theme-dia-nino nav { background-color: #C8E7FF !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #FF8FA3, #E5B100, #4ADE80, #5BC0EB, #A78BFA) 1; }
+html.theme-dia-nino .card-cute { border-color: #5BC0EB; box-shadow: inset 0 3px 0 0 #5BC0EB, 0 4px 20px rgba(91, 192, 235, 0.18); }
+html.theme-dia-nino .card-cute:hover { border-color: #FF8FA3; box-shadow: inset 0 3px 0 0 #FF8FA3, 0 10px 30px rgba(255, 143, 163, 0.30); transform: translateY(-3px); }
 html.theme-dia-nino .btn-primary { background-color: #5BC0EB; box-shadow: 0 4px 16px rgba(91, 192, 235, 0.35); }
 html.theme-dia-nino .btn-primary:hover { background-color: #3DA8D8; }
 html.theme-dia-nino .btn-secondary { background-color: #FFE5F0; color: #C0395A; }
@@ -287,20 +339,23 @@ html.theme-dia-nino .input-cute:focus { border-color: #5BC0EB; box-shadow: 0 0 0
 html.theme-dia-nino ::selection { background-color: #5BC0EB; color: white; }
 html.theme-dia-nino ::-webkit-scrollbar-thumb { background: #5BC0EB; }
 html.theme-dia-nino ::-webkit-scrollbar-thumb:hover { background: #3DA8D8; }
+html.theme-dia-nino .festive-banner { background: rgba(255, 255, 255, 0.80); color: #2A5485; border-color: rgba(91, 192, 235, 0.40); }
+html.theme-dia-nino .festive-banner__date { color: #5BC0EB; }
 
-/* ════════════ Día de las Madres 🌸 ════════════ */
+/* ════════════ Día de las Madres ════════════
+   Patrón: puntos rosados con racimos de tres */
 html.theme-dia-mama body {
   background: linear-gradient(135deg, #FFE0EC 0%, #FFC8DC 50%, #FFEEF5 100%);
 }
 html.theme-dia-mama body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 70)'><circle r='12' fill='%23FF8FA3' fill-opacity='0.40'/><circle cx='-14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle cx='14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle cy='-14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle cy='14' r='10' fill='%23FFB3BD' fill-opacity='0.35'/><circle r='5' fill='%23FFD700' fill-opacity='0.7'/></g><g transform='translate(240 230)'><circle r='10' fill='%23FF8FA3' fill-opacity='0.35'/><circle cx='-12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle cx='12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle cy='-12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle cy='12' r='8' fill='%23FFB3BD' fill-opacity='0.30'/><circle r='4' fill='%23FFD700' fill-opacity='0.6'/></g><g transform='translate(170 90)'><circle r='9' fill='%23FF8FA3' fill-opacity='0.30'/><circle cx='-11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/><circle cx='11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/><circle cy='-11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/><circle cy='11' r='7' fill='%23FFB3BD' fill-opacity='0.25'/></g></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%23FF8FA3' fill-opacity='0.32'><circle cx='80' cy='80' r='6'/><circle cx='95' cy='75' r='4'/><circle cx='75' cy='95' r='4'/><circle cx='220' cy='220' r='6'/><circle cx='235' cy='215' r='4'/><circle cx='215' cy='235' r='4'/></g><g fill='%23FFB3BD' fill-opacity='0.28'><circle cx='160' cy='110' r='5'/><circle cx='250' cy='90' r='4'/><circle cx='110' cy='200' r='4'/><circle cx='270' cy='160' r='5'/></g><g fill='%23FF4D6D' fill-opacity='0.30'><circle cx='80' cy='80' r='2'/><circle cx='220' cy='220' r='2'/></g></svg>");
 }
 html.theme-dia-mama body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FF8FA3' fill-opacity='0.18'><circle cx='100' cy='150' r='4'/><circle cx='380' cy='100' r='3'/><circle cx='250' cy='370' r='4'/><circle cx='60' cy='400' r='3'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FF8FA3' fill-opacity='0.22'><circle cx='100' cy='150' r='3'/><circle cx='380' cy='100' r='2.5'/><circle cx='250' cy='370' r='3'/><circle cx='60' cy='400' r='2'/><circle cx='420' cy='350' r='2.5'/></g></svg>");
 }
 html.theme-dia-mama nav { background-color: #FFD0DC !important; border-bottom: 2px solid rgba(255, 143, 163, 0.40); }
-html.theme-dia-mama .card-cute { border-color: #FFB3BD; box-shadow: 0 4px 20px rgba(255, 143, 163, 0.15); }
-html.theme-dia-mama .card-cute:hover { border-color: #FF8FA3; box-shadow: 0 10px 30px rgba(255, 143, 163, 0.28); }
+html.theme-dia-mama .card-cute { border-color: #FFB3BD; box-shadow: inset 0 3px 0 0 #FF8FA3, 0 4px 20px rgba(255, 143, 163, 0.18); }
+html.theme-dia-mama .card-cute:hover { border-color: #FF8FA3; box-shadow: inset 0 3px 0 0 #FF6B81, 0 10px 30px rgba(255, 143, 163, 0.30); }
 html.theme-dia-mama .btn-primary { background-color: #FF8FA3; box-shadow: 0 4px 16px rgba(255, 143, 163, 0.35); }
 html.theme-dia-mama .btn-primary:hover { background-color: #FF6B81; }
 html.theme-dia-mama .btn-secondary { background-color: #FFE0EC; color: #C0395A; }
@@ -308,20 +363,23 @@ html.theme-dia-mama .input-cute:focus { border-color: #FF8FA3; box-shadow: 0 0 0
 html.theme-dia-mama ::selection { background-color: #FF8FA3; color: white; }
 html.theme-dia-mama ::-webkit-scrollbar-thumb { background: #FF8FA3; }
 html.theme-dia-mama ::-webkit-scrollbar-thumb:hover { background: #FF6B81; }
+html.theme-dia-mama .festive-banner { background: rgba(255, 240, 245, 0.85); color: #C0395A; border-color: rgba(255, 143, 163, 0.40); }
+html.theme-dia-mama .festive-banner__date { color: #FF6B81; }
 
-/* ════════════ Día del Padre 👔 ════════════ */
+/* ════════════ Día del Padre ════════════
+   Patrón: hexágonos en cuadrícula (geométrico, sobrio) */
 html.theme-dia-papa body {
   background: linear-gradient(135deg, #D5E4F2 0%, #B3CCE5 50%, #E0EBF5 100%);
 }
 html.theme-dia-papa body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='%233B6EA5' fill-opacity='0.30'><polygon points='70,60 84,76 84,120 70,140 56,120 56,76'/><rect x='62' y='52' width='16' height='8' rx='2'/><polygon points='240,200 252,214 252,250 240,270 228,250 228,214'/><rect x='234' y='194' width='12' height='6' rx='1.5'/></g><g fill='%237CC4F5' fill-opacity='0.30'><polygon points='180,90 192,104 192,138 180,156 168,138 168,104'/><rect x='174' y='84' width='12' height='6' rx='1.5'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%233B6EA5' stroke-width='1.5' stroke-opacity='0.35'><polygon points='80,50 100,62 100,86 80,98 60,86 60,62'/><polygon points='240,180 260,192 260,216 240,228 220,216 220,192'/><polygon points='160,230 180,242 180,266 160,278 140,266 140,242'/></g></svg>");
 }
 html.theme-dia-papa body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%233B6EA5' fill-opacity='0.18'><polygon points='100,100 105,110 116,112 108,120 110,131 100,126 90,131 92,120 84,112 95,110'/><polygon points='380,200 385,210 396,212 388,220 390,231 380,226 370,231 372,220 364,212 375,210'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%233B6EA5' fill-opacity='0.20'><circle cx='100' cy='100' r='2.5'/><circle cx='380' cy='150' r='2.5'/><circle cx='250' cy='380' r='2.5'/><circle cx='60' cy='400' r='2.5'/></g></svg>");
 }
-html.theme-dia-papa nav { background-color: #B3CCE5 !important; border-bottom: 2px solid rgba(59, 110, 165, 0.40); }
-html.theme-dia-papa .card-cute { border-color: #7CC4F5; box-shadow: 0 4px 20px rgba(59, 110, 165, 0.15); }
-html.theme-dia-papa .card-cute:hover { border-color: #3B6EA5; box-shadow: 0 10px 30px rgba(59, 110, 165, 0.25); }
+html.theme-dia-papa nav { background-color: #B3CCE5 !important; border-bottom: 2px solid rgba(59, 110, 165, 0.45); }
+html.theme-dia-papa .card-cute { border-color: #7CC4F5; box-shadow: inset 0 3px 0 0 #3B6EA5, 0 4px 20px rgba(59, 110, 165, 0.15); }
+html.theme-dia-papa .card-cute:hover { border-color: #3B6EA5; box-shadow: inset 0 3px 0 0 #2A5485, 0 10px 30px rgba(59, 110, 165, 0.28); }
 html.theme-dia-papa .btn-primary { background-color: #3B6EA5; box-shadow: 0 4px 16px rgba(59, 110, 165, 0.35); }
 html.theme-dia-papa .btn-primary:hover { background-color: #2A5485; }
 html.theme-dia-papa .btn-secondary { background-color: #D5E4F2; color: #2A5485; }
@@ -329,20 +387,23 @@ html.theme-dia-papa .input-cute:focus { border-color: #3B6EA5; box-shadow: 0 0 0
 html.theme-dia-papa ::selection { background-color: #3B6EA5; color: white; }
 html.theme-dia-papa ::-webkit-scrollbar-thumb { background: #7CC4F5; }
 html.theme-dia-papa ::-webkit-scrollbar-thumb:hover { background: #3B6EA5; }
+html.theme-dia-papa .festive-banner { background: rgba(238, 244, 250, 0.85); color: #2A5485; border-color: rgba(59, 110, 165, 0.40); }
+html.theme-dia-papa .festive-banner__date { color: #3B6EA5; }
 
-/* ════════════ Independencia 🇲🇽 ════════════ */
+/* ════════════ Independencia ════════════
+   Patrón: estrellas de 5 puntas en tricolor */
 html.theme-independencia body {
   background: linear-gradient(135deg, #C8E8D0 0%, #FFFFFF 50%, #F8C8CC 100%);
 }
 html.theme-independencia body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill-opacity='0.30'><path d='M70 60 L78 82 L100 82 L82 96 L88 118 L70 104 L52 118 L58 96 L40 82 L62 82 Z' fill='%231F7A3A'/><path d='M240 220 L248 242 L270 242 L252 256 L258 278 L240 264 L222 278 L228 256 L210 242 L232 242 Z' fill='%23CE1126'/><path d='M180 100 L186 116 L202 116 L188 126 L194 142 L180 132 L166 142 L172 126 L158 116 L174 116 Z' fill='%23FFFFFF'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><path d='M70 50 L78 72 L100 72 L82 86 L88 108 L70 94 L52 108 L58 86 L40 72 L62 72 Z' fill='%231F7A3A' fill-opacity='0.35'/><path d='M240 230 L248 252 L270 252 L252 266 L258 288 L240 274 L222 288 L228 266 L210 252 L232 252 Z' fill='%23CE1126' fill-opacity='0.32'/><path d='M180 110 L186 126 L202 126 L188 136 L194 152 L180 142 L166 152 L172 136 L158 126 L174 126 Z' fill='%23CE1126' fill-opacity='0.28'/></g></svg>");
 }
 html.theme-independencia body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill-opacity='0.22'><circle cx='100' cy='100' r='4' fill='%231F7A3A'/><circle cx='400' cy='150' r='4' fill='%23CE1126'/><circle cx='250' cy='400' r='4' fill='%231F7A3A'/><circle cx='80' cy='400' r='4' fill='%23CE1126'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g><circle cx='100' cy='100' r='3' fill='%231F7A3A' fill-opacity='0.30'/><circle cx='400' cy='150' r='3' fill='%23CE1126' fill-opacity='0.30'/><circle cx='250' cy='400' r='3' fill='%231F7A3A' fill-opacity='0.30'/><circle cx='80' cy='400' r='3' fill='%23CE1126' fill-opacity='0.30'/></g></svg>");
 }
 html.theme-independencia nav { background-color: #C8E8D0 !important; border-bottom: 3px solid; border-image: linear-gradient(90deg, #1F7A3A 0%, #1F7A3A 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%) 1; }
-html.theme-independencia .card-cute { border-color: #1F7A3A; box-shadow: 0 4px 20px rgba(31, 122, 58, 0.15); }
-html.theme-independencia .card-cute:hover { border-color: #CE1126; box-shadow: 0 10px 30px rgba(206, 17, 38, 0.20); }
+html.theme-independencia .card-cute { border-color: #1F7A3A; box-shadow: inset 0 3px 0 0 #1F7A3A, 0 4px 20px rgba(31, 122, 58, 0.18); }
+html.theme-independencia .card-cute:hover { border-color: #CE1126; box-shadow: inset 0 3px 0 0 #CE1126, 0 10px 30px rgba(206, 17, 38, 0.22); }
 html.theme-independencia .btn-primary { background-color: #1F7A3A; box-shadow: 0 4px 16px rgba(31, 122, 58, 0.35); }
 html.theme-independencia .btn-primary:hover { background-color: #155F2C; }
 html.theme-independencia .btn-secondary { background-color: #C8E8D0; color: #155F2C; }
@@ -350,21 +411,24 @@ html.theme-independencia .input-cute:focus { border-color: #1F7A3A; box-shadow: 
 html.theme-independencia ::selection { background-color: #1F7A3A; color: white; }
 html.theme-independencia ::-webkit-scrollbar-thumb { background: #1F7A3A; }
 html.theme-independencia ::-webkit-scrollbar-thumb:hover { background: #CE1126; }
+html.theme-independencia .festive-banner { background: rgba(255, 255, 255, 0.85); color: #155F2C; border-color: rgba(31, 122, 58, 0.40); }
+html.theme-independencia .festive-banner__date { color: #CE1126; }
 
-/* ════════════ Halloween 🎃 ════════════ */
+/* ════════════ Halloween ════════════
+   Patrón: rayos radiales (web abstracta) + puntos */
 html.theme-halloween body {
   background: linear-gradient(135deg, #FFB870 0%, #FF7518 40%, #4A1F5C 100%);
   color: #2D1B33;
 }
 html.theme-halloween body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><circle cx='70' cy='80' r='22' fill='%23FF7518' fill-opacity='0.50'/><path d='M70 58 Q73 50 80 54' stroke='%232D5016' stroke-width='3' fill='none' stroke-opacity='0.65'/><polygon points='62,76 66,84 58,84' fill='%231A1A1A' fill-opacity='0.6'/><polygon points='78,76 82,84 74,84' fill='%231A1A1A' fill-opacity='0.6'/><path d='M60 92 Q70 100 80 92' stroke='%231A1A1A' stroke-width='2' fill='none' stroke-opacity='0.6'/><circle cx='240' cy='220' r='20' fill='%23E76F00' fill-opacity='0.45'/><path d='M240 200 Q243 192 250 196' stroke='%232D5016' stroke-width='3' fill='none' stroke-opacity='0.55'/></g><g fill='%231A1A1A' fill-opacity='0.40'><path d='M170 100 Q160 95 156 100 Q160 92 170 92 Q180 92 184 100 Q180 95 170 100 Z'/><path d='M180 230 Q170 225 166 230 Q170 222 180 222 Q190 222 194 230 Q190 225 180 230 Z'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g stroke='%234A1F5C' stroke-width='1.4' stroke-opacity='0.40' fill='none'><line x1='80' y1='80' x2='30' y2='30'/><line x1='80' y1='80' x2='130' y2='30'/><line x1='80' y1='80' x2='30' y2='130'/><line x1='80' y1='80' x2='130' y2='130'/><line x1='80' y1='80' x2='80' y2='20'/><line x1='80' y1='80' x2='140' y2='80'/><line x1='80' y1='80' x2='80' y2='140'/><line x1='80' y1='80' x2='20' y2='80'/></g><g fill='%234A1F5C' fill-opacity='0.55'><circle cx='80' cy='80' r='4'/><circle cx='240' cy='220' r='3'/></g></svg>");
 }
 html.theme-halloween body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%231A1A1A' fill-opacity='0.18'><circle cx='100' cy='120' r='2'/><circle cx='400' cy='200' r='2'/><circle cx='240' cy='380' r='2'/><circle cx='80' cy='400' r='2'/><circle cx='420' cy='400' r='2'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%234A1F5C' fill-opacity='0.35'><circle cx='100' cy='120' r='2'/><circle cx='380' cy='180' r='2'/><circle cx='240' cy='380' r='2'/><circle cx='80' cy='400' r='2'/><circle cx='420' cy='400' r='2'/><circle cx='200' cy='80' r='2'/></g></svg>");
 }
 html.theme-halloween nav { background-color: #FF7518 !important; border-bottom: 2px solid #4A1F5C; }
-html.theme-halloween .card-cute { border-color: #FF7518; box-shadow: 0 4px 20px rgba(255, 117, 24, 0.20); background-color: #FFF7EC; }
-html.theme-halloween .card-cute:hover { border-color: #4A1F5C; box-shadow: 0 10px 30px rgba(74, 31, 92, 0.30); }
+html.theme-halloween .card-cute { border-color: #FF7518; box-shadow: inset 0 3px 0 0 #4A1F5C, 0 4px 20px rgba(255, 117, 24, 0.20); background-color: #FFF7EC; }
+html.theme-halloween .card-cute:hover { border-color: #4A1F5C; box-shadow: inset 0 3px 0 0 #4A1F5C, 0 10px 30px rgba(74, 31, 92, 0.32); }
 html.theme-halloween .btn-primary { background-color: #FF7518; color: white; box-shadow: 0 4px 16px rgba(255, 117, 24, 0.40); }
 html.theme-halloween .btn-primary:hover { background-color: #E76F00; }
 html.theme-halloween .btn-secondary { background-color: #4A1F5C; color: #FFD9B3; }
@@ -373,47 +437,53 @@ html.theme-halloween .input-cute:focus { border-color: #FF7518; box-shadow: 0 0 
 html.theme-halloween ::selection { background-color: #FF7518; color: #2D1B33; }
 html.theme-halloween ::-webkit-scrollbar-thumb { background: #FF7518; }
 html.theme-halloween ::-webkit-scrollbar-thumb:hover { background: #4A1F5C; }
+html.theme-halloween .festive-banner { background: rgba(255, 247, 236, 0.90); color: #4A1F5C; border-color: rgba(74, 31, 92, 0.45); }
+html.theme-halloween .festive-banner__date { color: #FF7518; }
 
-/* ════════════ Día de Muertos 💀 ════════════ */
+/* ════════════ Día de Muertos ════════════
+   Patrón: flores radiales abstractas (8 elipses + centro) */
 html.theme-dia-muertos body {
   background: linear-gradient(135deg, #FFCC80 0%, #E76F00 40%, #7B3F9F 100%);
   background-size: 200% 200%;
-  animation: gradient-shift 25s ease infinite;
+  animation: gradient-shift 28s ease infinite;
 }
 html.theme-dia-muertos body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 80)'><ellipse rx='18' ry='22' fill='%23FFFFFF' fill-opacity='0.55'/><circle cx='-7' cy='-3' r='3.5' fill='%231A1A1A' fill-opacity='0.65'/><circle cx='7' cy='-3' r='3.5' fill='%231A1A1A' fill-opacity='0.65'/><path d='M-6 8 L-3 12 L0 8 L3 12 L6 8' stroke='%231A1A1A' stroke-width='1.5' fill='none' stroke-opacity='0.65'/></g><g transform='translate(240 230)'><circle r='12' fill='%23E76F00' fill-opacity='0.55'/><circle cx='-14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle cx='14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle cy='-14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle cy='14' r='10' fill='%23FFD93D' fill-opacity='0.50'/><circle r='5' fill='%23B23A00' fill-opacity='0.60'/></g></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(80 80)'><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50'/><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50' transform='rotate(45)'/><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50' transform='rotate(90)'/><ellipse rx='4' ry='12' fill='%23E76F00' fill-opacity='0.50' transform='rotate(135)'/><circle r='4' fill='%23B23A00' fill-opacity='0.65'/></g><g transform='translate(240 220)'><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45'/><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45' transform='rotate(45)'/><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45' transform='rotate(90)'/><ellipse rx='3' ry='10' fill='%237B3F9F' fill-opacity='0.45' transform='rotate(135)'/><circle r='3' fill='%235A2C7A' fill-opacity='0.65'/></g></g></svg>");
 }
 html.theme-dia-muertos body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFD93D' fill-opacity='0.30'><path d='M100 100 L102 106 L108 106 L103 110 L105 116 L100 112 L95 116 L97 110 L92 106 L98 106 Z'/><path d='M380 250 L382 256 L388 256 L383 260 L385 266 L380 262 L375 266 L377 260 L372 256 L378 256 Z'/><path d='M200 380 L202 386 L208 386 L203 390 L205 396 L200 392 L195 396 L197 390 L192 386 L198 386 Z'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23E5B100' fill-opacity='0.32'><circle cx='100' cy='100' r='2.5'/><circle cx='380' cy='250' r='2.5'/><circle cx='200' cy='380' r='2.5'/><circle cx='60' cy='400' r='2'/></g></svg>");
 }
 html.theme-dia-muertos nav { background-color: #E76F00 !important; border-bottom: 3px solid #7B3F9F; }
-html.theme-dia-muertos .card-cute { border-color: #E76F00; box-shadow: 0 4px 20px rgba(231, 111, 0, 0.20); background-color: #FFF7EC; }
-html.theme-dia-muertos .card-cute:hover { border-color: #7B3F9F; box-shadow: 0 10px 30px rgba(123, 63, 159, 0.25); }
+html.theme-dia-muertos .card-cute { border-color: #E76F00; box-shadow: inset 0 3px 0 0 #7B3F9F, 0 4px 20px rgba(231, 111, 0, 0.22); background-color: #FFF7EC; }
+html.theme-dia-muertos .card-cute:hover { border-color: #7B3F9F; box-shadow: inset 0 3px 0 0 #5A2C7A, 0 10px 30px rgba(123, 63, 159, 0.28); }
 html.theme-dia-muertos .btn-primary { background-color: #E76F00; box-shadow: 0 4px 16px rgba(231, 111, 0, 0.40); }
 html.theme-dia-muertos .btn-primary:hover { background-color: #B23A00; }
-html.theme-dia-muertos .btn-secondary { background-color: #7B3F9F; color: #FFF; }
+html.theme-dia-muertos .btn-secondary { background-color: #7B3F9F; color: white; }
 html.theme-dia-muertos .btn-secondary:hover { background-color: #5A2C7A; }
 html.theme-dia-muertos .input-cute:focus { border-color: #E76F00; box-shadow: 0 0 0 3px rgba(231, 111, 0, 0.30); }
 html.theme-dia-muertos ::selection { background-color: #E76F00; color: white; }
 html.theme-dia-muertos ::-webkit-scrollbar-thumb { background: #E76F00; }
 html.theme-dia-muertos ::-webkit-scrollbar-thumb:hover { background: #7B3F9F; }
+html.theme-dia-muertos .festive-banner { background: rgba(255, 247, 236, 0.90); color: #5A2C7A; border-color: rgba(123, 63, 159, 0.45); }
+html.theme-dia-muertos .festive-banner__date { color: #E76F00; }
 
-/* ════════════ Navidad 🎄 ════════════ */
+/* ════════════ Navidad ════════════
+   Patrón: cristales de nieve (líneas geométricas) + puntos blancos */
 html.theme-navidad body {
   background: linear-gradient(135deg, #C8E8D0 0%, #F8C8CC 50%, #E8F5EC 100%);
   background-size: 200% 200%;
-  animation: gradient-shift 22s ease infinite;
+  animation: gradient-shift 25s ease infinite;
 }
 html.theme-navidad body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(70 80)'><polygon points='0,-30 -18,0 18,0' fill='%230F8A4D' fill-opacity='0.45'/><polygon points='0,-15 -22,18 22,18' fill='%230F8A4D' fill-opacity='0.45'/><polygon points='0,3 -26,38 26,38' fill='%230F8A4D' fill-opacity='0.45'/><rect x='-4' y='38' width='8' height='8' fill='%238B6543' fill-opacity='0.6'/><circle cx='0' cy='-30' r='4' fill='%23FFD700' fill-opacity='0.7'/></g><g transform='translate(240 220)'><circle r='12' fill='%23C8102E' fill-opacity='0.55'/><circle r='4' fill='%23FFD700' fill-opacity='0.7'/><rect x='-2' y='-18' width='4' height='6' fill='%23FFD700' fill-opacity='0.7'/></g><g transform='translate(180 90)'><polygon points='0,-3 1,1 5,1 2,3 3,7 0,5 -3,7 -2,3 -5,1 -1,1' fill='%23FFFFFF' fill-opacity='0.8'/></g></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g stroke='%230F8A4D' stroke-width='1.4' stroke-opacity='0.40' fill='none' stroke-linecap='round'><g transform='translate(80 80)'><line x1='0' y1='-22' x2='0' y2='22'/><line x1='-22' y1='0' x2='22' y2='0'/><line x1='-16' y1='-16' x2='16' y2='16'/><line x1='16' y1='-16' x2='-16' y2='16'/><line x1='-3' y1='-19' x2='3' y2='-19'/><line x1='-3' y1='19' x2='3' y2='19'/></g></g><g stroke='%23C8102E' stroke-width='1.4' stroke-opacity='0.40' fill='none' stroke-linecap='round'><g transform='translate(240 220)'><line x1='0' y1='-18' x2='0' y2='18'/><line x1='-18' y1='0' x2='18' y2='0'/><line x1='-13' y1='-13' x2='13' y2='13'/><line x1='13' y1='-13' x2='-13' y2='13'/></g></g></svg>");
 }
 html.theme-navidad body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFFFFF' fill-opacity='0.50'><circle cx='100' cy='100' r='2'/><circle cx='350' cy='180' r='2.5'/><circle cx='200' cy='350' r='2'/><circle cx='420' cy='400' r='2.5'/><circle cx='80' cy='420' r='2'/><circle cx='280' cy='80' r='2'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23FFFFFF' fill-opacity='0.65'><circle cx='100' cy='100' r='2'/><circle cx='350' cy='180' r='2.5'/><circle cx='200' cy='350' r='2'/><circle cx='420' cy='400' r='2.5'/><circle cx='80' cy='420' r='2'/><circle cx='280' cy='80' r='2'/></g></svg>");
 }
 html.theme-navidad nav { background-color: #0F8A4D !important; border-bottom: 3px solid #C8102E; }
 html.theme-navidad nav a, html.theme-navidad nav button { color: #FFFFFF !important; }
-html.theme-navidad .card-cute { border-color: #0F8A4D; box-shadow: 0 4px 20px rgba(15, 138, 77, 0.18); }
-html.theme-navidad .card-cute:hover { border-color: #C8102E; box-shadow: 0 10px 30px rgba(200, 16, 46, 0.20); }
+html.theme-navidad .card-cute { border-color: #0F8A4D; box-shadow: inset 0 3px 0 0 #C8102E, 0 4px 20px rgba(15, 138, 77, 0.18); }
+html.theme-navidad .card-cute:hover { border-color: #C8102E; box-shadow: inset 0 3px 0 0 #A00D24, 0 10px 30px rgba(200, 16, 46, 0.22); }
 html.theme-navidad .btn-primary { background-color: #C8102E; box-shadow: 0 4px 16px rgba(200, 16, 46, 0.35); }
 html.theme-navidad .btn-primary:hover { background-color: #A00D24; }
 html.theme-navidad .btn-secondary { background-color: #0F8A4D; color: white; }
@@ -422,20 +492,23 @@ html.theme-navidad .input-cute:focus { border-color: #0F8A4D; box-shadow: 0 0 0 
 html.theme-navidad ::selection { background-color: #C8102E; color: white; }
 html.theme-navidad ::-webkit-scrollbar-thumb { background: #0F8A4D; }
 html.theme-navidad ::-webkit-scrollbar-thumb:hover { background: #C8102E; }
+html.theme-navidad .festive-banner { background: rgba(255, 255, 255, 0.85); color: #0A6A3A; border-color: rgba(15, 138, 77, 0.40); }
+html.theme-navidad .festive-banner__date { color: #C8102E; }
 
-/* ════════════ Día de Reyes 👑 ════════════ */
+/* ════════════ Día de Reyes ════════════
+   Patrón: estrella de 8 puntas (cuadrados superpuestos) + chispas doradas */
 html.theme-reyes body {
   background: linear-gradient(135deg, #FFEFC0 0%, #FFD970 50%, #FFF8DC 100%);
 }
 html.theme-reyes body::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><path d='M50 110 L60 80 L70 105 L80 70 L90 105 L100 80 L110 110 L110 125 L50 125 Z' fill='%23D4AF37' fill-opacity='0.55'/><circle cx='60' cy='80' r='4' fill='%23B8860B' fill-opacity='0.7'/><circle cx='80' cy='70' r='4' fill='%23B8860B' fill-opacity='0.7'/><circle cx='100' cy='80' r='4' fill='%23B8860B' fill-opacity='0.7'/><path d='M210 240 L218 220 L226 238 L234 215 L242 238 L250 220 L258 240 L258 252 L210 252 Z' fill='%23B8860B' fill-opacity='0.45'/></g><g fill='%23FFD700' fill-opacity='0.40'><path d='M180 90 L184 100 L194 100 L186 106 L190 116 L180 110 L170 116 L174 106 L166 100 L176 100 Z'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g><g transform='translate(80 80)'><rect x='-15' y='-15' width='30' height='30' fill='%23D4AF37' fill-opacity='0.40'/><rect x='-15' y='-15' width='30' height='30' fill='%23B8860B' fill-opacity='0.30' transform='rotate(45)'/><circle r='4' fill='%23FFFFFF' fill-opacity='0.7'/></g><g transform='translate(240 220)'><rect x='-12' y='-12' width='24' height='24' fill='%23B8860B' fill-opacity='0.35'/><rect x='-12' y='-12' width='24' height='24' fill='%23D4AF37' fill-opacity='0.30' transform='rotate(45)'/></g></g></svg>");
 }
 html.theme-reyes body::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23D4AF37' fill-opacity='0.28'><path d='M100 100 L103 110 L113 110 L105 116 L108 126 L100 120 L92 126 L95 116 L87 110 L97 110 Z'/><path d='M380 200 L383 210 L393 210 L385 216 L388 226 L380 220 L372 226 L375 216 L367 210 L377 210 Z'/><path d='M250 380 L253 390 L263 390 L255 396 L258 406 L250 400 L242 406 L245 396 L237 390 L247 390 Z'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'><g fill='%23B8860B' fill-opacity='0.30'><circle cx='100' cy='150' r='2.5'/><circle cx='380' cy='100' r='2'/><circle cx='200' cy='380' r='2.5'/><circle cx='420' cy='350' r='2'/></g></svg>");
 }
 html.theme-reyes nav { background-color: #FFD970 !important; border-bottom: 3px solid #D4AF37; }
-html.theme-reyes .card-cute { border-color: #D4AF37; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.20); }
-html.theme-reyes .card-cute:hover { border-color: #B8860B; box-shadow: 0 10px 30px rgba(184, 134, 11, 0.30); }
+html.theme-reyes .card-cute { border-color: #D4AF37; box-shadow: inset 0 3px 0 0 #B8860B, 0 4px 20px rgba(212, 175, 55, 0.22); }
+html.theme-reyes .card-cute:hover { border-color: #B8860B; box-shadow: inset 0 3px 0 0 #B8860B, 0 10px 30px rgba(184, 134, 11, 0.32); }
 html.theme-reyes .btn-primary { background-color: #D4AF37; color: #4A3320; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.40); }
 html.theme-reyes .btn-primary:hover { background-color: #B8860B; color: white; }
 html.theme-reyes .btn-secondary { background-color: #FFEFC0; color: #8B6543; }
@@ -443,4 +516,6 @@ html.theme-reyes .input-cute:focus { border-color: #D4AF37; box-shadow: 0 0 0 3p
 html.theme-reyes ::selection { background-color: #D4AF37; color: #4A3320; }
 html.theme-reyes ::-webkit-scrollbar-thumb { background: #D4AF37; }
 html.theme-reyes ::-webkit-scrollbar-thumb:hover { background: #B8860B; }
+html.theme-reyes .festive-banner { background: rgba(255, 248, 220, 0.90); color: #8B6543; border-color: rgba(184, 134, 11, 0.45); }
+html.theme-reyes .festive-banner__date { color: #B8860B; }
 /* ═══ Fin temas festivos ═══ */

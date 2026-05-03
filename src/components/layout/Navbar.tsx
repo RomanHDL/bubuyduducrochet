@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import ProfileAvatar, { ProfileFrame } from '@/components/ProfileAvatar';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import FestiveBanner from '@/components/FestiveBanner';
 import { isSystemsAdmin } from '@/lib/systemsAdmin';
 
 const LOGO = 'https://i.pinimg.com/originals/f7/97/e0/f797e0d435f74e1b41a49ba08f908d25.png';
@@ -65,6 +66,9 @@ export default function Navbar() {
               className="h-14 sm:h-16 w-auto object-contain rounded-xl group-hover:scale-105 transition-transform"
             />
           </Link>
+
+          {/* Banner festivo (entre logo y nav) — solo visible si hay tema activo */}
+          <FestiveBanner />
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-4">

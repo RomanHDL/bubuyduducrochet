@@ -18,88 +18,111 @@ export type ThemeId =
 export interface ThemeMeta {
   id: ThemeId;
   label: string;
-  emoji: string;
+  date: string;       // texto corto de fecha mostrado en el banner (ej. "10 DE MAYO")
+  message: string;    // frase festiva que acompaña a la fecha
   description: string;
-  swatch: string; // color hex usado como vista previa en el selector
+  swatch: string;        // color principal del tema (vista previa)
+  swatchAccent?: string; // color secundario (mini-degradado en el selector)
 }
 
 export const THEMES: ThemeMeta[] = [
   {
     id: 'none',
     label: 'Sin tema',
-    emoji: '✨',
+    date: '',
+    message: '',
     description: 'Diseño base, sin decoración festiva',
     swatch: '#FFFDF7',
   },
   {
     id: 'san-valentin',
     label: 'San Valentín',
-    emoji: '💖',
-    description: '14 de febrero — corazones y rojo enamorado',
+    date: '14 DE FEBRERO',
+    message: 'Día del Amor y la Amistad — regala con corazón',
+    description: 'Tonos rojos y rosados',
     swatch: '#FF4D6D',
+    swatchAccent: '#FFB3BD',
   },
   {
     id: 'flor-amarilla',
     label: 'Día de la Flor Amarilla',
-    emoji: '🌼',
-    description: '21 de marzo — primavera y girasoles',
-    swatch: '#FFD93D',
+    date: '21 DE MARZO',
+    message: 'Floreció la primavera, regala alegría',
+    description: 'Amarillos y dorados de primavera',
+    swatch: '#F5C518',
+    swatchAccent: '#FFE066',
   },
   {
     id: 'dia-nino',
     label: 'Día del Niño',
-    emoji: '🎈',
-    description: '30 de abril — globos y colores festivos',
+    date: '30 DE ABRIL',
+    message: 'La alegría hecha a mano, para los más pequeños',
+    description: 'Multicolor pastel',
     swatch: '#5BC0EB',
+    swatchAccent: '#FF8FA3',
   },
   {
     id: 'dia-mama',
     label: 'Día de las Madres',
-    emoji: '🌸',
-    description: '10 de mayo — flores rosadas para mamá',
+    date: '10 DE MAYO',
+    message: 'Para la mujer que lo es todo, con amor',
+    description: 'Rosas pastel y dorados',
     swatch: '#FF8FA3',
+    swatchAccent: '#FFD0DC',
   },
   {
     id: 'dia-papa',
     label: 'Día del Padre',
-    emoji: '👔',
-    description: 'Tercer domingo de junio — azul para papá',
+    date: 'TERCER DOMINGO DE JUNIO',
+    message: 'Detalles que no se olvidan, hechos para él',
+    description: 'Azules sobrios',
     swatch: '#3B6EA5',
+    swatchAccent: '#7CC4F5',
   },
   {
     id: 'independencia',
     label: 'Independencia',
-    emoji: '🇲🇽',
-    description: '16 de septiembre — verde, blanco y rojo',
+    date: '16 DE SEPTIEMBRE',
+    message: 'Viva México con orgullo y tradición',
+    description: 'Verde, blanco y rojo',
     swatch: '#1F7A3A',
+    swatchAccent: '#CE1126',
   },
   {
     id: 'halloween',
     label: 'Halloween',
-    emoji: '🎃',
-    description: '31 de octubre — naranja calabaza',
+    date: '31 DE OCTUBRE',
+    message: 'Detalles tejidos con un toque misterioso',
+    description: 'Naranja calabaza y morado',
     swatch: '#FF7518',
+    swatchAccent: '#4A1F5C',
   },
   {
     id: 'dia-muertos',
     label: 'Día de Muertos',
-    emoji: '💀',
-    description: '1-2 noviembre — cempasúchil y morado',
+    date: '1 Y 2 DE NOVIEMBRE',
+    message: 'Tradición tejida con cariño y memoria',
+    description: 'Cempasúchil y morado tradicional',
     swatch: '#E76F00',
+    swatchAccent: '#7B3F9F',
   },
   {
     id: 'navidad',
     label: 'Navidad',
-    emoji: '🎄',
-    description: 'Diciembre — verde pino y rojo navideño',
+    date: 'DICIEMBRE',
+    message: 'El regalo perfecto, hecho a mano con amor',
+    description: 'Verde pino y rojo navideño',
     swatch: '#0F8A4D',
+    swatchAccent: '#C8102E',
   },
   {
     id: 'reyes',
     label: 'Día de Reyes',
-    emoji: '👑',
-    description: '6 de enero — dorado real',
+    date: '6 DE ENERO',
+    message: 'La magia del regalo continúa',
+    description: 'Dorados reales',
     swatch: '#D4AF37',
+    swatchAccent: '#B8860B',
   },
 ];
 
