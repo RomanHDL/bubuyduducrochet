@@ -234,7 +234,10 @@ html.theme-independencia body::before {
   background-color: rgba(255, 255, 255, 0.38);
 }
 
-/* Capa 2: diagonal action lines */
+/* Capa 2: patron decorativo del tema (iconos festivos repetidos).
+   Atenuado globalmente con opacity baja para que no compita con el
+   texto. Si una palabra cae justo encima de un icono, igual sigue
+   legible. */
 html[class*="theme-"]:not(.theme-none) body::after {
   content: '';
   position: fixed;
@@ -243,7 +246,16 @@ html[class*="theme-"]:not(.theme-none) body::after {
   pointer-events: none;
   background-repeat: repeat;
   background-size: 80px 80px;
+  opacity: 0.35;
+  filter: blur(0.3px);
   animation: lines-shift 20s linear infinite;
+}
+
+/* Excepcion: independencia ya tiene un overlay blanco controlado en
+   body::before. No bajamos opacity ahi porque la bandera del fondo
+   necesita los iconos del tema mas visibles. */
+html.theme-independencia body::after {
+  opacity: 0.5;
 }
 
 /* === CARDS COMIC-PANEL === */
