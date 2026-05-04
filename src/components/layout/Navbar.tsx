@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import ProfileAvatar, { ProfileFrame } from '@/components/ProfileAvatar';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import FestiveBanner from '@/components/FestiveBanner';
+import ChatTrigger from '@/components/chat/ChatTrigger';
 import { isSystemsAdmin } from '@/lib/systemsAdmin';
 
 const LOGO = 'https://i.pinimg.com/originals/f7/97/e0/f797e0d435f74e1b41a49ba08f908d25.png';
@@ -112,6 +113,9 @@ export default function Navbar() {
                     badge={profile.badge || (isSysAdmin ? 'DE SISTEMAS' : '')}
                   />
                 </Link>
+
+                {/* Chat — al lado del perfil */}
+                <ChatTrigger />
               </>
             ) : (
               <Link href="/login" className="bg-blush-400 text-white text-sm font-bold px-5 py-2 rounded-full hover:bg-blush-500 transition-colors shadow-md">Entrar 💕</Link>
@@ -135,6 +139,13 @@ export default function Navbar() {
                 <Link href="/carrito" className="block text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 py-1" onClick={() => setMenuOpen(false)}>🛒 Carrito</Link>
                 <Link href="/pedidos" className="block text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 py-1" onClick={() => setMenuOpen(false)}>📦 Mis Pedidos</Link>
                 <Link href="/mi-cuenta" className="block text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 py-1" onClick={() => setMenuOpen(false)}>👤 Mi Cuenta</Link>
+                {/* Chat — boton del lado derecho */}
+                <div className="flex items-center gap-3 py-1">
+                  <span className="text-sm font-semibold text-cocoa-600">💬 Chat:</span>
+                  <span onClick={() => setMenuOpen(false)}>
+                    <ChatTrigger />
+                  </span>
+                </div>
                 {isAdmin && (
                   <>
                     <Link href="/admin" className="block text-sm font-semibold text-cocoa-600 py-1" onClick={() => setMenuOpen(false)}>

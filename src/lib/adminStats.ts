@@ -19,7 +19,7 @@ export async function computeAdminStats() {
   // miles de ordenes historicas.
   const d90 = new Date(Date.now() - 90 * 86400000);
 
-  const [totalUsers, totalProducts, totalOrders, orders, products, reviewCount, prodReviewCount, materials, recentUsers] = await Promise.all([
+  const [totalUsers, totalProducts, totalOrders, orders, recentOrdersRaw, products, reviewCount, prodReviewCount, materials, recentUsers] = await Promise.all([
     User.countDocuments({}),
     Product.countDocuments({}),
     Order.countDocuments({}),
@@ -30,6 +30,14 @@ export async function computeAdminStats() {
       { createdAt: { $gte: d90 } },
       { status: 1, paymentStatus: 1, total: 1, createdAt: 1, items: 1, orderNumber: 1, userName: 1, userEmail: 1 }
     ).sort({ createdAt: -1 }).lean(),
+    // Query separada para "Pedidos recientes" SIN filtro de fecha. Usa
+    // sort por _id (ObjectId trae el timestamp embedded) como fallback
+    // por si createdAt tiene problemas. Asi el ultimo pedido siempre
+    // aparece, aunque createdAt tenga formato raro o este vacio.
+    Order.find(
+      {},
+      { status: 1, paymentStatus: 1, total: 1, createdAt: 1, items: 1, orderNumber: 1, userName: 1, userEmail: 1 }
+    ).sort({ _id: -1 }).limit(20).lean(),
     // CRITICO: antes se traia Product.find({}).lean() → incluia TODAS las
     // imagenes base64 de TODOS los productos. En una tienda con 50 productos
     // y fotos de 500KB en base64 cada una, esto eran 20-30MB solo para computar
@@ -108,7 +116,9 @@ export async function computeAdminStats() {
   const avgOrder = paidCount > 0 ? totalSales / paidCount : 0;
   const convRate = activeOrders.length > 0 ? (paidCount / activeOrders.length) * 100 : 0;
 
-  const recentOrders = orders.slice(0, 8).map((o: any) => ({
+  // recentOrders viene de la query SIN filtro de fecha — garantiza que
+  // el ultimo pedido siempre se vea aunque tenga createdAt raro.
+  const recentOrders = recentOrdersRaw.slice(0, 8).map((o: any) => ({
     _id: o._id, orderNumber: o.orderNumber, userName: o.userName, userEmail: o.userEmail,
     total: o.total, status: o.status, paymentStatus: o.paymentStatus, createdAt: o.createdAt,
     itemCount: o.items?.length || 0,

@@ -230,7 +230,7 @@ export default function AdminDashboard({ initialStats }: { initialStats?: any } 
         <div className="bg-white rounded-cute shadow-soft border border-cream-200 p-5 min-h-[280px]">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-bold text-sm text-cocoa-700">📦 Pedidos recientes</h3>
-            <Link href="/pedidos" className="text-[10px] font-bold text-blush-400 hover:text-blush-500">Ver todos →</Link>
+            <Link href="/admin/pedidos" className="text-[10px] font-bold text-blush-400 hover:text-blush-500">Ver todos →</Link>
           </div>
           <div className="space-y-1.5">
             {(s.recentOrders || []).map((o: any) => (
