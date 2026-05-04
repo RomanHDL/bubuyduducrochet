@@ -75,6 +75,13 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
     return NextResponse.json({ error: 'Conversacion no existe' }, { status: 404 });
   }
 
+  // No te puedes responder a ti misma como vendedora — usa "Mi chat"
+  if (conversation.customer.toString() === auth.user._id.toString()) {
+    return NextResponse.json({
+      error: 'Es tu propia conversacion. Usa la pestaña "Mi chat" para escribir como cliente.',
+    }, { status: 400 });
+  }
+
   const message = await ChatMessage.create({
     conversation: conversation._id,
     sender: auth.user._id,

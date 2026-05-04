@@ -21,6 +21,7 @@ import { canUseChat } from '@/lib/chat';
 
 export type Message = {
   _id: string;
+  sender: string;          // ObjectId del User que escribio el mensaje
   senderRole: 'customer' | 'admin';
   senderName?: string;
   senderImage?: string;
@@ -47,6 +48,9 @@ export type ChatTab = 'mine' | 'inbox';
 interface ChatState {
   enabled: boolean;       // si el usuario actual tiene chat permitido
   isAdmin: boolean;
+  currentUserId: string;  // _id del User logueado — fuente de verdad para "esto es mio"
+  currentUserName: string;
+  currentUserImage: string;
   open: boolean;
   setOpen: (v: boolean) => void;
   toggle: () => void;
@@ -72,6 +76,9 @@ const noop = () => {};
 const defaultState: ChatState = {
   enabled: false,
   isAdmin: false,
+  currentUserId: '',
+  currentUserName: '',
+  currentUserImage: '',
   open: false,
   setOpen: noop,
   toggle: noop,
@@ -97,6 +104,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const role = (session?.user as any)?.role as string | undefined;
   const enabled = status === 'authenticated' && canUseChat(role);
   const isAdmin = role === 'admin';
+  const currentUserId = (session?.user as any)?.id as string || '';
+  const currentUserName = session?.user?.name || '';
+  const currentUserImage = session?.user?.image || '';
 
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<ChatTab>('mine');
@@ -227,6 +237,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<ChatState>(() => ({
     enabled,
     isAdmin,
+    currentUserId,
+    currentUserName,
+    currentUserImage,
     open,
     setOpen,
     toggle,
@@ -244,7 +257,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     sendAsAdmin,
     refresh,
   }), [
-    enabled, isAdmin, open, toggle, unreadTotal,
+    enabled, isAdmin, currentUserId, currentUserName, currentUserImage,
+    open, toggle, unreadTotal,
     mineConversation, mineMessages, tab,
     inboxConversations, adminThreadId, adminThreadMessages, adminThreadConversation,
     openAdminThread, sendAsCustomer, sendAsAdmin, refresh,

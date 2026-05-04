@@ -68,6 +68,13 @@ export default function ThemeSwitcher() {
 
   const activeId = state.themeMode === 'auto' ? state.effectiveThemeId : state.themeId;
 
+  // Color de preview del tema activo para el ribbon del boton
+  const activePreview = (() => {
+    const t = THEMES.find((x) => x.id === (state.themeMode === 'auto' ? state.effectiveThemeId : state.themeId));
+    if (!t || t.id === 'none') return null;
+    return t;
+  })();
+
   return (
     <div className="relative" ref={popoverRef}>
       <button
@@ -75,9 +82,34 @@ export default function ThemeSwitcher() {
         onClick={() => setOpen((v) => !v)}
         title="Cambiar tema festivo del sitio"
         aria-label="Cambiar tema festivo del sitio"
-        className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/80 hover:bg-white shadow-sm border border-cocoa-200/40 text-cocoa-600 hover:scale-105 hover:shadow-md transition-all"
+        aria-pressed={open}
+        className={`
+          relative inline-flex items-center justify-center w-10 h-10 rounded-full
+          transition-all duration-200
+          ${open
+            ? 'bg-gradient-to-br from-amber-400 via-rose-400 to-violet-400 text-white shadow-lg shadow-rose-400/30 scale-105'
+            : 'bg-white text-cocoa-700 shadow-sm hover:shadow-md hover:scale-105 border border-cream-200 hover:border-cream-300'}
+        `}
       >
         <PaletteIcon />
+        {/* Punto de color del tema activo, abajo a la derecha del boton */}
+        {activePreview && !open && (
+          <span
+            className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm"
+            style={{
+              background: activePreview.swatchAccent
+                ? `linear-gradient(135deg, ${activePreview.swatch}, ${activePreview.swatchAccent})`
+                : activePreview.swatch,
+            }}
+            aria-hidden="true"
+          />
+        )}
+        {/* Tag "AUTO" cuando esta en modo automatico */}
+        {state.themeMode === 'auto' && state.effectiveThemeId !== 'none' && !open && (
+          <span className="absolute -top-1 -left-1 px-1 py-px rounded-md bg-cocoa-700 text-white text-[7px] font-bold uppercase tracking-wider leading-none shadow-sm">
+            auto
+          </span>
+        )}
       </button>
 
       {open && (

@@ -71,54 +71,78 @@ export default function Navbar() {
           {/* Banner festivo (entre logo y nav) — solo visible si hay tema activo */}
           <FestiveBanner />
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link href="/catalogo" className="text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 transition-colors">Catalogo</Link>
-            <Link href="/preguntas" className="text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 transition-colors">FAQ</Link>
-            <Link href="/contacto" className="text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 transition-colors">Nosotros</Link>
+          {/* Desktop nav — agrupado: nav principal | shop icons | admin tools | perfil+chat */}
+          <div className="hidden md:flex items-center">
+            {/* Grupo 1: nav principal */}
+            <div className="flex items-center gap-1 px-1">
+              <Link href="/catalogo" className="text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 hover:bg-white/50 px-3 py-1.5 rounded-full transition-colors">Catalogo</Link>
+              <Link href="/preguntas" className="text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 hover:bg-white/50 px-3 py-1.5 rounded-full transition-colors">FAQ</Link>
+              <Link href="/contacto" className="text-sm font-semibold text-cocoa-600 hover:text-cocoa-800 hover:bg-white/50 px-3 py-1.5 rounded-full transition-colors">Nosotros</Link>
+            </div>
 
             {session ? (
               <>
-                <Link href="/favoritos" className="text-cocoa-600 hover:text-cocoa-800 transition-colors text-lg" title="Favoritos">💕</Link>
-                <Link href="/carrito" className="relative text-cocoa-600 hover:text-cocoa-800 transition-colors" title="Carrito">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                </Link>
+                {/* Divider */}
+                <span className="hidden lg:block w-px h-6 bg-cocoa-200/60 mx-3" aria-hidden="true" />
 
+                {/* Grupo 2: iconos de shop (favoritos, carrito) */}
+                <div className="flex items-center gap-1 px-1">
+                  <Link
+                    href="/favoritos"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-full text-cocoa-600 hover:bg-white/60 transition-colors"
+                    title="Favoritos"
+                  >
+                    <span className="text-base">💕</span>
+                  </Link>
+                  <Link
+                    href="/carrito"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-full text-cocoa-600 hover:bg-white/60 transition-colors"
+                    title="Carrito"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
+                  </Link>
+                </div>
+
+                {/* Grupo 3: herramientas admin */}
                 {isAdmin && (
-                  <div className="flex items-center gap-2">
-                    <Link href="/admin" className="text-sm font-semibold text-cocoa-700 bg-cocoa-700/10 px-3 py-1.5 rounded-full hover:bg-cocoa-700/20 transition-colors">
-                      Admin
-                    </Link>
-                    {isSysAdmin && (
-                      <span
-                        className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold border border-black/20 shadow-sm bg-black text-green-400 whitespace-nowrap"
-                        title="Administrador de sistemas"
-                      >
-                        {'>_'} SISTEMAS
-                      </span>
-                    )}
-                  </div>
+                  <>
+                    <span className="hidden lg:block w-px h-6 bg-cocoa-200/60 mx-3" aria-hidden="true" />
+                    <div className="flex items-center gap-2 px-1">
+                      <Link href="/admin" className="text-sm font-bold text-cocoa-700 bg-cocoa-700/10 px-3 py-1.5 rounded-full hover:bg-cocoa-700/20 transition-colors">
+                        Admin
+                      </Link>
+                      {isSysAdmin && (
+                        <span
+                          className="hidden xl:inline-block px-2 py-1 rounded-md text-[10px] font-mono font-bold border border-black/20 shadow-sm bg-black text-green-400 whitespace-nowrap"
+                          title="Administrador de sistemas"
+                        >
+                          {'>_'} SISTEMAS
+                        </span>
+                      )}
+                      <ThemeSwitcher />
+                    </div>
+                  </>
                 )}
 
-                {/* Selector de tema festivo — solo admins */}
-                {isAdmin && <ThemeSwitcher />}
+                {/* Divider antes de perfil */}
+                <span className="w-px h-6 bg-cocoa-200/60 mx-3" aria-hidden="true" />
 
-                {/* Avatar con marco + badge — refleja lo que el admin guardó */}
-                <Link href="/mi-cuenta" className="inline-flex items-center hover:scale-105 transition-transform" title={session.user?.name || 'Mi cuenta'}>
-                  <ProfileAvatar
-                    src={session.user?.image}
-                    name={session.user?.name}
-                    frame={profile.frame || 'none'}
-                    size={36}
-                    badge={profile.badge || (isSysAdmin ? 'DE SISTEMAS' : '')}
-                  />
-                </Link>
-
-                {/* Chat — al lado del perfil */}
-                <ChatTrigger />
+                {/* Grupo 4: perfil + chat — siempre juntos a la derecha */}
+                <div className="flex items-center gap-2 px-1">
+                  <Link href="/mi-cuenta" className="inline-flex items-center hover:scale-105 transition-transform" title={session.user?.name || 'Mi cuenta'}>
+                    <ProfileAvatar
+                      src={session.user?.image}
+                      name={session.user?.name}
+                      frame={profile.frame || 'none'}
+                      size={36}
+                      badge={profile.badge || (isSysAdmin ? 'DE SISTEMAS' : '')}
+                    />
+                  </Link>
+                  <ChatTrigger />
+                </div>
               </>
             ) : (
-              <Link href="/login" className="bg-blush-400 text-white text-sm font-bold px-5 py-2 rounded-full hover:bg-blush-500 transition-colors shadow-md">Entrar 💕</Link>
+              <Link href="/login" className="bg-blush-400 text-white text-sm font-bold px-5 py-2 rounded-full hover:bg-blush-500 transition-colors shadow-md ml-3">Entrar 💕</Link>
             )}
           </div>
 
