@@ -353,16 +353,13 @@ html[class*="theme-"]:not(.theme-none) .input-cute {
   overflow: hidden;
 }
 
-/* === LOGO === */
-html[class*="theme-"]:not(.theme-none) .navbar-logo-img {
-  padding: 4px;
-  border: 2px solid #1A1A1A;
-  box-shadow: 3px 3px 0 0 #1A1A1A;
-  transition: transform 0.2s ease;
-}
-html[class*="theme-"]:not(.theme-none) .navbar-logo-img:hover {
-  transform: translate(-1px, -1px);
-}
+/* === LOGO ===
+   Antes los temas festivos ponian un border negro + box-shadow + un
+   background coloreado en el logo. Se quito a peticion del usuario:
+   el logo siempre se muestra con su estilo normal (sin marco festivo),
+   aunque el resto del tema (body decorations, footer, paleta de botones)
+   se conserva activo. Si en el futuro quieren rehabilitarlo, devolver
+   estas reglas + los `background` por tema mas abajo. */
 
 /* === FOOTER === */
 html[class*="theme-"]:not(.theme-none) footer {
@@ -394,7 +391,6 @@ html.theme-san-valentin .btn-primary { background-color: #FF1744 !important; col
 html.theme-san-valentin .btn-primary:hover { background-color: #B0001D !important; }
 html.theme-san-valentin .btn-secondary { background-color: #FFD0DC !important; color: #B0001D !important; }
 html.theme-san-valentin nav { background-color: #FFB3BD !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-san-valentin .navbar-logo-img { background: #FF1744; }
 html.theme-san-valentin footer { background-color: #B0001D !important; color: #FFE5EA; }
 html.theme-san-valentin ::selection { background-color: #FF1744; color: white; }
 html.theme-san-valentin ::-webkit-scrollbar-thumb { background: #FF1744; }
@@ -421,7 +417,6 @@ html.theme-flor-amarilla .btn-primary { background-color: #FFD93D !important; co
 html.theme-flor-amarilla .btn-primary:hover { background-color: #E5B100 !important; color: #FFF !important; }
 html.theme-flor-amarilla .btn-secondary { background-color: #FFEFA0 !important; color: #8B6543 !important; }
 html.theme-flor-amarilla nav { background-color: #FFE066 !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-flor-amarilla .navbar-logo-img { background: #FFD93D; }
 html.theme-flor-amarilla footer { background-color: #6B4A00 !important; color: #FFF6B8; }
 html.theme-flor-amarilla ::selection { background-color: #FFD93D; color: #1A1A1A; }
 html.theme-flor-amarilla ::-webkit-scrollbar-thumb { background: #E5B100; }
@@ -453,7 +448,6 @@ html.theme-dia-nino .btn-primary { background-color: #5BC0EB !important; color: 
 html.theme-dia-nino .btn-primary:hover { background-color: #2A5485 !important; }
 html.theme-dia-nino .btn-secondary { background-color: #FFE5F0 !important; color: #C0395A !important; }
 html.theme-dia-nino nav { background-color: #C8E7FF !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-dia-nino .navbar-logo-img { background: linear-gradient(135deg, #FF8FA3, #FFD93D, #4ADE80, #5BC0EB, #A78BFA); }
 html.theme-dia-nino footer { background-color: #1A3D5C !important; color: #C8E7FF; }
 html.theme-dia-nino ::selection { background-color: #5BC0EB; color: #FFF; }
 html.theme-dia-nino ::-webkit-scrollbar-thumb { background: #5BC0EB; }
@@ -480,7 +474,6 @@ html.theme-dia-mama .btn-primary { background-color: #FF8FA3 !important; color: 
 html.theme-dia-mama .btn-primary:hover { background-color: #FF6B81 !important; }
 html.theme-dia-mama .btn-secondary { background-color: #FFD0DC !important; color: #C0395A !important; }
 html.theme-dia-mama nav { background-color: #FFC8DC !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-dia-mama .navbar-logo-img { background: #FF8FA3; }
 html.theme-dia-mama footer { background-color: #7A2540 !important; color: #FFE0EC; }
 html.theme-dia-mama ::selection { background-color: #FF8FA3; color: #FFF; }
 html.theme-dia-mama ::-webkit-scrollbar-thumb { background: #FF8FA3; }
@@ -507,7 +500,6 @@ html.theme-dia-papa .btn-primary { background-color: #3B6EA5 !important; color: 
 html.theme-dia-papa .btn-primary:hover { background-color: #2A5485 !important; }
 html.theme-dia-papa .btn-secondary { background-color: #B3CCE5 !important; color: #2A5485 !important; }
 html.theme-dia-papa nav { background-color: #B3CCE5 !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-dia-papa .navbar-logo-img { background: #3B6EA5; }
 html.theme-dia-papa footer { background-color: #1A3D5C !important; color: #D5E4F2; }
 html.theme-dia-papa ::selection { background-color: #3B6EA5; color: #FFF; }
 html.theme-dia-papa ::-webkit-scrollbar-thumb { background: #7CC4F5; }
@@ -546,9 +538,6 @@ html.theme-independencia .btn-primary { background-color: #006847 !important; co
 html.theme-independencia .btn-primary:hover { background-color: #155F2C !important; }
 html.theme-independencia .btn-secondary { background-color: #CE1126 !important; color: #FFF !important; }
 html.theme-independencia nav { background-color: #FFFFFF !important; border-bottom: 4px solid #1A1A1A !important; }
-html.theme-independencia .navbar-logo-img {
-  background: linear-gradient(90deg, #006847 0%, #006847 33%, #FFFFFF 33%, #FFFFFF 66%, #CE1126 66%, #CE1126 100%);
-}
 html.theme-independencia footer { background-color: #155F2C !important; color: #FFF; }
 html.theme-independencia ::selection { background-color: #006847; color: #FFF; }
 html.theme-independencia ::-webkit-scrollbar-thumb { background: #006847; }
@@ -583,7 +572,6 @@ html.theme-halloween .btn-primary { background-color: #FF7518 !important; color:
 html.theme-halloween .btn-primary:hover { background-color: #E76F00 !important; }
 html.theme-halloween .btn-secondary { background-color: #4A1F5C !important; color: #FFC080 !important; }
 html.theme-halloween nav { background-color: #FF7518 !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-halloween .navbar-logo-img { background: #4A1F5C; }
 html.theme-halloween footer { background-color: #2D1B33 !important; color: #FFB870; }
 html.theme-halloween ::selection { background-color: #FF7518; color: #1A1A1A; }
 html.theme-halloween ::-webkit-scrollbar-thumb { background: #FF7518; }
@@ -613,7 +601,6 @@ html.theme-dia-muertos .btn-primary { background-color: #E76F00 !important; colo
 html.theme-dia-muertos .btn-primary:hover { background-color: #B23A00 !important; }
 html.theme-dia-muertos .btn-secondary { background-color: #7B3F9F !important; color: #FFF !important; }
 html.theme-dia-muertos nav { background-color: #FFB870 !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-dia-muertos .navbar-logo-img { background: linear-gradient(135deg, #E76F00, #7B3F9F); }
 html.theme-dia-muertos footer { background-color: #3D1A4F !important; color: #FFCC80; }
 html.theme-dia-muertos ::selection { background-color: #E76F00; color: #FFF; }
 html.theme-dia-muertos ::-webkit-scrollbar-thumb { background: #E76F00; }
@@ -641,7 +628,6 @@ html.theme-navidad .btn-primary:hover { background-color: #A00D24 !important; }
 html.theme-navidad .btn-secondary { background-color: #0F8A4D !important; color: #FFF !important; }
 html.theme-navidad nav { background-color: #0F8A4D !important; border-bottom: 4px solid #C8102E !important; }
 html.theme-navidad nav a, html.theme-navidad nav button { color: #FFFFFF !important; }
-html.theme-navidad .navbar-logo-img { background: linear-gradient(90deg, #0F8A4D 0%, #0F8A4D 50%, #C8102E 50%, #C8102E 100%); }
 html.theme-navidad footer { background-color: #0A4A2A !important; color: #C8E8D0; }
 html.theme-navidad ::selection { background-color: #C8102E; color: #FFF; }
 html.theme-navidad ::-webkit-scrollbar-thumb { background: #0F8A4D; }
@@ -668,7 +654,6 @@ html.theme-reyes .btn-primary { background-color: #D4AF37 !important; color: #1A
 html.theme-reyes .btn-primary:hover { background-color: #B8860B !important; color: #FFF !important; }
 html.theme-reyes .btn-secondary { background-color: #FFEFC0 !important; color: #8B6A0B !important; }
 html.theme-reyes nav { background-color: #FFD970 !important; border-bottom: 3px solid #1A1A1A !important; }
-html.theme-reyes .navbar-logo-img { background: #D4AF37; }
 html.theme-reyes footer { background-color: #4A3320 !important; color: #FFD970; }
 html.theme-reyes ::selection { background-color: #D4AF37; color: #1A1A1A; }
 html.theme-reyes ::-webkit-scrollbar-thumb { background: #D4AF37; }

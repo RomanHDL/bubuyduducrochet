@@ -63,6 +63,10 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
   const [elaboration, setElaboration] = useState<typeof emptyElaboration>({ ...emptyElaboration, materials: [], measurements: [], patterns: [] });
   const [savingProceso, setSavingProceso] = useState(false);
   const [procesoSuccess, setProcesoSuccess] = useState(false);
+  // 'view' = ficha resumen no-editable (default cuando ya hay elaboracion guardada);
+  // 'edit' = formulario completo (modo por defecto si el producto no tiene proceso aun
+  // o si el admin pulsa "Editar" en la ficha).
+  const [procesoMode, setProcesoMode] = useState<'view' | 'edit'>('edit');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -193,6 +197,17 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
   const openProceso = (p: any) => {
     setProcesoProduct(p);
     setProcesoSuccess(false);
+    // Arrancar en modo "view" si ya hay elaboracion guardada con contenido —
+    // asi el admin ve la ficha completa de inmediato sin tener que scrollear
+    // el formulario. Si no hay nada todavia, abrimos directo en "edit".
+    const hasContent = !!(
+      p.elaboration && (
+        p.elaboration.materials?.length ||
+        p.elaboration.measurements?.length ||
+        p.elaboration.patterns?.length ||
+        p.elaboration.instructions
+      )
+    );
     if (p.elaboration) {
       setElaboration({
         materials: p.elaboration.materials?.length ? p.elaboration.materials.map((m: any) => ({ ...m })) : [],
@@ -205,6 +220,7 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
     } else {
       setElaboration({ ...emptyElaboration, materials: [], measurements: [], patterns: [] });
     }
+    setProcesoMode(hasContent ? 'view' : 'edit');
     setProcesoModalOpen(true);
   };
 
@@ -212,6 +228,7 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
     setProcesoModalOpen(false);
     setProcesoProduct(null);
     setProcesoSuccess(false);
+    setProcesoMode('edit');
   };
 
   const handleSaveProceso = async () => {
@@ -228,7 +245,13 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
       if (r.ok) {
         // Marca el producto como "con elaboration" en el listado, sin refetch.
         setProducts((prev) => prev.map((x) => x._id === procesoProduct._id ? { ...x, elaboration } : x));
+        // Mantener el producto en memoria actualizado por si reabren la ficha
+        // antes de un refetch global.
+        setProcesoProduct({ ...procesoProduct, elaboration });
         setProcesoSuccess(true);
+        // Al guardar, cambia a vista resumen ("hoja completa" pedida por el usuario):
+        // se muestra el proceso como ficha y se elimina el scroll del formulario.
+        setProcesoMode('view');
         setTimeout(() => setProcesoSuccess(false), 3000);
       }
     } catch { /* silent */ }
@@ -490,6 +513,109 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
               </div>
             )}
 
+            {/* Ficha resumen (vista no-editable). Reemplaza el formulario cuando ya hay
+                proceso guardado o justo despues de guardar — sin scroll forzado el
+                admin ve TODO de un vistazo (materiales, medidas, patrones, instrucciones)
+                como una nota tipo hoja completa. El boton "Editar" abajo regresa al form. */}
+            {procesoMode === 'view' && (
+              <div className="space-y-4">
+                {/* Cabecera: dificultad + tiempo estimado */}
+                <div className="flex flex-wrap items-center gap-3 bg-cream-50 rounded-cute p-3 border border-cream-200">
+                  {(() => {
+                    const opt = DIFFICULTY_OPTIONS.find((o) => o.value === elaboration.difficulty);
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border-2 border-blush-200 text-sm font-bold text-blush-600">
+                        <span>{opt?.emoji}</span>
+                        <span>Dificultad: {opt?.label || 'Facil'}</span>
+                      </span>
+                    );
+                  })()}
+                  {elaboration.estimatedTime && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border-2 border-cream-200 text-sm font-semibold text-cocoa-600">
+                      <span>⏱️</span>
+                      <span>{elaboration.estimatedTime}</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Materiales */}
+                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">🧵 Materiales</h3>
+                  {elaboration.materials.length === 0 ? (
+                    <p className="text-sm text-cocoa-300">— sin materiales —</p>
+                  ) : (
+                    <ul className="space-y-1 text-sm text-cocoa-700">
+                      {elaboration.materials.map((m, i) => (
+                        <li key={i} className="flex flex-wrap gap-1.5">
+                          <span className="font-semibold">{m.name || '(sin nombre)'}</span>
+                          <span className="text-cocoa-400">·</span>
+                          <span className="text-cocoa-500">{m.type}</span>
+                          {m.quantity && (
+                            <>
+                              <span className="text-cocoa-400">·</span>
+                              <span className="text-cocoa-500">{m.quantity}</span>
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Medidas */}
+                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">📏 Medidas</h3>
+                  {elaboration.measurements.length === 0 ? (
+                    <p className="text-sm text-cocoa-300">— sin medidas —</p>
+                  ) : (
+                    <ul className="space-y-1 text-sm text-cocoa-700">
+                      {elaboration.measurements.map((m, i) => (
+                        <li key={i}>
+                          <span className="font-semibold">{m.name || '(sin nombre)'}:</span>{' '}
+                          <span>{m.value} {m.unit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Patrones */}
+                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">🧷 Patrones</h3>
+                  {elaboration.patterns.length === 0 ? (
+                    <p className="text-sm text-cocoa-300">— sin patrones —</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {elaboration.patterns.map((p, i) => (
+                        <div key={i} className="bg-white rounded-cute p-2 border border-cream-200 flex gap-2">
+                          {p.imageUrl && (
+                            <img src={p.imageUrl} alt={p.name} className="w-14 h-14 rounded-md object-cover flex-shrink-0 border border-cream-200" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm text-cocoa-700 truncate">{p.name || '(sin nombre)'}</p>
+                            {p.description && (
+                              <p className="text-xs text-cocoa-500 line-clamp-2">{p.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Instrucciones */}
+                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">📝 Instrucciones</h3>
+                  {elaboration.instructions ? (
+                    <p className="text-sm text-cocoa-700 whitespace-pre-line leading-relaxed">{elaboration.instructions}</p>
+                  ) : (
+                    <p className="text-sm text-cocoa-300">— sin instrucciones —</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {procesoMode === 'edit' && (
             <div className="space-y-6">
 
               {/* Difficulty & Estimated Time */}
@@ -553,7 +679,7 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
                         >
                           ✕
                         </button>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                           <div>
                             <label className="block text-xs font-semibold text-cocoa-500 mb-1">Nombre</label>
                             <input
@@ -580,15 +706,6 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
                               value={mat.quantity}
                               onChange={(e) => updateMaterial(idx, 'quantity', e.target.value)}
                               placeholder="Ej: 100g"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Notas</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={mat.notes}
-                              onChange={(e) => updateMaterial(idx, 'notes', e.target.value)}
-                              placeholder="Opcional"
                             />
                           </div>
                         </div>
@@ -718,8 +835,21 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
                 />
               </div>
             </div>
+            )}
 
-            {/* Footer */}
+            {/* Footer · cambia segun modo. View muestra Cerrar + Editar para reabrir
+                el formulario. Edit muestra Cancelar + Guardar como antes. */}
+            {procesoMode === 'view' ? (
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-cream-200">
+                <button onClick={closeProceso} className="btn-cute bg-cream-200 text-cocoa-600 hover:bg-cream-300">Cerrar</button>
+                <button
+                  onClick={() => { setProcesoMode('edit'); setProcesoSuccess(false); }}
+                  className="btn-cute bg-blush-400 text-white hover:bg-blush-500"
+                >
+                  ✏️ Editar
+                </button>
+              </div>
+            ) : (
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-cream-200">
               <button onClick={closeProceso} className="btn-cute bg-cream-200 text-cocoa-600 hover:bg-cream-300">Cancelar</button>
               <button
@@ -730,6 +860,7 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
                 {savingProceso ? 'Guardando...' : 'Guardar Proceso'} 🧶
               </button>
             </div>
+            )}
           </div>
         </div>
       )}

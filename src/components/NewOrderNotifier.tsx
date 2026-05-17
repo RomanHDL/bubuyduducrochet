@@ -158,29 +158,6 @@ export default function NewOrderNotifier() {
     });
   };
 
-  const testNotification = () => {
-    const fake: OrderItem = {
-      _id: 'test-' + Date.now(),
-      orderNumber: 9999,
-      userName: 'Cliente de Prueba',
-      userEmail: 'test@example.com',
-      total: 450,
-      status: 'pending',
-      paymentStatus: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    enqueueWithAutoDismiss([fake]);
-    playDing();
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      try {
-        new Notification('🛒 Prueba · Nuevo pedido #' + fake.orderNumber, {
-          body: `${fake.userName} · $${fake.total.toFixed(2)} MXN`,
-          tag: 'test-notif',
-        });
-      } catch { /* ignore */ }
-    }
-  };
-
   // Re-mostrar los últimos N pedidos al instante. Útil cuando el admin
   // sospecha que perdió alguno. NO borra la baseline — solo trae los últimos
   // y los muestra con auto-dismiss, sin afectar la lógica del polling normal.
@@ -221,16 +198,13 @@ export default function NewOrderNotifier() {
                     ✨ Activar notificaciones
                   </button>
                 )}
-                <button onClick={testNotification} className="text-xs font-bold px-3 py-1 rounded-full bg-white text-amber-700 border border-amber-300 hover:bg-amber-50">
-                  🔔 Probar
-                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Botones flotantes discretos: probar y recuperar */}
+      {/* Botón flotante discreto: recuperar últimos pedidos */}
       {!showPermBanner && queue.length === 0 && (
         <div className="self-end flex gap-1">
           <button
@@ -239,13 +213,6 @@ export default function NewOrderNotifier() {
             className="text-[10px] font-bold px-2 py-1 rounded-full bg-white/80 text-blush-500 border border-blush-200 hover:bg-blush-50 shadow-sm opacity-60 hover:opacity-100"
           >
             ↻ recuperar
-          </button>
-          <button
-            onClick={testNotification}
-            title="Probar notificación"
-            className="text-[10px] font-bold px-2 py-1 rounded-full bg-white/80 text-cocoa-500 border border-cream-200 hover:bg-cream-50 shadow-sm opacity-60 hover:opacity-100"
-          >
-            🔔 probar
           </button>
         </div>
       )}

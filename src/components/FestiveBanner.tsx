@@ -31,11 +31,9 @@ export default function FestiveBanner() {
     <div
       className="festive-banner hidden lg:flex items-center gap-3 px-5 py-2 mx-2 rounded-full max-w-md"
       role="status"
-      aria-label={`${theme.date}. ${theme.message}`}
+      aria-label={theme.date}
     >
       <span className="festive-banner__date">{theme.date}</span>
-      <span className="festive-banner__divider" aria-hidden="true" />
-      <span className="festive-banner__message">{theme.message}</span>
     </div>
   );
 }
