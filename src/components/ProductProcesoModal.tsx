@@ -39,7 +39,6 @@ export default function ProductProcesoModal({
   const hasContent = !!(
     el.materials?.length ||
     el.measurements?.length ||
-    el.patterns?.length ||
     el.instructions
   );
   const [elaboration, setElaboration] = useState<any>({
@@ -169,30 +168,6 @@ export default function ProductProcesoModal({
                 )}
               </div>
 
-              {/* Patrones */}
-              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">🎨 Patrones</h3>
-                {elaboration.patterns.length === 0 ? (
-                  <p className="text-sm text-cocoa-300">— sin patrones —</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {elaboration.patterns.map((p: any, i: number) => (
-                      <div key={i} className="bg-white rounded-cute p-2 border border-cream-200 flex gap-2">
-                        {p.imageUrl && (
-                          <img src={p.imageUrl} alt={p.name} className="w-14 h-14 rounded-md object-cover flex-shrink-0 border border-cream-200" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-sm text-cocoa-700 truncate">{p.name || '(sin nombre)'}</p>
-                          {p.description && (
-                            <p className="text-xs text-cocoa-500 line-clamp-2">{p.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Instrucciones */}
               <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
                 <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">📝 Instrucciones</h3>
@@ -259,22 +234,6 @@ export default function ProductProcesoModal({
                     {MEASUREMENT_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                   <button onClick={() => { const arr = elaboration.measurements.filter((_: any, j: number) => j !== i); setElaboration({ ...elaboration, measurements: arr }); }} className="text-blush-400 hover:text-blush-500 text-sm">✕</button>
-                </div>
-              ))}
-            </div>
-
-            {/* Patterns */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-cocoa-600">🎨 Patrones</label>
-                <button onClick={() => setElaboration({ ...elaboration, patterns: [...elaboration.patterns, { name: '', imageUrl: '', description: '' }] })} className="text-xs font-semibold text-blush-400 hover:text-blush-500">+ Agregar</button>
-              </div>
-              {elaboration.patterns.map((m: any, i: number) => (
-                <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 mb-2 items-center">
-                  <input className="input-cute text-xs" placeholder="Nombre" value={m.name} onChange={e => { const arr = [...elaboration.patterns]; arr[i] = { ...arr[i], name: e.target.value }; setElaboration({ ...elaboration, patterns: arr }); }} />
-                  <input className="input-cute text-xs" placeholder="URL imagen" value={m.imageUrl} onChange={e => { const arr = [...elaboration.patterns]; arr[i] = { ...arr[i], imageUrl: e.target.value }; setElaboration({ ...elaboration, patterns: arr }); }} />
-                  <input className="input-cute text-xs" placeholder="Descripción" value={m.description} onChange={e => { const arr = [...elaboration.patterns]; arr[i] = { ...arr[i], description: e.target.value }; setElaboration({ ...elaboration, patterns: arr }); }} />
-                  <button onClick={() => { const arr = elaboration.patterns.filter((_: any, j: number) => j !== i); setElaboration({ ...elaboration, patterns: arr }); }} className="text-blush-400 hover:text-blush-500 text-sm">✕</button>
                 </div>
               ))}
             </div>
