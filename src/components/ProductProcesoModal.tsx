@@ -17,6 +17,17 @@ interface Product {
   elaboration?: any;
 }
 
+// Componente unico del modal de "Proceso de Elaboracion". Usado por:
+//   · /admin/productos      (tabla admin de productos)
+//   · /catalogo             (cards del catalogo admin)
+//   · /producto/[id]        (pagina publica del producto, solo admin lo ve)
+//
+// Tiene dos modos:
+//   · 'view' — ficha resumen no-editable, sin scroll forzado. Es lo que ve
+//     el admin cuando ya hay un proceso guardado o justo despues de guardar.
+//   · 'edit' — formulario completo para capturar/actualizar. Se entra desde
+//     el boton "Editar" en el footer del modo view, o automaticamente cuando
+//     el producto aun no tiene elaboracion.
 export default function ProductProcesoModal({
   product, onClose, onSaved,
 }: {
@@ -25,16 +36,23 @@ export default function ProductProcesoModal({
   onSaved: (updated: any) => void;
 }) {
   const el = product.elaboration || {};
+  const hasContent = !!(
+    el.materials?.length ||
+    el.measurements?.length ||
+    el.patterns?.length ||
+    el.instructions
+  );
   const [elaboration, setElaboration] = useState<any>({
     materials: el.materials?.length ? el.materials.map((m: any) => ({ ...m })) : [],
     measurements: el.measurements?.length ? el.measurements.map((m: any) => ({ ...m })) : [],
     patterns: el.patterns?.length ? el.patterns.map((m: any) => ({ ...m })) : [],
     instructions: el.instructions || '',
-    difficulty: el.difficulty || '',
+    difficulty: el.difficulty || 'facil',
     estimatedTime: el.estimatedTime || '',
   });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [mode, setMode] = useState<'view' | 'edit'>(hasContent ? 'view' : 'edit');
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -62,9 +80,14 @@ export default function ProductProcesoModal({
       const updated = await r.json();
       setSuccess(true);
       onSaved(updated);
+      // Al guardar pasa a vista resumen — "hoja completa" sin scroll que
+      // pidio el usuario. Si necesita ajustar algo mas, pulsa Editar.
+      setMode('view');
       setTimeout(() => setSuccess(false), 2500);
     } catch { /* ignore */ } finally { setSaving(false); }
   };
+
+  const diffOpt = DIFFICULTY_OPTIONS.find((d) => d.value === elaboration.difficulty);
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
@@ -88,6 +111,102 @@ export default function ProductProcesoModal({
         <div className="p-5 overflow-y-auto flex-1">
           {success && <div className="mb-4 p-3 bg-mint-100 border border-green-200 rounded-xl text-sm text-green-700 font-semibold">✅ Proceso guardado correctamente</div>}
 
+          {/* ─── Modo VIEW: ficha resumen ─── */}
+          {mode === 'view' && (
+            <div className="space-y-4">
+              {/* Cabecera: dificultad + tiempo estimado */}
+              <div className="flex flex-wrap items-center gap-3 bg-cream-50 rounded-cute p-3 border border-cream-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border-2 border-blush-200 text-sm font-bold text-blush-600">
+                  <span>{diffOpt?.emoji}</span>
+                  <span>Dificultad: {diffOpt?.label || 'Fácil'}</span>
+                </span>
+                {elaboration.estimatedTime && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border-2 border-cream-200 text-sm font-semibold text-cocoa-600">
+                    <span>⏱️</span>
+                    <span>{elaboration.estimatedTime}</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Materiales */}
+              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">🧶 Materiales</h3>
+                {elaboration.materials.length === 0 ? (
+                  <p className="text-sm text-cocoa-300">— sin materiales —</p>
+                ) : (
+                  <ul className="space-y-1 text-sm text-cocoa-700">
+                    {elaboration.materials.map((m: any, i: number) => (
+                      <li key={i} className="flex flex-wrap gap-1.5">
+                        <span className="font-semibold">{m.name || '(sin nombre)'}</span>
+                        <span className="text-cocoa-400">·</span>
+                        <span className="text-cocoa-500">{m.type}</span>
+                        {m.quantity && (
+                          <>
+                            <span className="text-cocoa-400">·</span>
+                            <span className="text-cocoa-500">{m.quantity}</span>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Medidas */}
+              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">📏 Medidas</h3>
+                {elaboration.measurements.length === 0 ? (
+                  <p className="text-sm text-cocoa-300">— sin medidas —</p>
+                ) : (
+                  <ul className="space-y-1 text-sm text-cocoa-700">
+                    {elaboration.measurements.map((m: any, i: number) => (
+                      <li key={i}>
+                        <span className="font-semibold">{m.name || '(sin nombre)'}:</span>{' '}
+                        <span>{m.value} {m.unit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Patrones */}
+              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">🎨 Patrones</h3>
+                {elaboration.patterns.length === 0 ? (
+                  <p className="text-sm text-cocoa-300">— sin patrones —</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {elaboration.patterns.map((p: any, i: number) => (
+                      <div key={i} className="bg-white rounded-cute p-2 border border-cream-200 flex gap-2">
+                        {p.imageUrl && (
+                          <img src={p.imageUrl} alt={p.name} className="w-14 h-14 rounded-md object-cover flex-shrink-0 border border-cream-200" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-sm text-cocoa-700 truncate">{p.name || '(sin nombre)'}</p>
+                          {p.description && (
+                            <p className="text-xs text-cocoa-500 line-clamp-2">{p.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Instrucciones */}
+              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
+                <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">📝 Instrucciones</h3>
+                {elaboration.instructions ? (
+                  <p className="text-sm text-cocoa-700 whitespace-pre-line leading-relaxed">{elaboration.instructions}</p>
+                ) : (
+                  <p className="text-sm text-cocoa-300">— sin instrucciones —</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Modo EDIT: formulario completo ─── */}
+          {mode === 'edit' && (
           <div className="space-y-5">
             {/* Difficulty */}
             <div>
@@ -107,20 +226,20 @@ export default function ProductProcesoModal({
               <input className="input-cute" value={elaboration.estimatedTime} onChange={e => setElaboration({ ...elaboration, estimatedTime: e.target.value })} placeholder="Ej: 3 horas, 2 días..." />
             </div>
 
-            {/* Materials */}
+            {/* Materials — 3 columnas: Nombre / Tipo / Cantidad. La columna
+                "Notas" se quito (era la "N" truncada en movil) */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-semibold text-cocoa-600">🧶 Materiales</label>
-                <button onClick={() => setElaboration({ ...elaboration, materials: [...elaboration.materials, { name: '', type: 'hilo', quantity: '', notes: '' }] })} className="text-xs font-semibold text-blush-400 hover:text-blush-500">+ Agregar</button>
+                <button onClick={() => setElaboration({ ...elaboration, materials: [...elaboration.materials, { name: '', type: 'hilo', quantity: '' }] })} className="text-xs font-semibold text-blush-400 hover:text-blush-500">+ Agregar</button>
               </div>
               {elaboration.materials.map((m: any, i: number) => (
-                <div key={i} className="grid grid-cols-[1fr_auto_1fr_1fr_auto] gap-2 mb-2 items-center">
+                <div key={i} className="grid grid-cols-[1fr_auto_1fr_auto] gap-2 mb-2 items-center">
                   <input className="input-cute text-xs" placeholder="Nombre" value={m.name} onChange={e => { const arr = [...elaboration.materials]; arr[i] = { ...arr[i], name: e.target.value }; setElaboration({ ...elaboration, materials: arr }); }} />
                   <select className="input-cute text-xs" value={m.type} onChange={e => { const arr = [...elaboration.materials]; arr[i] = { ...arr[i], type: e.target.value }; setElaboration({ ...elaboration, materials: arr }); }}>
                     {MATERIAL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                   <input className="input-cute text-xs" placeholder="Cantidad" value={m.quantity} onChange={e => { const arr = [...elaboration.materials]; arr[i] = { ...arr[i], quantity: e.target.value }; setElaboration({ ...elaboration, materials: arr }); }} />
-                  <input className="input-cute text-xs" placeholder="Notas" value={m.notes} onChange={e => { const arr = [...elaboration.materials]; arr[i] = { ...arr[i], notes: e.target.value }; setElaboration({ ...elaboration, materials: arr }); }} />
                   <button onClick={() => { const arr = elaboration.materials.filter((_: any, j: number) => j !== i); setElaboration({ ...elaboration, materials: arr }); }} className="text-blush-400 hover:text-blush-500 text-sm">✕</button>
                 </div>
               ))}
@@ -166,14 +285,25 @@ export default function ProductProcesoModal({
               <textarea className="input-cute min-h-[120px] resize-y text-xs" value={elaboration.instructions} onChange={e => setElaboration({ ...elaboration, instructions: e.target.value })} placeholder="Paso 1: ...&#10;Paso 2: ...&#10;Paso 3: ..." />
             </div>
           </div>
+          )}
         </div>
 
-        <div className="p-4 border-t border-cream-100 flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400 hover:bg-cream-50">Cancelar</button>
-          <button onClick={save} disabled={saving} className="flex-1 btn-cute bg-amber-500 text-white py-2.5 text-sm hover:bg-amber-600 disabled:opacity-50">
-            {saving ? '💾 Guardando...' : '💾 Guardar proceso'}
-          </button>
-        </div>
+        {/* Footer · botones cambian segun el modo */}
+        {mode === 'view' ? (
+          <div className="p-4 border-t border-cream-100 flex gap-3">
+            <button onClick={onClose} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400 hover:bg-cream-50">Cerrar</button>
+            <button onClick={() => { setMode('edit'); setSuccess(false); }} className="flex-1 btn-cute bg-blush-400 text-white py-2.5 text-sm hover:bg-blush-500">
+              ✏️ Editar
+            </button>
+          </div>
+        ) : (
+          <div className="p-4 border-t border-cream-100 flex gap-3">
+            <button onClick={onClose} className="flex-1 py-2.5 rounded-bubble border-2 border-cream-300 text-sm font-semibold text-cocoa-400 hover:bg-cream-50">Cancelar</button>
+            <button onClick={save} disabled={saving} className="flex-1 btn-cute bg-amber-500 text-white py-2.5 text-sm hover:bg-amber-600 disabled:opacity-50">
+              {saving ? '💾 Guardando...' : '💾 Guardar proceso'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

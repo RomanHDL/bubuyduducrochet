@@ -1,34 +1,14 @@
-'use client';
+﻿'use client';
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCached, setCached, invalidatePrefix, dedupedFetchJson } from '@/lib/fetchCache';
+import ProductProcesoModal from '@/components/ProductProcesoModal';
 
 const CATEGORIES = ['amigurumis', 'accesorios', 'decoracion', 'ropa-bebe', 'llaveros', 'otro'];
 
-const MATERIAL_TYPES = ['hilo', 'aguja', 'relleno', 'ojos de seguridad', 'alambre', 'fieltro', 'pegamento', 'otro'];
-const MEASUREMENT_UNITS = ['cm', 'mm', 'pulgadas'];
-const DIFFICULTY_OPTIONS = [
-  { value: 'facil', label: 'Facil', emoji: '🟢' },
-  { value: 'intermedio', label: 'Intermedio', emoji: '🟡' },
-  { value: 'avanzado', label: 'Avanzado', emoji: '🔴' },
-];
-
 const emptyProduct = { title: '', description: '', price: 0, images: [''], stock: 1, availability: 'disponible', category: 'amigurumis', isActive: true, featured: false };
-
-const emptyElaboration = {
-  materials: [] as { name: string; type: string; quantity: string; notes: string }[],
-  measurements: [] as { name: string; value: string; unit: string }[],
-  patterns: [] as { name: string; imageUrl: string; description: string }[],
-  instructions: '',
-  difficulty: 'facil' as 'facil' | 'intermedio' | 'avanzado',
-  estimatedTime: '',
-};
-
-const emptyMaterial = { name: '', type: 'hilo', quantity: '', notes: '' };
-const emptyMeasurement = { name: '', value: '', unit: 'cm' };
-const emptyPattern = { name: '', imageUrl: '', description: '' };
 
 type InitialProps = { initialProducts?: any[] };
 
@@ -57,16 +37,13 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
   const [saveError, setSaveError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Elaboration Process state
+  // Modal del proceso ahora es un componente compartido (`ProductProcesoModal`).
+  // Aqui solo rastreamos que producto esta abierto y si el modal esta visible
+  // — el form, la ficha resumen, view/edit, save y validacion viven adentro
+  // del componente. Resultado: el modal se ve identico en /admin/productos,
+  // /catalogo y /producto/[id].
   const [procesoModalOpen, setProcesoModalOpen] = useState(false);
   const [procesoProduct, setProcesoProduct] = useState<any>(null);
-  const [elaboration, setElaboration] = useState<typeof emptyElaboration>({ ...emptyElaboration, materials: [], measurements: [], patterns: [] });
-  const [savingProceso, setSavingProceso] = useState(false);
-  const [procesoSuccess, setProcesoSuccess] = useState(false);
-  // 'view' = ficha resumen no-editable (default cuando ya hay elaboracion guardada);
-  // 'edit' = formulario completo (modo por defecto si el producto no tiene proceso aun
-  // o si el admin pulsa "Editar" en la ficha).
-  const [procesoMode, setProcesoMode] = useState<'view' | 'edit'>('edit');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -196,96 +173,12 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
 
   const openProceso = (p: any) => {
     setProcesoProduct(p);
-    setProcesoSuccess(false);
-    // Arrancar en modo "view" si ya hay elaboracion guardada con contenido —
-    // asi el admin ve la ficha completa de inmediato sin tener que scrollear
-    // el formulario. Si no hay nada todavia, abrimos directo en "edit".
-    const hasContent = !!(
-      p.elaboration && (
-        p.elaboration.materials?.length ||
-        p.elaboration.measurements?.length ||
-        p.elaboration.patterns?.length ||
-        p.elaboration.instructions
-      )
-    );
-    if (p.elaboration) {
-      setElaboration({
-        materials: p.elaboration.materials?.length ? p.elaboration.materials.map((m: any) => ({ ...m })) : [],
-        measurements: p.elaboration.measurements?.length ? p.elaboration.measurements.map((m: any) => ({ ...m })) : [],
-        patterns: p.elaboration.patterns?.length ? p.elaboration.patterns.map((pt: any) => ({ ...pt })) : [],
-        instructions: p.elaboration.instructions || '',
-        difficulty: p.elaboration.difficulty || 'facil',
-        estimatedTime: p.elaboration.estimatedTime || '',
-      });
-    } else {
-      setElaboration({ ...emptyElaboration, materials: [], measurements: [], patterns: [] });
-    }
-    setProcesoMode(hasContent ? 'view' : 'edit');
     setProcesoModalOpen(true);
   };
 
   const closeProceso = () => {
     setProcesoModalOpen(false);
     setProcesoProduct(null);
-    setProcesoSuccess(false);
-    setProcesoMode('edit');
-  };
-
-  const handleSaveProceso = async () => {
-    if (!procesoProduct) return;
-    setSavingProceso(true);
-    setProcesoSuccess(false);
-    try {
-      const r = await fetch(`/api/products/${procesoProduct._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ elaboration }),
-        cache: 'no-store',
-      });
-      if (r.ok) {
-        // Marca el producto como "con elaboration" en el listado, sin refetch.
-        setProducts((prev) => prev.map((x) => x._id === procesoProduct._id ? { ...x, elaboration } : x));
-        // Mantener el producto en memoria actualizado por si reabren la ficha
-        // antes de un refetch global.
-        setProcesoProduct({ ...procesoProduct, elaboration });
-        setProcesoSuccess(true);
-        // Al guardar, cambia a vista resumen ("hoja completa" pedida por el usuario):
-        // se muestra el proceso como ficha y se elimina el scroll del formulario.
-        setProcesoMode('view');
-        setTimeout(() => setProcesoSuccess(false), 3000);
-      }
-    } catch { /* silent */ }
-    finally { setSavingProceso(false); }
-  };
-
-  // Materials
-  const addMaterial = () => setElaboration({ ...elaboration, materials: [...elaboration.materials, { ...emptyMaterial }] });
-  const updateMaterial = (idx: number, field: string, value: string) => {
-    const mats = elaboration.materials.map((m, i) => i === idx ? { ...m, [field]: value } : m);
-    setElaboration({ ...elaboration, materials: mats });
-  };
-  const removeMaterial = (idx: number) => {
-    setElaboration({ ...elaboration, materials: elaboration.materials.filter((_, i) => i !== idx) });
-  };
-
-  // Measurements
-  const addMeasurement = () => setElaboration({ ...elaboration, measurements: [...elaboration.measurements, { ...emptyMeasurement }] });
-  const updateMeasurement = (idx: number, field: string, value: string) => {
-    const ms = elaboration.measurements.map((m, i) => i === idx ? { ...m, [field]: value } : m);
-    setElaboration({ ...elaboration, measurements: ms });
-  };
-  const removeMeasurement = (idx: number) => {
-    setElaboration({ ...elaboration, measurements: elaboration.measurements.filter((_, i) => i !== idx) });
-  };
-
-  // Patterns
-  const addPattern = () => setElaboration({ ...elaboration, patterns: [...elaboration.patterns, { ...emptyPattern }] });
-  const updatePattern = (idx: number, field: string, value: string) => {
-    const ps = elaboration.patterns.map((p, i) => i === idx ? { ...p, [field]: value } : p);
-    setElaboration({ ...elaboration, patterns: ps });
-  };
-  const removePattern = (idx: number) => {
-    setElaboration({ ...elaboration, patterns: elaboration.patterns.filter((_, i) => i !== idx) });
   };
 
   if (status === 'loading' || (status === 'authenticated' && (session?.user as any)?.role !== 'admin')) return null;
@@ -487,382 +380,20 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
         </div>
       )}
 
-      {/* Elaboration Process Modal */}
+      {/* Elaboration Process Modal — componente compartido en src/components.
+          Tambien se usa en /catalogo (CatalogClient) y /producto/[id] para
+          que el modal se vea identico en los 3 lados. Cualquier cambio de
+          UI/UX del proceso va alli, no aqui. */}
       {procesoModalOpen && procesoProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-cocoa-800/40 backdrop-blur-sm p-4" onClick={closeProceso}>
-          <div className="bg-white rounded-cute shadow-warm w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-cream-100 overflow-hidden flex-shrink-0">
-                {procesoProduct.images?.[0]
-                  ? <img src={procesoProduct.images[0]} alt="" className="w-full h-full object-cover" />
-                  : <div className="w-full h-full flex items-center justify-center text-lg">🧸</div>
-                }
-              </div>
-              <div>
-                <h2 className="font-display font-bold text-xl text-cocoa-700">Proceso de Elaboracion 🧶</h2>
-                <p className="text-sm text-cocoa-400">{procesoProduct.title}</p>
-              </div>
-            </div>
-
-            {/* Success banner */}
-            {procesoSuccess && (
-              <div className="mb-4 px-4 py-3 bg-mint-100 border border-green-200 rounded-cute text-green-700 text-sm font-semibold flex items-center gap-2">
-                <span>✅</span> Proceso de elaboracion guardado exitosamente!
-              </div>
-            )}
-
-            {/* Ficha resumen (vista no-editable). Reemplaza el formulario cuando ya hay
-                proceso guardado o justo despues de guardar — sin scroll forzado el
-                admin ve TODO de un vistazo (materiales, medidas, patrones, instrucciones)
-                como una nota tipo hoja completa. El boton "Editar" abajo regresa al form. */}
-            {procesoMode === 'view' && (
-              <div className="space-y-4">
-                {/* Cabecera: dificultad + tiempo estimado */}
-                <div className="flex flex-wrap items-center gap-3 bg-cream-50 rounded-cute p-3 border border-cream-200">
-                  {(() => {
-                    const opt = DIFFICULTY_OPTIONS.find((o) => o.value === elaboration.difficulty);
-                    return (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border-2 border-blush-200 text-sm font-bold text-blush-600">
-                        <span>{opt?.emoji}</span>
-                        <span>Dificultad: {opt?.label || 'Facil'}</span>
-                      </span>
-                    );
-                  })()}
-                  {elaboration.estimatedTime && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border-2 border-cream-200 text-sm font-semibold text-cocoa-600">
-                      <span>⏱️</span>
-                      <span>{elaboration.estimatedTime}</span>
-                    </span>
-                  )}
-                </div>
-
-                {/* Materiales */}
-                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">🧵 Materiales</h3>
-                  {elaboration.materials.length === 0 ? (
-                    <p className="text-sm text-cocoa-300">— sin materiales —</p>
-                  ) : (
-                    <ul className="space-y-1 text-sm text-cocoa-700">
-                      {elaboration.materials.map((m, i) => (
-                        <li key={i} className="flex flex-wrap gap-1.5">
-                          <span className="font-semibold">{m.name || '(sin nombre)'}</span>
-                          <span className="text-cocoa-400">·</span>
-                          <span className="text-cocoa-500">{m.type}</span>
-                          {m.quantity && (
-                            <>
-                              <span className="text-cocoa-400">·</span>
-                              <span className="text-cocoa-500">{m.quantity}</span>
-                            </>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Medidas */}
-                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">📏 Medidas</h3>
-                  {elaboration.measurements.length === 0 ? (
-                    <p className="text-sm text-cocoa-300">— sin medidas —</p>
-                  ) : (
-                    <ul className="space-y-1 text-sm text-cocoa-700">
-                      {elaboration.measurements.map((m, i) => (
-                        <li key={i}>
-                          <span className="font-semibold">{m.name || '(sin nombre)'}:</span>{' '}
-                          <span>{m.value} {m.unit}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Patrones */}
-                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">🧷 Patrones</h3>
-                  {elaboration.patterns.length === 0 ? (
-                    <p className="text-sm text-cocoa-300">— sin patrones —</p>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {elaboration.patterns.map((p, i) => (
-                        <div key={i} className="bg-white rounded-cute p-2 border border-cream-200 flex gap-2">
-                          {p.imageUrl && (
-                            <img src={p.imageUrl} alt={p.name} className="w-14 h-14 rounded-md object-cover flex-shrink-0 border border-cream-200" />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-sm text-cocoa-700 truncate">{p.name || '(sin nombre)'}</p>
-                            {p.description && (
-                              <p className="text-xs text-cocoa-500 line-clamp-2">{p.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Instrucciones */}
-                <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                  <h3 className="font-display font-bold text-sm text-cocoa-600 mb-2 uppercase tracking-wider">📝 Instrucciones</h3>
-                  {elaboration.instructions ? (
-                    <p className="text-sm text-cocoa-700 whitespace-pre-line leading-relaxed">{elaboration.instructions}</p>
-                  ) : (
-                    <p className="text-sm text-cocoa-300">— sin instrucciones —</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {procesoMode === 'edit' && (
-            <div className="space-y-6">
-
-              {/* Difficulty & Estimated Time */}
-              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                <h3 className="font-display font-bold text-sm text-cocoa-600 mb-3 uppercase tracking-wider">Informacion General</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-cocoa-600 mb-2">Dificultad</label>
-                    <div className="flex gap-2">
-                      {DIFFICULTY_OPTIONS.map((opt) => (
-                        <label
-                          key={opt.value}
-                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-cute border-2 cursor-pointer transition-all text-sm font-semibold ${
-                            elaboration.difficulty === opt.value
-                              ? 'border-blush-400 bg-blush-50 text-blush-600'
-                              : 'border-cream-200 bg-white text-cocoa-400 hover:border-cream-300'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="difficulty"
-                            value={opt.value}
-                            checked={elaboration.difficulty === opt.value}
-                            onChange={(e) => setElaboration({ ...elaboration, difficulty: e.target.value as any })}
-                            className="sr-only"
-                          />
-                          <span>{opt.emoji}</span>
-                          <span>{opt.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-cocoa-600 mb-2">Tiempo Estimado</label>
-                    <input
-                      className="input-cute"
-                      value={elaboration.estimatedTime}
-                      onChange={(e) => setElaboration({ ...elaboration, estimatedTime: e.target.value })}
-                      placeholder="Ej: 3 horas, 2 dias"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Materials Section */}
-              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display font-bold text-sm text-cocoa-600 uppercase tracking-wider">🧵 Materiales</h3>
-                  <button onClick={addMaterial} className="text-xs font-semibold text-blush-400 hover:text-blush-500 transition-colors">+ Agregar material</button>
-                </div>
-                {elaboration.materials.length === 0 ? (
-                  <p className="text-sm text-cocoa-300 text-center py-3">Sin materiales. Agrega uno para empezar.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {elaboration.materials.map((mat, idx) => (
-                      <div key={idx} className="bg-white rounded-cute p-3 border border-cream-200 relative">
-                        <button
-                          onClick={() => removeMaterial(idx)}
-                          className="absolute top-2 right-2 text-cocoa-300 hover:text-red-400 transition-colors text-xs font-bold"
-                          title="Eliminar material"
-                        >
-                          ✕
-                        </button>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Nombre</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={mat.name}
-                              onChange={(e) => updateMaterial(idx, 'name', e.target.value)}
-                              placeholder="Ej: Hilo rosa"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Tipo</label>
-                            <select
-                              className="input-cute text-sm"
-                              value={mat.type}
-                              onChange={(e) => updateMaterial(idx, 'type', e.target.value)}
-                            >
-                              {MATERIAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Cantidad</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={mat.quantity}
-                              onChange={(e) => updateMaterial(idx, 'quantity', e.target.value)}
-                              placeholder="Ej: 100g"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Measurements Section */}
-              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display font-bold text-sm text-cocoa-600 uppercase tracking-wider">📏 Medidas</h3>
-                  <button onClick={addMeasurement} className="text-xs font-semibold text-blush-400 hover:text-blush-500 transition-colors">+ Agregar medida</button>
-                </div>
-                {elaboration.measurements.length === 0 ? (
-                  <p className="text-sm text-cocoa-300 text-center py-3">Sin medidas. Agrega una para empezar.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {elaboration.measurements.map((meas, idx) => (
-                      <div key={idx} className="bg-white rounded-cute p-3 border border-cream-200 relative">
-                        <button
-                          onClick={() => removeMeasurement(idx)}
-                          className="absolute top-2 right-2 text-cocoa-300 hover:text-red-400 transition-colors text-xs font-bold"
-                          title="Eliminar medida"
-                        >
-                          ✕
-                        </button>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Nombre</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={meas.name}
-                              onChange={(e) => updateMeasurement(idx, 'name', e.target.value)}
-                              placeholder="Ej: Alto"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Valor</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={meas.value}
-                              onChange={(e) => updateMeasurement(idx, 'value', e.target.value)}
-                              placeholder="Ej: 15"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Unidad</label>
-                            <select
-                              className="input-cute text-sm"
-                              value={meas.unit}
-                              onChange={(e) => updateMeasurement(idx, 'unit', e.target.value)}
-                            >
-                              {MEASUREMENT_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Patterns Section */}
-              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display font-bold text-sm text-cocoa-600 uppercase tracking-wider">🧷 Patrones</h3>
-                  <button onClick={addPattern} className="text-xs font-semibold text-blush-400 hover:text-blush-500 transition-colors">+ Agregar patron</button>
-                </div>
-                {elaboration.patterns.length === 0 ? (
-                  <p className="text-sm text-cocoa-300 text-center py-3">Sin patrones. Agrega uno para empezar.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {elaboration.patterns.map((pat, idx) => (
-                      <div key={idx} className="bg-white rounded-cute p-3 border border-cream-200 relative">
-                        <button
-                          onClick={() => removePattern(idx)}
-                          className="absolute top-2 right-2 text-cocoa-300 hover:text-red-400 transition-colors text-xs font-bold"
-                          title="Eliminar patron"
-                        >
-                          ✕
-                        </button>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Nombre</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={pat.name}
-                              onChange={(e) => updatePattern(idx, 'name', e.target.value)}
-                              placeholder="Ej: Cuerpo principal"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">URL de Imagen</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={pat.imageUrl}
-                              onChange={(e) => updatePattern(idx, 'imageUrl', e.target.value)}
-                              placeholder="https://..."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-cocoa-500 mb-1">Descripcion</label>
-                            <input
-                              className="input-cute text-sm"
-                              value={pat.description}
-                              onChange={(e) => updatePattern(idx, 'description', e.target.value)}
-                              placeholder="Detalle del patron"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Instructions */}
-              <div className="bg-cream-50 rounded-cute p-4 border border-cream-200">
-                <h3 className="font-display font-bold text-sm text-cocoa-600 mb-3 uppercase tracking-wider">📝 Instrucciones</h3>
-                <textarea
-                  className="input-cute min-h-[160px] resize-y text-sm"
-                  value={elaboration.instructions}
-                  onChange={(e) => setElaboration({ ...elaboration, instructions: e.target.value })}
-                  placeholder={"Paso 1: Hacer un anillo magico con 6pb\nPaso 2: Aumentar en cada punto (12pb)\nPaso 3: ..."}
-                />
-              </div>
-            </div>
-            )}
-
-            {/* Footer · cambia segun modo. View muestra Cerrar + Editar para reabrir
-                el formulario. Edit muestra Cancelar + Guardar como antes. */}
-            {procesoMode === 'view' ? (
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-cream-200">
-                <button onClick={closeProceso} className="btn-cute bg-cream-200 text-cocoa-600 hover:bg-cream-300">Cerrar</button>
-                <button
-                  onClick={() => { setProcesoMode('edit'); setProcesoSuccess(false); }}
-                  className="btn-cute bg-blush-400 text-white hover:bg-blush-500"
-                >
-                  ✏️ Editar
-                </button>
-              </div>
-            ) : (
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-cream-200">
-              <button onClick={closeProceso} className="btn-cute bg-cream-200 text-cocoa-600 hover:bg-cream-300">Cancelar</button>
-              <button
-                onClick={handleSaveProceso}
-                disabled={savingProceso}
-                className="btn-cute bg-blush-400 text-white hover:bg-blush-500 disabled:opacity-50"
-              >
-                {savingProceso ? 'Guardando...' : 'Guardar Proceso'} 🧶
-              </button>
-            </div>
-            )}
-          </div>
-        </div>
+        <ProductProcesoModal
+          product={procesoProduct}
+          onClose={closeProceso}
+          onSaved={(updated) => {
+            // Patch local del producto en el listado, sin refetch.
+            setProducts((prev) => prev.map((x) => x._id === updated._id ? { ...x, ...updated } : x));
+            setProcesoProduct((curr: any) => curr ? { ...curr, ...updated } : curr);
+          }}
+        />
       )}
     </div>
   );

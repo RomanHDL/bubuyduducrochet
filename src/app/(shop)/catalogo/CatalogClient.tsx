@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
+import ProductProcesoModal from '@/components/ProductProcesoModal';
 import { getCached, setCached, invalidatePrefix, dedupedFetchJson } from '@/lib/fetchCache';
 
 // ═══ Cute sound system — 40 unique Web Audio sounds ═══
@@ -213,19 +214,13 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [editingCatForm, setEditingCatForm] = useState<{ name: string; slug: string; emoji: string }>({ name: '', slug: '', emoji: '🧸' });
   const [soundOn, setSoundOn] = useState(true);
+  // Modal de proceso ahora es un componente compartido (ProductProcesoModal)
+  // — vive en `src/components/`. Aqui solo mantenemos qué producto esta abierto
+  // y si el modal esta visible. El form, el save y la ficha resumen viven dentro
+  // del componente, asi este modal se ve identico en /admin/productos, /catalogo
+  // y /producto/[id].
   const [procesoModal, setProcesoModal] = useState(false);
   const [procesoProduct, setProcesoProduct] = useState<Product | null>(null);
-  const [elaboration, setElaboration] = useState<any>({ materials: [], measurements: [], patterns: [], instructions: '', difficulty: '', estimatedTime: '' });
-  const [savingProceso, setSavingProceso] = useState(false);
-  const [procesoSuccess, setProcesoSuccess] = useState(false);
-
-  const MATERIAL_TYPES = ['hilo', 'aguja', 'relleno', 'ojos de seguridad', 'alambre', 'fieltro', 'pegamento', 'otro'];
-  const MEASUREMENT_UNITS = ['cm', 'mm', 'pulgadas'];
-  const DIFFICULTY_OPTIONS = [
-    { value: 'facil', label: 'Facil', emoji: '🟢' },
-    { value: 'intermedio', label: 'Intermedio', emoji: '🟡' },
-    { value: 'avanzado', label: 'Avanzado', emoji: '🔴' },
-  ];
 
   // Categorias y destacados: prefieren props del servidor (SSR), caen al cache
   // en memoria, y se revalidan en background. Siempre hay algo pintado.
@@ -355,32 +350,7 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
   const openProceso = (p: Product, e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     setProcesoProduct(p);
-    const el = p.elaboration || {};
-    setElaboration({
-      materials: el.materials?.length ? el.materials.map((m: any) => ({...m})) : [],
-      measurements: el.measurements?.length ? el.measurements.map((m: any) => ({...m})) : [],
-      patterns: el.patterns?.length ? el.patterns.map((m: any) => ({...m})) : [],
-      instructions: el.instructions || '',
-      difficulty: el.difficulty || '',
-      estimatedTime: el.estimatedTime || '',
-    });
-    setProcesoSuccess(false);
     setProcesoModal(true);
-  };
-
-  const saveProceso = async () => {
-    if (!procesoProduct) return;
-    setSavingProceso(true);
-    try {
-      const r = await fetch(`/api/products/${procesoProduct._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ elaboration }), cache: 'no-store' });
-      if (r.ok) {
-        // Optimista: actualiza el producto en el listado local, sin refetch.
-        setProducts((prev) => prev.map((x) => x._id === procesoProduct._id ? { ...x, elaboration } : x));
-        setProcesoSuccess(true);
-        setTimeout(() => setProcesoSuccess(false), 3000);
-      }
-    } catch {}
-    finally { setSavingProceso(false); }
   };
 
   const doSave = async () => {
@@ -909,106 +879,15 @@ function Content({ initialProducts, initialFeatured, initialCategories }: Initia
     </div>
 
     {procesoModal && procesoProduct && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-cocoa-800/40 backdrop-blur-sm p-4" onClick={() => setProcesoModal(false)}>
-        <div className="bg-white rounded-cute shadow-warm w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center gap-3 mb-4">
-            {procesoProduct.images?.[0] && <img src={procesoProduct.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover" />}
-            <div>
-              <h2 className="font-display font-bold text-xl text-cocoa-700">📋 Proceso de Elaboracion</h2>
-              <p className="text-sm text-cocoa-400">{procesoProduct.title}</p>
-            </div>
-          </div>
-
-          {procesoSuccess && <div className="mb-4 p-3 bg-mint-100 border border-green-200 rounded-xl text-sm text-green-700 font-semibold">✅ Proceso guardado correctamente</div>}
-
-          <div className="space-y-5">
-            {/* Difficulty */}
-            <div>
-              <label className="block text-sm font-semibold text-cocoa-600 mb-2">Dificultad</label>
-              <div className="flex gap-2">
-                {DIFFICULTY_OPTIONS.map(d => (
-                  <button key={d.value} onClick={() => setElaboration({...elaboration, difficulty: d.value})}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${elaboration.difficulty === d.value ? 'border-blush-400 bg-blush-50 text-cocoa-700' : 'border-cream-200 text-cocoa-400 hover:border-cream-300'}`}>
-                    {d.emoji} {d.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Estimated time */}
-            <div>
-              <label className="block text-sm font-semibold text-cocoa-600 mb-1">Tiempo estimado</label>
-              <input className="input-cute" value={elaboration.estimatedTime} onChange={e => setElaboration({...elaboration, estimatedTime: e.target.value})} placeholder="Ej: 3 horas, 2 dias..." />
-            </div>
-
-            {/* Materials */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-cocoa-600">🧶 Materiales</label>
-                <button onClick={() => setElaboration({...elaboration, materials: [...elaboration.materials, { name: '', type: 'hilo', quantity: '', notes: '' }]})} className="text-xs font-semibold text-blush-400 hover:text-blush-500">+ Agregar</button>
-              </div>
-              {elaboration.materials.map((m: any, i: number) => (
-                <div key={i} className="grid grid-cols-[1fr_auto_1fr_1fr_auto] gap-2 mb-2 items-center">
-                  <input className="input-cute text-xs" placeholder="Nombre" value={m.name} onChange={e => { const arr = [...elaboration.materials]; arr[i] = {...arr[i], name: e.target.value}; setElaboration({...elaboration, materials: arr}); }} />
-                  <select className="input-cute text-xs" value={m.type} onChange={e => { const arr = [...elaboration.materials]; arr[i] = {...arr[i], type: e.target.value}; setElaboration({...elaboration, materials: arr}); }}>
-                    {MATERIAL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <input className="input-cute text-xs" placeholder="Cantidad" value={m.quantity} onChange={e => { const arr = [...elaboration.materials]; arr[i] = {...arr[i], quantity: e.target.value}; setElaboration({...elaboration, materials: arr}); }} />
-                  <input className="input-cute text-xs" placeholder="Notas" value={m.notes} onChange={e => { const arr = [...elaboration.materials]; arr[i] = {...arr[i], notes: e.target.value}; setElaboration({...elaboration, materials: arr}); }} />
-                  <button onClick={() => { const arr = elaboration.materials.filter((_: any, j: number) => j !== i); setElaboration({...elaboration, materials: arr}); }} className="text-blush-400 hover:text-blush-500 text-sm">✕</button>
-                </div>
-              ))}
-            </div>
-
-            {/* Measurements */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-cocoa-600">📏 Medidas</label>
-                <button onClick={() => setElaboration({...elaboration, measurements: [...elaboration.measurements, { name: '', value: '', unit: 'cm' }]})} className="text-xs font-semibold text-blush-400 hover:text-blush-500">+ Agregar</button>
-              </div>
-              {elaboration.measurements.map((m: any, i: number) => (
-                <div key={i} className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 mb-2 items-center">
-                  <input className="input-cute text-xs" placeholder="Nombre (ej: Alto)" value={m.name} onChange={e => { const arr = [...elaboration.measurements]; arr[i] = {...arr[i], name: e.target.value}; setElaboration({...elaboration, measurements: arr}); }} />
-                  <input className="input-cute text-xs" placeholder="Valor" value={m.value} onChange={e => { const arr = [...elaboration.measurements]; arr[i] = {...arr[i], value: e.target.value}; setElaboration({...elaboration, measurements: arr}); }} />
-                  <select className="input-cute text-xs" value={m.unit} onChange={e => { const arr = [...elaboration.measurements]; arr[i] = {...arr[i], unit: e.target.value}; setElaboration({...elaboration, measurements: arr}); }}>
-                    {MEASUREMENT_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                  <button onClick={() => { const arr = elaboration.measurements.filter((_: any, j: number) => j !== i); setElaboration({...elaboration, measurements: arr}); }} className="text-blush-400 hover:text-blush-500 text-sm">✕</button>
-                </div>
-              ))}
-            </div>
-
-            {/* Patterns */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-cocoa-600">🎨 Patrones</label>
-                <button onClick={() => setElaboration({...elaboration, patterns: [...elaboration.patterns, { name: '', imageUrl: '', description: '' }]})} className="text-xs font-semibold text-blush-400 hover:text-blush-500">+ Agregar</button>
-              </div>
-              {elaboration.patterns.map((m: any, i: number) => (
-                <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 mb-2 items-center">
-                  <input className="input-cute text-xs" placeholder="Nombre" value={m.name} onChange={e => { const arr = [...elaboration.patterns]; arr[i] = {...arr[i], name: e.target.value}; setElaboration({...elaboration, patterns: arr}); }} />
-                  <input className="input-cute text-xs" placeholder="URL imagen" value={m.imageUrl} onChange={e => { const arr = [...elaboration.patterns]; arr[i] = {...arr[i], imageUrl: e.target.value}; setElaboration({...elaboration, patterns: arr}); }} />
-                  <input className="input-cute text-xs" placeholder="Descripcion" value={m.description} onChange={e => { const arr = [...elaboration.patterns]; arr[i] = {...arr[i], description: e.target.value}; setElaboration({...elaboration, patterns: arr}); }} />
-                  <button onClick={() => { const arr = elaboration.patterns.filter((_: any, j: number) => j !== i); setElaboration({...elaboration, patterns: arr}); }} className="text-blush-400 hover:text-blush-500 text-sm">✕</button>
-                </div>
-              ))}
-            </div>
-
-            {/* Instructions */}
-            <div>
-              <label className="block text-sm font-semibold text-cocoa-600 mb-1">📝 Instrucciones</label>
-              <textarea className="input-cute min-h-[120px] resize-y text-xs" value={elaboration.instructions} onChange={e => setElaboration({...elaboration, instructions: e.target.value})} placeholder="Paso 1: ...&#10;Paso 2: ...&#10;Paso 3: ..." />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-cream-200">
-            <button onClick={() => setProcesoModal(false)} className="btn-cute bg-cream-200 text-cocoa-600 hover:bg-cream-300">Cancelar</button>
-            <button onClick={saveProceso} disabled={savingProceso} className="btn-cute bg-orange-400 text-white hover:bg-orange-500 disabled:opacity-50">
-              {savingProceso ? 'Guardando...' : 'Guardar Proceso'} 📋
-            </button>
-          </div>
-        </div>
-      </div>
+      <ProductProcesoModal
+        product={procesoProduct}
+        onClose={() => setProcesoModal(false)}
+        onSaved={(updated) => {
+          // patch local del producto en el listado, sin refetch
+          setProducts((prev) => prev.map((p) => p._id === updated._id ? { ...p, ...updated } : p));
+          setProcesoProduct((curr) => curr ? { ...curr, ...updated } : curr);
+        }}
+      />
     )}
 
     </AnimatedBg>
