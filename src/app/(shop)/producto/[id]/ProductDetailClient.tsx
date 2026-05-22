@@ -1,12 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AnimatedBg from '@/components/AnimatedBg';
 import ProductEditModal from '@/components/ProductEditModal';
 import ProductProcesoModal from '@/components/ProductProcesoModal';
+import {
+  setPostLoginIntent,
+  getPostLoginIntent,
+  clearPostLoginIntent,
+} from '@/lib/auth-intent';
 
 interface Product {
   _id: string; title: string; description: string; price: number; images: string[]; stock: number; availability?: 'disponible' | 'por_pedido'; category: string; featured: boolean;
@@ -64,7 +69,14 @@ export default function ProductDetailPage({ initialProduct }: { initialProduct?:
 
   // Añade al carrito y se queda en la ficha (estilo Amazon: puedes seguir comprando)
   const addToCart = async (opts?: { goToCheckout?: boolean }) => {
-    if (!session) { router.push('/login'); return; }
+    if (!session) {
+      const productId = typeof id === 'string' ? id : (Array.isArray(id) ? id[0] : '');
+      if (productId) {
+        setPostLoginIntent(productId, opts?.goToCheckout ? 'buy' : 'order');
+      }
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/producto/${productId}`)}`);
+      return;
+    }
     if (!product) return;
     setAdding(true);
     try {
@@ -80,6 +92,23 @@ export default function ProductDetailPage({ initialProduct }: { initialProduct?:
   };
 
   const buyNow = () => addToCart({ goToCheckout: true });
+
+  // Auto-ejecutar la accion que el usuario intento antes del login.
+  // Solo se dispara una vez por mount cuando: hay sesion, el producto
+  // ya cargo, y hay un intent valido y matching para este productId.
+  const intentExecutedRef = useRef(false);
+  useEffect(() => {
+    if (intentExecutedRef.current) return;
+    if (!session || !product) return;
+    const productId = product._id;
+    const intent = getPostLoginIntent(productId);
+    if (!intent) return;
+    intentExecutedRef.current = true;
+    clearPostLoginIntent();
+    if (intent.action === 'buy') buyNow();
+    else addToCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, product]);
 
   if (loading) return <AnimatedBg theme="warm"><div className="flex items-center justify-center min-h-[60vh]"><span className="text-4xl animate-bounce">🧶</span></div></AnimatedBg>;
 

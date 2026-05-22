@@ -13,6 +13,7 @@ module.exports = {
         lavender: { 50: '#F8F5FF', 100: '#EDE5FF', 200: '#D9C8FF', 300: '#C4ABFF', 400: '#A78BFA' },
         mint: { 50: '#F0FFF4', 100: '#D4F5E0', 200: '#A8E6CF', 300: '#7DD3A8', 400: '#4ADE80' },
         sky: { 50: '#F0F9FF', 100: '#E0F2FE', 200: '#B3E0FF', 300: '#7CC4F5' },
+        peach: { 50: '#FFF7F0', 100: '#FFE9D6', 200: '#FFD2A8', 300: '#FFB87A', 400: '#FF9F4D' },
         cocoa: { 50: '#FDF8F5', 100: '#F5E6DA', 200: '#E8C9B0', 300: '#D4A574', 400: '#B8845A', 500: '#8B6543', 600: '#6B4A30', 700: '#4A3320', 800: '#2D1F14' },
       },
       fontFamily: {
@@ -27,6 +28,15 @@ module.exports = {
         'soft': '0 2px 16px rgba(139, 101, 67, 0.08)',
         'warm': '0 4px 24px rgba(139, 101, 67, 0.12)',
         'glow': '0 0 20px rgba(255, 182, 193, 0.3)',
+      },
+      keyframes: {
+        'gradient-shift': {
+          '0%, 100%': { 'background-position': '0% 50%' },
+          '50%': { 'background-position': '100% 50%' },
+        },
+      },
+      animation: {
+        'gradient': 'gradient-shift 8s ease infinite',
       },
     },
   },
