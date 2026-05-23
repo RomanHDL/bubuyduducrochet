@@ -13,7 +13,7 @@ export default function BenefitsBadges() {
       />
       <Badge
         icon="📦"
-        label="Envío a todo México"
+        label="Especial"
         className="border-lavender-300 bg-lavender-50 text-lavender-400"
       />
       <Badge
