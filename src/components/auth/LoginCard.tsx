@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
-import SecurityBadges from './SecurityBadges';
+import BenefitsBadges from './BenefitsBadges';
 import ProductPreviewMini, { type PreviewProduct } from './ProductPreviewMini';
 
 // Card de login — Client Component que vive sobre un fondo con
@@ -145,23 +145,22 @@ export default function LoginCard({ callbackUrl, intent, product }: Props) {
             {signingIn ? 'Conectando…' : 'Continuar con Google'}
           </button>
 
-          {/* Disclaimer */}
+          {/* Promesa de marca debajo del boton */}
           <p className="text-[11px] text-cocoa-500 text-center mt-4 px-2">
-            Solo usamos tu nombre y email para tu pedido. Nunca compartimos tus
-            datos.
+            Hecho con amor en México · Tu pedido en buenas manos 💕
           </p>
 
           {/* Separador */}
           <div className="my-5 flex items-center gap-3" aria-hidden>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cocoa-300/40 to-transparent" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-cocoa-400">
-              Seguridad
+              Por qué comprar con nosotras
             </span>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cocoa-300/40 to-transparent" />
           </div>
 
-          {/* Security badges */}
-          <SecurityBadges />
+          {/* Beneficios de marca */}
+          <BenefitsBadges />
         </div>
 
         {/* Footer mini */}
