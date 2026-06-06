@@ -13,7 +13,7 @@ const PROGRESS_STEPS = [10, 30, 50, 75, 100];
 
 const emptyProduct = { title: '', description: '', price: 0, images: [''], stock: 1, availability: 'disponible', category: 'amigurumis', isActive: true, featured: false, status: 'publicado', progress: 100 };
 
-type InitialProps = { initialProducts?: any[] };
+type InitialProps = { initialProducts?: any[]; initialTab?: 'catalogo' | 'wip' };
 
 export default function AdminProductsPage(props: InitialProps = {}) {
   return (
@@ -23,10 +23,12 @@ export default function AdminProductsPage(props: InitialProps = {}) {
   );
 }
 
-function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
+function AdminProductsPageInner({ initialProducts, initialTab }: InitialProps = {}) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Pestaña inicial: prop (cuando se entra por /admin/proceso) o ?tab=proceso.
+  const startTab: 'catalogo' | 'wip' = initialTab || (searchParams?.get('tab') === 'proceso' ? 'wip' : 'catalogo');
   // Prioridad: 1) initialProducts (SSR) 2) cache del cliente 3) vacio.
   // El SSR trae TODO (publicados + obras en proceso); separamos por `status`.
   const cachedInit = getCached<any[]>('/api/products');
@@ -36,7 +38,7 @@ function AdminProductsPageInner({ initialProducts }: InitialProps = {}) {
   if (initialProducts && initialProducts.length && !cachedInit) setCached('/api/products', seedPublished);
   const [products, setProducts] = useState<any[]>(seedPublished);
   const [wipProducts, setWipProducts] = useState<any[]>(seedWip);
-  const [tab, setTab] = useState<'catalogo' | 'wip'>('catalogo');
+  const [tab, setTab] = useState<'catalogo' | 'wip'>(startTab);
   const [loading, setLoading] = useState(seedPublished.length === 0);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);

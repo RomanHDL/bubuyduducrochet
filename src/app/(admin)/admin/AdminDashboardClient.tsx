@@ -98,7 +98,8 @@ export default function AdminDashboard({ initialStats }: { initialStats?: any } 
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/catalogo" className="btn-cute bg-blush-400 text-white text-xs px-4 py-2 hover:bg-blush-500">🧶 Catalogo</Link>
-          <Link href="/admin/productos" className="btn-cute bg-orange-400 text-white text-xs px-4 py-2 hover:bg-orange-500">📋 Proceso</Link>
+          <Link href="/admin/productos" className="btn-cute bg-orange-400 text-white text-xs px-4 py-2 hover:bg-orange-500">🧸 Productos</Link>
+          <Link href="/admin/proceso" className="btn-cute bg-lavender-500 text-white text-xs px-4 py-2 hover:bg-lavender-600">🧶 En proceso</Link>
           <Link href="/pedidos" className="btn-cute bg-lavender-400 text-white text-xs px-4 py-2 hover:bg-lavender-500">📋 Pedidos</Link>
           <Link href="/admin/pagos" className="btn-cute bg-green-500 text-white text-xs px-4 py-2 hover:bg-green-600">💰 Pagos</Link>
           <Link href="/admin/materiales" className="btn-cute bg-amber-500 text-white text-xs px-4 py-2 hover:bg-amber-600">🧶 Materiales</Link>
@@ -263,9 +264,10 @@ export default function AdminDashboard({ initialStats }: { initialStats?: any } 
       </div>
 
       {/* ═══ Quick Actions ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <QLink href="/admin/materiales" emoji="🧵" title="Materiales" />
         <QLink href="/admin/productos" emoji="📦" title="Inventario" />
+        <QLink href="/admin/proceso" emoji="🧶" title="En proceso" />
         <QLink href="/preguntas" emoji="❓" title="FAQs" />
         <QLink href="/" emoji="🏠" title="Tienda" />
         <QLink href="/contacto" emoji="📝" title="Nosotros" />

@@ -20,6 +20,7 @@ import { useSession } from 'next-auth/react';
 const ADMIN_ROUTES = [
   '/admin',
   '/admin/productos',
+  '/admin/proceso',
   '/admin/pedidos',
   '/admin/pagos',
   '/admin/materiales',
