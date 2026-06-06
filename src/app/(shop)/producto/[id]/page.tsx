@@ -5,6 +5,8 @@
 //   * Si no existe el id, muestra el 404 nativo de Next.js.
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import ProductReview from '@/models/ProductReview';
@@ -58,6 +60,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     };
   }
 
+  // Obra en proceso: no la indexamos (solo el admin la ve).
+  if (product.status === 'en_proceso') {
+    return { title: product.title, robots: { index: false, follow: false } };
+  }
+
   const url = `${SITE_URL}/producto/${product._id}`;
   const image = product.images?.[0] || undefined;
   const description = (product.description || '').slice(0, 160);
@@ -87,6 +94,13 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 export default async function ProductPage({ params }: { params: { id: string } }) {
   const initialProduct = await getProduct(params.id);
   if (!initialProduct) notFound();
+
+  // Las "obras en proceso" no son publicas: aunque alguien adivine la URL, solo
+  // el admin puede verlas (no estan enlazadas ni en el sitemap).
+  if (initialProduct.status === 'en_proceso') {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).role !== 'admin') notFound();
+  }
 
   const { reviewCount, avgRating } = await getReviewStats(params.id);
 

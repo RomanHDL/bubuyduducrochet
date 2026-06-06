@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic'; // session-dependent
 
 const LIST_PROJECTION: any = {
   title: 1, description: 1, price: 1, stock: 1, availability: 1,
-  category: 1, isActive: 1, featured: 1, createdAt: 1, updatedAt: 1,
+  category: 1, isActive: 1, featured: 1, status: 1, progress: 1,
+  createdAt: 1, updatedAt: 1,
   images: { $slice: 1 },
 };
 

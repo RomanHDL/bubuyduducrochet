@@ -24,8 +24,33 @@ export async function GET(req: NextRequest) {
   const featured = searchParams.get('featured');
   const limit = parseInt(searchParams.get('limit') || '50');
   const includeElaboration = searchParams.get('includeElaboration') === 'true';
+  const scope = searchParams.get('scope'); // 'proceso' → obras en proceso (solo admin)
 
-  const filter: any = { isActive: true };
+  // scope=proceso: lista de "obras en proceso" para el panel admin. Requiere
+  // sesion admin y trae SOLO los productos con status 'en_proceso' (que viven
+  // con isActive:false, por eso el listado publico de abajo nunca los toca).
+  if (scope === 'proceso') {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).role !== 'admin') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    const projection: any = {
+      title: 1, description: 1, price: 1, stock: 1, availability: 1,
+      category: 1, isActive: 1, featured: 1, status: 1, progress: 1,
+      createdAt: 1, updatedAt: 1, images: { $slice: 1 },
+    };
+    const enProceso = await Product.find({ status: 'en_proceso' }, projection)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    const r = NextResponse.json(enProceso);
+    r.headers.set('Cache-Control', 'no-store, must-revalidate');
+    return r;
+  }
+
+  // Listado publico (catalogo). isActive:true ya excluye las obras en proceso;
+  // el filtro de status es defensivo por si algun dia una obra quedara activa.
+  const filter: any = { isActive: true, status: { $ne: 'en_proceso' } };
   if (category) filter.category = category;
   if (featured === 'true') filter.featured = true;
   if (search) {
@@ -68,6 +93,11 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const body = await req.json();
 
+    // Obra en proceso: se guarda oculta (isActive:false) con su % de avance. Asi
+    // no aparece en el catalogo hasta que el admin la "sube a catalogo".
+    const isEnProceso = body.status === 'en_proceso';
+    const progress = Math.min(100, Math.max(0, Number(body.progress)));
+
     // Normalizar payload — evita que campos vacios/tipicos del form rompan el schema
     const doc: any = {
       title: (body.title || '').trim(),
@@ -77,8 +107,10 @@ export async function POST(req: NextRequest) {
       stock: Number(body.stock) || 0,
       availability: body.availability === 'por_pedido' ? 'por_pedido' : 'disponible',
       category: (body.category || 'otro').trim() || 'otro',
-      isActive: body.isActive !== false,
+      isActive: isEnProceso ? false : body.isActive !== false,
       featured: !!body.featured,
+      status: isEnProceso ? 'en_proceso' : 'publicado',
+      progress: isEnProceso ? (Number.isFinite(progress) ? progress : 0) : 100,
       createdBy: (session.user as any).id,
     };
     if (body.elaboration && typeof body.elaboration === 'object') {
